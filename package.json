@@ -4,7 +4,7 @@
   "description": "BE",
   "main": "index.js",
   "scripts": {
-    "build": "tsc -p .",
+    "build": "npx tsc -p .",
     "start": "node dist/index.ts",
     "dev": "npx nodemon -q index.ts"
   },
