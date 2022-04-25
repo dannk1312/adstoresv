@@ -1,0 +1,37 @@
+POST http://localhost:5000/customer/emailCreate HTTP/1.1
+content-type: application/json
+
+{
+    "email": "dannk1312@gmail.com",
+    "password": "nkD18110091"
+}
+
+
+###
+POST http://localhost:5000/customer/phoneCreate HTTP/1.1
+content-type: application/json
+
+{
+    "phone": "+84944647001"
+}
+
+
+###
+POST http://localhost:5000/customer/phoneVerify HTTP/1.1
+content-type: application/json
+
+{
+    "phone": "+84944647001",
+    "code": "4246"
+}
+
+
+
+###
+POST http://localhost:5000/customer/login HTTP/1.1
+content-type: application/json
+
+{
+    "email_or_phone": "+84923202850",
+    "password": "nkD18110091"
+}
