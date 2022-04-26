@@ -124,3 +124,5 @@ export const phoneCheck = async (req: Request, res: Response, next: NextFunction
         res.status(400).send({msg: 'Not enough information for this perform'})
     }
 }
+
+

@@ -31,10 +31,17 @@ POST http://localhost:5000/customer/updatePhone HTTP/1.1
 content-type: application/json
 
 {
-    "newPhone": "+84923202851",
-    "code": "409024"
+    "phone": "+84923202851",
+    "code": "161547"
 }
 
+####
+POST http://localhost:5000/customer/updatePassword HTTP/1.1
+content-type: application/json
 
+{
+    "password": "nkDanh18110091",
+    "newPassword": "nkD18110091"
+}
 
 
