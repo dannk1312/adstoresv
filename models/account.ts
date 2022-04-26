@@ -1,15 +1,8 @@
 import { argon2d } from 'argon2';
 import { Schema, model, Types } from 'mongoose';
+import { config } from '../services/config';
 import { billSchema, IBill } from './bill';
 
-const emailRegEx = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|'(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*')@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
-// Minimum eight characters, at least one letter and one number
-const passwordRegEx = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
-const phoneRegEx = /^[+]*[(]{0,1}[0-9]{1,3}[)]{0,1}[-\s\./0-9]{8,14}$/g;
-
-export const passwordCheck = (password: string): boolean => {
-    return passwordRegEx.test(password)
-}
 
 export interface IAccount {
     _id: Types.ObjectId,
@@ -45,7 +38,7 @@ export const accountSchema = new Schema<IAccount>({
         },
         validate: {
             validator: function (v: string) {
-                return emailRegEx.test(v)
+                return config.emailRegEx.test(v)
             },
             message: 'Email format is not correct.'
         },
@@ -63,7 +56,7 @@ export const accountSchema = new Schema<IAccount>({
         },
         validate: {
             validator: function (v: string) {
-                return phoneRegEx.test(v)
+                return config.phoneRegEx.test(v)
             },
             message: 'Phone format is not correct.'
         },

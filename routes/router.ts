@@ -1,37 +1,51 @@
 import express, { NextFunction, Request, Response } from 'express';
-import { AccountEmailCreate, AccountEmailVerify, AccountPhoneCreate, AccountPhoneVerify, AccountSignin, AccountUpdateInfo } from '../controllers/accountController';
-import { Document, Types } from "mongoose";
-import jwt from "jsonwebtoken";
-import { Account, IAccount } from '../models/account';
+import * as AccountController from '../controllers/accountController';
+import * as DefaultController from '../controllers/defaultController';
 
 export const route = express.Router();
 route.get("/", (req: Request, res: Response) => {
     res.send(`ADStore Server`);
 })
 
-const verify = (roles: string[]) => {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        try {
-            const token: string = req.signedCookies['accessToken'];
-            // @ts-ignore
-            const id: string = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!).id;
-            // @ts-ignore
-            const acc: Document<unknown, any, IAccount> & IAccount & { _id: Types.ObjectId } = await Account.findById(id)
-            
-            if(roles.includes(acc.role)) {
-                req.body.account = acc;
-                next();
-            } else throw new Error()
-        } catch (err) {
-            return res.status(400).send({ msg: `Need permission in ${roles.toString()} to perform this action` })
-        }
-    }
-}
+// Field: email**, password**, code**, name, birth, gender
+route.post("/customer/createByMail",
+    DefaultController.emailCheck,
+    DefaultController.emailOTPCheck,
+    AccountController.AccountCreateByEmail
+)
+// Field: email**
+route.post("/customer/emailOTP", DefaultController.emailOTPRequest)
+// Field: phone**, code**
+route.post("/customer/createByPhone",
+    DefaultController.phoneCheck,
+    DefaultController.phoneOTPCheck,
+    AccountController.AccountCreateByPhone
+)
+// Field: phone**
+route.post("/customer/phoneOTP", DefaultController.phoneOTPRequest)
 
-route.post("/customer/emailCreate", AccountEmailCreate)
-route.post("/customer/phoneCreate", AccountPhoneCreate)
-route.get("/customer/emailVerify/:token", AccountEmailVerify)
-route.post("/customer/phoneVerify", AccountPhoneVerify)
-route.post("/customer/login", AccountSignin)
+// Field: (email_or_phone**, password**) | (email_or_phone**, code**) | googleToken**
+route.post("/customer/login", AccountController.AccountSignin)
 
-route.post("/customer/update", verify(["Customer", "Sale", "Admin"]), AccountUpdateInfo)
+// require: accessToken
+// role: ["Customer", "Sale", "Admin"]
+// field: name, birth, gender, address
+route.post("/customer/updateInfo",
+    DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
+    AccountController.AccountUpdateInfo
+)
+// require: accessToken
+// role: ["Customer", "Sale", "Admin"]
+// field: newPhone**, code**
+route.post("/customer/updatePhone",
+    DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
+    DefaultController.phoneOTPCheck,
+    AccountController.AccountUpdatePhone
+)
+// require: accessToken
+// role: ["Customer", "Sale", "Admin"]
+// field: password**, newPassword**
+route.post("/customer/updatePassword",
+    DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
+    AccountController.AccountUpdatePassword
+)

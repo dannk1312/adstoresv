@@ -2,6 +2,7 @@ import { Schema, model, Types } from 'mongoose';
 
 export interface ICategory {
     _id: string,
+    image: Buffer,
     specsModel: Types.Map<String>
 }
 
@@ -13,6 +14,7 @@ export const categorySchema = new Schema<ICategory>({
         unique: true,
         trim: true
     },
+    image: Buffer,
     specsModel: {
         type: Types.Map,
         of: String

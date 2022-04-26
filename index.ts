@@ -1,11 +1,9 @@
 import express, { Express, Request, Response } from 'express';
 import dotenv from 'dotenv';
-import { dbconnect } from './database/database';
+import { dbconnect } from './services/database';
 import { route } from './routes/router';
 import cors from "cors";
 import cookieParser from 'cookie-parser';
-import { SendMail } from './services/email';
-import { SendSMS } from './services/sms';
 
 dotenv.config();
 dbconnect();

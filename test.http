@@ -1,4 +1,15 @@
-POST http://localhost:5000/customer/emailCreate HTTP/1.1
+POST http://localhost:5000/customer/updateInfo HTTP/1.1
+content-type: application/json
+
+{
+    "name": "Nguyen Khoa Danh", 
+    "birth": "12/13/2000", 
+    "gender": "Male", 
+    "address": ["Baria", "TPHCM"]
+}
+
+####
+POST http://localhost:5000/customer/login HTTP/1.1
 content-type: application/json
 
 {
@@ -7,31 +18,23 @@ content-type: application/json
 }
 
 
-###
-POST http://localhost:5000/customer/phoneCreate HTTP/1.1
+####
+POST http://localhost:5000/customer/phoneOTP HTTP/1.1
 content-type: application/json
 
 {
-    "phone": "+84944647001"
+    "phone": "+84923202851"
 }
 
-
-###
-POST http://localhost:5000/customer/phoneVerify HTTP/1.1
+####
+POST http://localhost:5000/customer/updatePhone HTTP/1.1
 content-type: application/json
 
 {
-    "phone": "+84944647001",
-    "code": "4246"
+    "newPhone": "+84923202851",
+    "code": "409024"
 }
 
 
 
-###
-POST http://localhost:5000/customer/login HTTP/1.1
-content-type: application/json
 
-{
-    "email_or_phone": "+84923202850",
-    "password": "nkD18110091"
-}

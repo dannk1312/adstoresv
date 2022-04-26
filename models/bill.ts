@@ -2,6 +2,8 @@ import { Schema, model, Types } from 'mongoose';
 
 export interface IBill {
     _id: Types.ObjectId,
+    phone: String,
+    address: String,
     products: [{
         product: Types.ObjectId,
         quantity: number,
@@ -41,6 +43,8 @@ export const billSchema = new Schema<IBill>({
         type: Number,
         default: 0
     },
+    phone: {type: String, required: [true, "Bill phone cannot be empty"]},
+    address: {type: String, required: [true, "Bill address cannot be empty"]},
     discountCode: {type: String, ref: 'Discount'},
     status: {
         type: String,

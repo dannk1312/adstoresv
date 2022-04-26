@@ -1,4 +1,4 @@
 import NodeCache from "node-cache";
-export const phoneCodeCache = new NodeCache();
+export const codeCache = new NodeCache();
 
 
