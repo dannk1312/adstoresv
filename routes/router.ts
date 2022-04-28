@@ -8,36 +8,36 @@ route.get("/", (req: Request, res: Response) => {
 })
 
 // Field: email**, password**, code**, name, birth, gender
-route.post("/customer/createByMail",
+route.post("/default/createByMail",
     DefaultController.emailCheck,
     DefaultController.emailOTPCheck,
     AccountController.AccountCreateByEmail
 )
 // Field: email**
-route.post("/customer/emailOTP", DefaultController.emailOTPRequest)
+route.post("/default/emailOTP", DefaultController.emailOTPRequest)
 // Field: phone**, code**
-route.post("/customer/createByPhone",
+route.post("/default/createByPhone",
     DefaultController.phoneCheck,
     DefaultController.phoneOTPCheck,
     AccountController.AccountCreateByPhone
 )
 // Field: phone**
-route.post("/customer/phoneOTP", DefaultController.phoneOTPRequest)
+route.post("/default/phoneOTP", DefaultController.phoneOTPRequest)
 
 // Field: (email_or_phone**, password**) | (email_or_phone**, code**) | googleToken**
-route.post("/customer/login", AccountController.AccountSignin)
+route.post("/default/login", AccountController.AccountSignin)
 
 // require: accessToken
 // role: ["Customer", "Sale", "Admin"]
 // field: name, birth, gender, address
-route.post("/customer/updateInfo",
+route.post("/default/updateInfo",
     DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
     AccountController.AccountUpdateInfo
 )
 // require: accessToken
 // role: ["Customer", "Sale", "Admin"]
 // field: newPhone**, code**
-route.post("/customer/updatePhone",
+route.post("/default/updatePhone",
     DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
     DefaultController.phoneOTPCheck,
     AccountController.AccountUpdatePhone
@@ -45,7 +45,28 @@ route.post("/customer/updatePhone",
 // require: accessToken
 // role: ["Customer", "Sale", "Admin"]
 // field: password**, newPassword**
-route.post("/customer/updatePassword",
+route.post("/default/updatePassword",
     DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
     AccountController.AccountUpdatePassword
+)
+// require: accessToken
+// role: ["Customer"]
+// field: message**
+route.post("/chat/newChat",
+    DefaultController.roleVerify(["Customer"]),
+    AccountController.NewChat
+)
+// require: accessToken
+// role: ["Customer", "Sale"]
+// field: chatId**, message**
+route.post("/chat/addChatMessage",
+    DefaultController.roleVerify(["Customer", "Sale"]),
+    AccountController.AddChatMessage
+)
+// require: accessToken
+// role: ["Customer", "Sale"]
+// field: chatId**, index**, length**
+route.post("/chat/getChat",
+    DefaultController.roleVerify(["Customer", "Sale"]),
+    AccountController.GetChat
 )

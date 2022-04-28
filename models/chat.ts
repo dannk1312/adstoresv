@@ -2,9 +2,10 @@ import { Schema, model, Types } from 'mongoose';
 
 export interface IChat {
     _id: Types.ObjectId,
-    accounts: [Types.ObjectId],
+    customer: Types.ObjectId,
+    saler: Types.ObjectId,
     messages: [{
-        account: Types.ObjectId,
+        isCustomer: boolean,
         message: String,
         createdAt: Date
     }],
@@ -14,14 +15,12 @@ export interface IChat {
 
 
 export const chatSchema = new Schema<IChat>({
-    accounts: {
-        values: [{type: Types.ObjectId, ref: 'Account'}], 
-        minlength: [2, 'Chat room need more than 1 account']
-    },
+    customer: {type: Schema.Types.ObjectId, ref: 'Account', required: true},
+    saler: {type: Schema.Types.ObjectId, ref: 'Account', required: true},
     messages: [{
-        account: {type: Types.ObjectId, ref: 'Account'},
+        isCustomer: {type: Boolean, required: true},
         message: {type: String, required: true, trim: true},
-        createdAt: {type: Date, default: true}
+        createdAt: {type: Date, default: Date.now}
     }]
 }, { timestamps: true })
 

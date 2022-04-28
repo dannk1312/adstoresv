@@ -17,7 +17,10 @@ export interface IAccount {
     role: string,
     // Features
     chats: [Types.ObjectId],
-    bag: [Types.ObjectId],
+    bag: [{
+        product: Types.ObjectId,
+        quantity: number
+    }],
     bill: [IBill],
     notifications: [{
         message: string,
@@ -76,7 +79,10 @@ export const accountSchema = new Schema<IAccount>({
     },
     // Features
     chats: [{ type: Schema.Types.ObjectId, ref: 'Chat' }],
-    bag: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
+    bag: [{
+        product: { type: Schema.Types.ObjectId, ref: 'Product' },
+        quantity: Number
+    }],
     rated: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
     bill: [billSchema],
     notifications: [{

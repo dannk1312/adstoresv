@@ -1,37 +1,61 @@
-POST http://localhost:5000/customer/emailCreate HTTP/1.1
+POST http://localhost:5000/default/emailOTP HTTP/1.1
 content-type: application/json
 
 {
-    "email": "dannk1312@gmail.com",
+    "email": "sandais2903@gmail.com"
+}
+
+####
+POST http://localhost:5000/default/createByMail HTTP/1.1
+content-type: application/json
+
+{
+    "email": "sandais2903@gmail.com",
+    "password": "sD123456",
+    "code": "569803"
+}
+
+####
+POST http://localhost:5000/default/login HTTP/1.1
+content-type: application/json
+
+{
+    "email_or_phone": "dannk1312@gmail.com",
     "password": "nkD18110091"
 }
 
-
-###
-POST http://localhost:5000/customer/phoneCreate HTTP/1.1
+####
+POST http://localhost:5000/default/login HTTP/1.1
 content-type: application/json
 
 {
-    "phone": "+84944647001"
+    "email_or_phone": "sandais2903@gmail.com",
+    "password": "sD123456"
 }
 
-
-###
-POST http://localhost:5000/customer/phoneVerify HTTP/1.1
+####
+POST http://localhost:5000/chat/newChat HTTP/1.1
 content-type: application/json
 
 {
-    "phone": "+84944647001",
-    "code": "4246"
+    "message": "Tôi cần tư vấn"
 }
 
-
-
-###
-POST https://adstoresv.herokuapp.com/customer/login HTTP/1.1
+####
+POST http://localhost:5000/chat/addChatMessage HTTP/1.1
 content-type: application/json
 
 {
-    "email_or_phone": "+84923202850",
-    "password": "nkD18110091"
+    "chatId": "62691e6e7fd95aacf7114ebc",
+    "message": "Ô cc? chỗ tôi không bán ô tô"
+}
+
+####
+POST http://localhost:5000/chat/getChat HTTP/1.1
+content-type: application/json
+
+{
+    "chatId": "62691e6e7fd95aacf7114ebc",
+    "index": 4,
+    "length": 2
 }
