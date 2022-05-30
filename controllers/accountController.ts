@@ -7,6 +7,7 @@ import { SendMail } from "../services/email";
 import { codeCache } from "../services/cache";
 import { config } from "../services/config";
 import { Chat, IChat } from "../models/chat";
+import { Console, debug } from "console";
 
 
 
@@ -65,8 +66,10 @@ export const AccountVerifyEmail = async (req: Request, res: Response, next: Next
 
 // SIGN IN
 export const AccountSignin = async (req: Request, res: Response, next: NextFunction) => {
-    const { email_or_phone, password, googleToken, code } = req.body;
+    const { email_or_phone, password, googleToken, code } = req.body
     if (password) {
+        if(!email_or_phone)
+            return res.status(400).send({ msg: 'Some field maybe wrong' })
         const account = await Account.findOne({ $or: [{ email: email_or_phone }, { phone: email_or_phone }] })
         if (account && await argon2.verify(account.password, password)) {
             const token = jwt.sign({ id: account._id }, process.env.ACCESS_TOKEN_SECRET!)
@@ -135,6 +138,15 @@ export const NewChat = async (req: Request, res: Response, next: NextFunction) =
         const message = req.body.message;
         const account: Document<unknown, any, IAccount> & IAccount & { _id: Types.ObjectId; } = req.body.account;
 
+        // Remove old Chatbox
+        if(account.chats.length > 0) {
+            Chat.findByIdAndDelete(account.chats.pop()).exec((err, doc: any) => {
+                if (doc) {
+                    Account.findByIdAndUpdate(doc.saler, { $pull: {chats: doc._id}}).exec();
+                }
+            })
+        }
+
         // Get list of saler
         const salers = await Account.find({ role: 'Sale' })
         if (salers.length == 0)
@@ -151,7 +163,7 @@ export const NewChat = async (req: Request, res: Response, next: NextFunction) =
         })
 
         chat.save((err, doc) => {
-            if (err) return res.status(500).send("We've got some internal problems, please try again later.")
+            if (err) return res.status(500).send("We've got some internal problems, pleacse try again later.")
             account.chats.push(doc._id)
             account.save()
             minChatSaler.chats.push(doc._id)
@@ -164,13 +176,20 @@ export const NewChat = async (req: Request, res: Response, next: NextFunction) =
     }
 }
 
-export const AddChatMessage = async (req: Request, res: Response, next: NextFunction) => {
+export const GetChat = async (req: Request, res: Response, next: NextFunction) => {
+    const account: Document<unknown, any, IAccount> & IAccount & { _id: Types.ObjectId; } = req.body.account;
+    return res.send({ msg: "Get success", chats: account.chats })
+}
+
+export const AddMessage = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const account: Document<unknown, any, IAccount> & IAccount & { _id: Types.ObjectId; } = req.body.account;
         const {chatId, message} = req.body;
         Chat.findById(chatId, (err: Error, doc: Document<unknown, any, IChat> & IChat & { _id: Types.ObjectId; }) => {
             if (err)
-                return res.status(500).send("We've got some internal problems, please try again later.")
+                return res.status(500).send({msg: "We've got some internal problems, please try again later."})
+            if(!doc)
+                return res.status(400).send({msg: "We've got some internal problems, please try again later."})
             if (!doc.customer.equals(account._id) && !doc.saler.equals(account._id))
                 return res.status(400).send({ msg: "You don't have permission on this chatbox" })
             const isCustomer: boolean = doc.customer.equals(account._id);
@@ -178,7 +197,7 @@ export const AddChatMessage = async (req: Request, res: Response, next: NextFunc
             doc.messages.push({ isCustomer: isCustomer, message: message })
             doc.save((_err) => {
                 if (_err)
-                    return res.status(500).send("We've got some internal problems, please try again later.")
+                    return res.status(500).send({msg: "We've got some internal problems, please try again later."})
                 return res.send({ msg: "Send success" })
             })
         })
@@ -188,14 +207,16 @@ export const AddChatMessage = async (req: Request, res: Response, next: NextFunc
     }
 }
 
-export const GetChat = async (req: Request, res: Response, next: NextFunction) => {
+export const GetMessages = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const account: Document<unknown, any, IAccount> & IAccount & { _id: Types.ObjectId; } = req.body.account;
-        const {chatId, index, length} = req.body;
-        Chat.findById(chatId, { accounts: 1, _id : 1, messages: {createAt: 1, message: 1, isCustomer: 1} }).populate(['customer', 'saler']).exec((err, doc) => {
-            if (err || !doc)
-                return res.status(500).send("We've got some internal problems, please try again later.")
-            if (!doc.customer.equals(account._id) && !doc.saler.equals(account._id))
+        const {chatId} = req.body;
+        const skip: number = req.body.skip??-1;
+        const get: number = req.body.get??1;
+        Chat.findById(chatId, { accounts: 1, _id : 1, messages: { createAt: 1, message: 1, isCustomer: 1} }).slice("messages", [skip, get]).populate(['customer', 'saler']).exec((err, doc) => {
+            if (err)
+                return res.status(500).send({msg: "We've got some internal problems, please try again later."})
+            if (!doc || !doc.customer.equals(account._id) && !doc.saler.equals(account._id))
                 return res.status(400).send({ msg: "You don't have permission on this chatbox" })
             
             //@ts-ignore

@@ -7,6 +7,7 @@ import { codeCache } from '../services/cache';
 import { config } from '../services/config';
 import express, { NextFunction, Request, Response } from 'express';
 import { SendMail } from "../services/email";
+import { Console } from "console";
 
 const randomCode = (): string => {
     var numbers = '0123456789'
@@ -25,13 +26,12 @@ export const roleVerify = (roles: string[]) => {
             const id: string = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!).id;
             // @ts-ignore
             const acc: Document<unknown, any, IAccount> & IAccount & { _id: Types.ObjectId } = await Account.findById(id)
-
             if (roles.includes(acc.role)) {
                 req.body.account = acc;
                 next();
-            } else throw new Error()
+            } else throw new Error(`${acc.email + " " + acc.role}`)
         } catch (err) {
-            console.log(err)
+            console.log("Error with " + err)
             return res.status(400).send({ msg: `Need permission in ${roles.toString()} to perform this action` })
         }
     }

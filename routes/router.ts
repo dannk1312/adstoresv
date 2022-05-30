@@ -58,15 +58,21 @@ route.post("/chat/newChat",
 )
 // require: accessToken
 // role: ["Customer", "Sale"]
-// field: chatId**, message**
-route.post("/chat/addChatMessage",
+route.get("/chat/getChat",
     DefaultController.roleVerify(["Customer", "Sale"]),
-    AccountController.AddChatMessage
+    AccountController.GetChat
 )
 // require: accessToken
 // role: ["Customer", "Sale"]
-// field: chatId**, index**, length**
-route.post("/chat/getChat",
+// field: chatId**, message**
+route.post("/chat/addMessage",
     DefaultController.roleVerify(["Customer", "Sale"]),
-    AccountController.GetChat
+    AccountController.AddMessage
+)
+// require: accessToken
+// role: ["Customer", "Sale"]
+// field: chatId**, skip, get
+route.post("/chat/getMessages",
+    DefaultController.roleVerify(["Customer", "Sale"]),
+    AccountController.GetMessages
 )

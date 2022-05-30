@@ -1,4 +1,6 @@
+import { Console } from 'console';
 import { Schema, model, Types } from 'mongoose';
+import { Account } from './account';
 
 export interface IChat {
     _id: Types.ObjectId,
@@ -24,5 +26,14 @@ export const chatSchema = new Schema<IChat>({
     }]
 }, { timestamps: true })
 
+
+chatSchema.post('findByIdAndDelete', function(doc, next) {
+    console.log("Hello")
+    Account.updateMany(
+        { $or: [{ _id: doc.customer }, { _id: doc.saler }]}, 
+        { $pull: { chats: doc._id } }, 
+        next);
+    next();
+  }); 
 
 export const Chat = model<IChat>('Chat', chatSchema)
