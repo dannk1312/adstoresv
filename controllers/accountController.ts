@@ -40,6 +40,7 @@ export const AccountCreateByPhone = async (req: Request, res: Response, next: Ne
     const account = new Account({ phone, role: 'Customer' });
 
     account.save(async (err, doc) => {
+        console.log(err);
         if (err)
             return res.status(500).send({ msg: "We've got some internal problems, please try again later." })
         return res.send({ msg: 'Create Success' })

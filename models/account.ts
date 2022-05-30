@@ -1,4 +1,5 @@
 import { argon2d } from 'argon2';
+import { debug } from 'console';
 import { Schema, model, Types } from 'mongoose';
 import { config } from '../services/config';
 import { billSchema, IBill } from './bill';
@@ -59,6 +60,7 @@ export const accountSchema = new Schema<IAccount>({
         },
         validate: {
             validator: function (v: string) {
+                console.log(config.phoneRegEx.test(v));
                 return config.phoneRegEx.test(v)
             },
             message: 'Phone format is not correct.'

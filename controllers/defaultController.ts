@@ -115,7 +115,7 @@ export const emailCheck = async (req: Request, res: Response, next: NextFunction
 export const phoneCheck = async (req: Request, res: Response, next: NextFunction) => {
     const phone: string = req.body.phone
     if(phone) {
-        if(!config.phoneRegEx.test(phone))
+        if(!config.phoneRegEx.test(phone)) 
             return res.status(400).send({msg: 'Phone format is not correct'})
         if(await Account.exists({phone}))
             return res.status(400).send({msg: 'Phone has already been used'})

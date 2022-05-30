@@ -22,7 +22,15 @@ route.post("/default/createByPhone",
     AccountController.AccountCreateByPhone
 )
 // Field: phone**
-route.post("/default/phoneOTP", DefaultController.phoneOTPRequest)
+route.post("/default/phoneCheck",
+    DefaultController.phoneCheck,
+    (req, res) => {res.send({msg: "ok" })}
+)
+// Field: phone**
+route.post("/default/phoneOTP", 
+        DefaultController.phoneCheck, 
+        DefaultController.phoneOTPRequest
+)
 
 // Field: (email_or_phone**, password**) | (email_or_phone**, code**) | googleToken**
 route.post("/default/login", AccountController.AccountSignin)
