@@ -80,7 +80,7 @@ export const emailOTPRequest = async (req: Request, res: Response, next: NextFun
             res.status(500).send({ msg: "We've got some problems with confirm email, please try again later." })
         }
     } catch (err: any) {
-        res.status(400).send('This perform need more field or have some problem. ' + err.message);
+        res.status(400).send('This perform need more field or have some problem. ');
     }
 }
 

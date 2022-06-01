@@ -68,25 +68,48 @@ export const AccountVerifyEmail = async (req: Request, res: Response, next: Next
 // SIGN IN
 export const AccountSignin = async (req: Request, res: Response, next: NextFunction) => {
     const { email_or_phone, password, googleToken, code } = req.body
+    console.log(req.body)
+    if(!email_or_phone)
+        return res.status(400).send({ msg: 'Some field maybe wrong' })
     if (password) {
-        if(!email_or_phone)
-            return res.status(400).send({ msg: 'Some field maybe wrong' })
         const account = await Account.findOne({ $or: [{ email: email_or_phone }, { phone: email_or_phone }] })
         if (account && await argon2.verify(account.password, password)) {
             const token = jwt.sign({ id: account._id }, process.env.ACCESS_TOKEN_SECRET!)
-            res.cookie('accessToken', token, { signed: true }).send({ msg: 'Login Success' })
-        } else res.status(400).send({ msg: 'Some field maybe wrong' })
+            res.cookie('accessToken', token, { signed: true })
+            req.body.account = account
+            return next()
+        } else 
+            return res.status(400).send({ msg: 'Some field maybe wrong' })
     } else if (code) {
         if (codeCache.get(email_or_phone) == code) {
             const account = await Account.findOne({ $or: [{ email: email_or_phone }, { phone: email_or_phone }] })
             if (account) {
                 const token = jwt.sign({ id: account._id }, process.env.ACCESS_TOKEN_SECRET!)
-                res.cookie('accessToken', token, { signed: true }).send({ msg: 'Login Success' })
-            } else res.status(400).send({ msg: 'Some field maybe wrong' })
-        } else res.status(400).send({ msg: 'OTP wrong' })
+                res.cookie('accessToken', token, { signed: true })
+                req.body.account = account
+                return next()
+            } else 
+                return res.status(400).send({ msg: 'Some field maybe wrong' })
+        } else 
+            return res.status(400).send({ msg: 'OTP wrong' })
     } else {
         // Google Token
     }
+}
+
+// GET INFO
+export const AccountInfo = async (req: Request, res: Response, next: NextFunction) => {
+    const acc: IAccount = req.body.account
+    const info: object = {
+        name: acc.name ?? "",
+        email: acc.email,
+        phone: acc.phone ?? "",
+        birth: acc.birth ?? "",
+        gender: acc.gender ?? "",
+        address: acc.address,
+        role: acc.role,
+    }
+    res.send({msg: "Success", info: info})
 }
 
 // UPDATE

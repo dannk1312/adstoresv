@@ -1,18 +1,21 @@
 import express, { NextFunction, Request, Response } from 'express';
 import * as AccountController from '../controllers/accountController';
 import * as DefaultController from '../controllers/defaultController';
+import * as CategoryCreate from '../controllers/categoryController';
 
 export const route = express.Router();
 route.get("/", (req: Request, res: Response) => {
     res.send(`ADStore Server`);
 })
 
+//#region DEFAULT ACCOUNT
 // Field: email**, password**, code**, name, birth, gender
 route.post("/default/createByMail",
     DefaultController.emailCheck,
     DefaultController.emailOTPCheck,
     AccountController.AccountCreateByEmail
 )
+
 // Field: email**
 route.post("/default/emailOTP", DefaultController.emailOTPRequest)
 // Field: phone**, code**
@@ -33,7 +36,7 @@ route.post("/default/phoneOTP",
 )
 
 // Field: (email_or_phone**, password**) | (email_or_phone**, code**) | googleToken**
-route.post("/default/login", AccountController.AccountSignin)
+route.post("/default/login", AccountController.AccountSignin, AccountController.AccountInfo)
 
 // require: accessToken
 // role: ["Customer", "Sale", "Admin"]
@@ -41,6 +44,13 @@ route.post("/default/login", AccountController.AccountSignin)
 route.post("/default/updateInfo",
     DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
     AccountController.AccountUpdateInfo
+)
+
+// require: accessToken
+// role: ["Customer", "Sale", "Admin"]
+route.get("/default/info",
+    DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
+    AccountController.AccountInfo
 )
 // require: accessToken
 // role: ["Customer", "Sale", "Admin"]
@@ -57,6 +67,9 @@ route.post("/default/updatePassword",
     DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
     AccountController.AccountUpdatePassword
 )
+//#endregion
+
+//#region CHAT
 // require: accessToken
 // role: ["Customer"]
 // field: message**
@@ -84,3 +97,37 @@ route.post("/chat/getMessages",
     DefaultController.roleVerify(["Customer", "Sale"]),
     AccountController.GetMessages
 )
+//#endregion
+
+//#region Category
+// require: accessToken
+// role: ["Admin"]
+// field: name**, image**, specsModel**
+route.post("/category/create", 
+    DefaultController.roleVerify(["Admin"]), 
+    CategoryCreate.CategoryCreate
+)
+
+// require: accessToken
+// role: ["Admin"]
+// field: name**, image**, specsModel**
+route.post("/category/update", 
+    DefaultController.roleVerify(["Admin"]), 
+    CategoryCreate.CategoryUpdate
+)
+
+// require: accessToken
+// field: name**
+route.post("/category/read", 
+    CategoryCreate.CategoryRead
+)
+
+// require: accessToken
+// role: ["Admin"]
+// field: name**
+route.post("/category/delete", 
+    DefaultController.roleVerify(["Admin"]), 
+    CategoryCreate.CategoryDelete
+)
+
+//#endregion

@@ -17,5 +17,5 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 app.use(route)
 
 app.listen(port, () => {
-  console.log(`[log] Server is running at http://localhost:${port}`);
+  console.log(`[log] Server is running at http://localhost:${port}`)
 });
