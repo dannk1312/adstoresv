@@ -2,12 +2,11 @@
 import { Document, Types } from "mongoose";
 import jwt from "jsonwebtoken";
 import { Account, IAccount } from '../models/account';
-import { SendSMS } from '../services/sms';
+import { SendSMS } from '../services/sender';
 import { codeCache } from '../services/cache';
 import { config } from '../services/config';
 import express, { NextFunction, Request, Response } from 'express';
-import { SendMail } from "../services/email";
-import { Console } from "console";
+import * as sender from "../services/sender";
 
 const randomCode = (): string => {
     var numbers = '0123456789'
@@ -41,6 +40,8 @@ export const phoneOTPRequest = async (req: Request, res: Response, next: NextFun
     try {
         const { phone } = req.body
         const code: string = randomCode();
+        if(!config.phoneRegEx.test(phone))
+            return res.status(400).send({ msg: `Phone format not correct` })
         if (await SendSMS(`Confirm your phone number, code: ${code}`, phone)) {
             console.log('otp', phone, code)
             codeCache.set(phone, code, config.waitVerifyTimeout)
@@ -72,7 +73,9 @@ export const emailOTPRequest = async (req: Request, res: Response, next: NextFun
     try {
         const { email } = req.body
         const code: string = randomCode();
-        if (await SendMail(email, 'Email Verify', `Confirm your email, code: ${code}`)) {
+        if(!config.emailRegEx.test(email))
+            return res.status(400).send({ msg: `Email format not correct` })
+        if (await sender.SendMail(email, 'Email Verify', `Confirm your email, code: ${code}`)) {
             console.log('otp', email, code)
             codeCache.set(email, code, config.waitVerifyTimeout)
             res.send({ msg: `Confirm email code was sent, You have ${config.waitVerifyTimeout}s to confirm it.` })
@@ -92,6 +95,21 @@ export const emailOTPCheck = async (req: Request, res: Response, next: NextFunct
         } else {
             res.status(400).send({ msg: "Timeout" })
         }
+    } catch (err) {
+        console.log(err)
+        res.status(400).send('This perform need more field or have some problem.');
+    }
+}
+
+export const optRequest = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { email_or_phone } = req.body
+        if (config.emailRegEx.test(email_or_phone)) {
+            return emailOTPRequest(req, res, next)
+        } else if (config.phoneRegEx.test(email_or_phone)) {
+            return phoneOTPCheck(req, res, next)
+        } 
+        return res.status(400).send({ msg: `Email or Phone format not correct` })
     } catch (err) {
         console.log(err)
         res.status(400).send('This perform need more field or have some problem.');
@@ -123,5 +141,6 @@ export const phoneCheck = async (req: Request, res: Response, next: NextFunction
         res.status(400).send({msg: 'Not enough information for this perform'})
     }
 }
+
 
 

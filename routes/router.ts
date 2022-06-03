@@ -1,5 +1,6 @@
 import express, { NextFunction, Request, Response } from 'express';
 import * as AccountController from '../controllers/accountController';
+import * as ChatController from '../controllers/chatController';
 import * as DefaultController from '../controllers/defaultController';
 import * as CategoryCreate from '../controllers/categoryController';
 
@@ -11,8 +12,6 @@ route.get("/", (req: Request, res: Response) => {
 //#region DEFAULT ACCOUNT
 // Field: email**, password**, code**, name, birth, gender
 route.post("/default/createByMail",
-    DefaultController.emailCheck,
-    DefaultController.emailOTPCheck,
     AccountController.AccountCreateByEmail
 )
 
@@ -75,27 +74,27 @@ route.post("/default/updatePassword",
 // field: message**
 route.post("/chat/newChat",
     DefaultController.roleVerify(["Customer"]),
-    AccountController.NewChat
+    ChatController.NewChat
 )
 // require: accessToken
 // role: ["Customer", "Sale"]
 route.get("/chat/getChat",
     DefaultController.roleVerify(["Customer", "Sale"]),
-    AccountController.GetChat
+    ChatController.GetChat
 )
 // require: accessToken
 // role: ["Customer", "Sale"]
 // field: chatId**, message**
 route.post("/chat/addMessage",
     DefaultController.roleVerify(["Customer", "Sale"]),
-    AccountController.AddMessage
+    ChatController.AddMessage
 )
 // require: accessToken
 // role: ["Customer", "Sale"]
 // field: chatId**, skip, get
 route.post("/chat/getMessages",
     DefaultController.roleVerify(["Customer", "Sale"]),
-    AccountController.GetMessages
+    ChatController.GetMessages
 )
 //#endregion
 

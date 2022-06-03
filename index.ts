@@ -4,9 +4,13 @@ import { dbconnect } from './services/database';
 import { route } from './routes/router';
 import cors from "cors";
 import cookieParser from 'cookie-parser';
+import * as sender from './services/sender';
+
 
 dotenv.config();
+sender.Setup();
 dbconnect();
+
 const port = process.env.PORT || 5000
 
 const app: Express = express()
