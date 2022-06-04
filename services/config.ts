@@ -8,8 +8,10 @@ export const config = {
     err400: "This perform need more field or some field are not correct.",
     errPassFormat: "Password format not correct.",
     errPermission: "Dont have Permission to Access.",
+    errExists: "Data need to query not exists. ",
     errEmailFormat: "Email format not correct.",
     errPhoneFormat: "Phone format not correct.",
     errOutOfSaler: "We not have any saler yet.",
     success: "Dậy đi ông cháu ơi.",
+    failure: "Chưa được ông cháu ơi.",
 }

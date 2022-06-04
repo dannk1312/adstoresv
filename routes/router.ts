@@ -101,7 +101,7 @@ route.post("/chat/getMessages",
 //#region Category
 // require: accessToken
 // role: ["Admin"]
-// field: name**, image**, specsModel**
+// field: name**, image_base64**, specsModel**
 route.post("/category/create", 
     DefaultController.roleVerify(["Admin"]), 
     CategoryCreate.CategoryCreate
@@ -109,7 +109,7 @@ route.post("/category/create",
 
 // require: accessToken
 // role: ["Admin"]
-// field: name**, image**, specsModel**
+// field: _id, name, image_base64, specsModel
 route.post("/category/update", 
     DefaultController.roleVerify(["Admin"]), 
     CategoryCreate.CategoryUpdate
@@ -122,7 +122,6 @@ route.post("/category/read",
 )
 
 // require: accessToken
-// field: name**
 route.get("/category/list", 
     CategoryCreate.CategoryList
 )
@@ -133,6 +132,12 @@ route.get("/category/list",
 route.post("/category/delete", 
     DefaultController.roleVerify(["Admin"]), 
     CategoryCreate.CategoryDelete
+)
+
+// require: accessToken
+// field: name**, specs (specs: {name: value})
+route.post("/category/query", 
+    CategoryCreate.CategoryQuery
 )
 
 //#endregion

@@ -1,5 +1,6 @@
 import { Schema, model, Types } from 'mongoose';
 import { type } from 'os';
+import { Category } from './category';
 
 export interface IProduct {
     _id: Types.ObjectId,
@@ -15,10 +16,7 @@ export interface IProduct {
 
     // Information
     category: Types.ObjectId,
-    specs: [{
-        name: string, 
-        value: string
-    }],
+    specs_link: [{}],
     price: number,
     sale: number,
 
@@ -32,7 +30,6 @@ export interface IProduct {
     }]
 }
 
-
 export const productSchema = new Schema<IProduct>({
     // Information
     name: {type: String, required: [true, 'Product name cannot be empty'], trim: true},
@@ -45,10 +42,7 @@ export const productSchema = new Schema<IProduct>({
     }],
 
     category: {type: Schema.Types.ObjectId, ref: 'Category'},
-    specs: [{
-        name: {type: String, required: true},
-        value: {type: String, required: true}
-    }],
+    specs_link: [{}],
     price: {type: Number, required: [true, 'Product price cannot be empty']},
     sale: {
         type: Number, 
@@ -65,5 +59,23 @@ export const productSchema = new Schema<IProduct>({
     }]
 }, { timestamps: true })
 
+productSchema.methods.specs = async function () {
+    var category = await Category.findById(this.category)
+    if(!category)
+        throw Error("Cannot get Category")
+    
+    var specs: any = []
+    category.specsModel.forEach(e => {
+        const specs_id = e._id.toString()
+        if(this.specs_link.hasOwnProperty(specs_id)) {
+            for (let i = 0; i < e.values.length; i++) {
+                if(e.values[i]._id == this.specs_link[specs_id]) {
+                    specs.push({name: e.name, value:  e.values[i].value})
+                }
+            }
+        }
+    });
+    return specs
+}
 
 export const Product = model<IProduct>('Product', productSchema)
