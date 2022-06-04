@@ -2,7 +2,7 @@ POST http://localhost:5000/default/otp HTTP/1.1
 content-type: application/json
 
 {
-    "email_or_phone": "sandais2903@gmail.com"
+    "email_or_phone": "dannk1312@gmail.com"
 }
 
 ####
@@ -10,9 +10,9 @@ POST http://localhost:5000/default/signUp HTTP/1.1
 content-type: application/json
 
 {
-    "email_or_phone": "sandais2903@gmail.com",
+    "email_or_phone": "dannk1312@gmail.com",
     "password": "nkD11312",
-    "code": "085600"
+    "code": "691319"
 }
 
 ####
@@ -83,3 +83,6 @@ content-type: application/json
 {
     "name": "test"
 }
+
+####
+GET http://localhost:5000/category/list HTTP/1.1

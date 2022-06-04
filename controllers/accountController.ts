@@ -111,7 +111,8 @@ export const AccountUpdateInfo = async (req: Request, res: Response, next: NextF
 
 export const AccountUpdatePhone = async (req: Request, res: Response, next: NextFunction) => {
     const { account, phone } = req.body
-    if (phone && config.phoneRegEx.test(phone))
+    // @ts-ignore
+    if (phone && config.phoneRegEx.test(phone) && !(await Account.phoneExists(phone)))
         account.updateOne({ phone }, (_err: Error) => {
             if (_err)
                 return res.status(500).send({ msg: config.err500 })
@@ -121,10 +122,10 @@ export const AccountUpdatePhone = async (req: Request, res: Response, next: Next
 }
 
 export const AccountUpdatePassword = async (req: Request, res: Response, next: NextFunction) => {
-    var { old_password, new_password, account } = req.body
-    if (!!old_password && !! new_password && await argon2.verify(account.password, old_password)) {
-        new_password = await argon2.hash(new_password)
-        account.updateOne({ password: new_password }, (_err: Error) => {
+    var { old_password, password, account } = req.body
+    if (!!old_password && !! password && config.passwordRegEx.test(password) && await argon2.verify(account.password, old_password)) {
+        password = await argon2.hash(password)
+        account.updateOne({ password }, (_err: Error) => {
             if (_err)
                 return res.status(500).send({ msg: config.err500 })
             return res.send({ msg: config.success })
@@ -133,3 +134,5 @@ export const AccountUpdatePassword = async (req: Request, res: Response, next: N
         res.status(400).send({ msg: config.err400 })
     }
 }
+
+// FEAUTURES

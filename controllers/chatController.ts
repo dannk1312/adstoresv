@@ -26,7 +26,7 @@ export const NewChat = async (req: Request, res: Response, next: NextFunction) =
         // Get list of saler
         const salers = await Account.find({ role: 'Sale' })
         if (salers.length == 0)
-            return res.status(400).send("We don't have any saler yet")
+            return res.status(400).send({msg: config.errOutOfSaler})
         const minChatSaler = salers.reduce((prev, current) => (prev.chats.length > current.chats.length) ? prev : current)
 
         const chat = new Chat({
@@ -39,22 +39,22 @@ export const NewChat = async (req: Request, res: Response, next: NextFunction) =
         })
 
         chat.save((err, doc) => {
-            if (err) return res.status(500).send("We've got some internal problems, pleacse try again later.")
+            if (err) return res.status(500).send({msg: config.err500})
             account.chats.push(doc._id)
             account.save()
             minChatSaler.chats.push(doc._id)
             minChatSaler.save()
-            return res.send({ msg: "Create success" })
+            return res.send({ msg: config.success })
         })
     } catch (err) {
         console.log(err)
-        return res.status(400).send("This perform need more field or have some problem.")
+        return res.status(400).send({msg: config.err400})
     }
 }
 
-export const GetChat = async (req: Request, res: Response, next: NextFunction) => {
+export const GetChats = async (req: Request, res: Response, next: NextFunction) => {
     const account: Document<unknown, any, IAccount> & IAccount & { _id: Types.ObjectId; } = req.body.account;
-    return res.send({ msg: "Get success", chats: account.chats })
+    return res.send({ msg: config.success, chats: account.chats })
 }
 
 export const AddMessage = async (req: Request, res: Response, next: NextFunction) => {
@@ -63,23 +63,23 @@ export const AddMessage = async (req: Request, res: Response, next: NextFunction
         const {chatId, message} = req.body;
         Chat.findById(chatId, (err: Error, doc: Document<unknown, any, IChat> & IChat & { _id: Types.ObjectId; }) => {
             if (err)
-                return res.status(500).send({msg: "We've got some internal problems, please try again later."})
+                return res.status(500).send({msg: config.err500})
             if(!doc)
-                return res.status(400).send({msg: "We've got some internal problems, please try again later."})
+                return res.status(400).send({msg: config.err400})
             if (!doc.customer.equals(account._id) && !doc.saler.equals(account._id))
-                return res.status(400).send({ msg: "You don't have permission on this chatbox" })
+                return res.status(400).send({ msg: config.errPermission })
             const isCustomer: boolean = doc.customer.equals(account._id);
             //@ts-ignore
             doc.messages.push({ isCustomer: isCustomer, message: message })
             doc.save((_err) => {
                 if (_err)
-                    return res.status(500).send({msg: "We've got some internal problems, please try again later."})
-                return res.send({ msg: "Send success" })
+                    return res.status(500).send({msg: config.err500})
+                return res.send({ msg: config.success })
             })
         })
     } catch (err) {
         console.log(err)
-        return res.status(400).send("This perform need more field or have some problem.")
+        return res.status(400).send({msg: config.err400})
     }
 }
 
@@ -91,15 +91,15 @@ export const GetMessages = async (req: Request, res: Response, next: NextFunctio
         const get: number = req.body.get??1;
         Chat.findById(chatId, { accounts: 1, _id : 1, messages: { createAt: 1, message: 1, isCustomer: 1} }).slice("messages", [skip, get]).populate(['customer', 'saler']).exec((err, doc) => {
             if (err)
-                return res.status(500).send({msg: "We've got some internal problems, please try again later."})
+                return res.status(500).send({msg: config.err500})
             if (!doc || !doc.customer.equals(account._id) && !doc.saler.equals(account._id))
-                return res.status(400).send({ msg: "You don't have permission on this chatbox" })
+                return res.status(400).send({ msg: config.errPermission})
             
             //@ts-ignore
-            res.send({msg: "Get Success", doc: {chatId: doc._id, customer: doc.customer.name, saler: doc.saler.name, messages: doc.messages}})
+            res.send({msg: config.success, doc: {chatId: doc._id, customer: doc.customer.name, saler: doc.saler.name, messages: doc.messages}})
         })
     } catch (err) {
         console.log(err)
-        return res.status(400).send("This perform need more field or have some problem.")
+        return res.status(400).send({msg: config.err400 })
     }
 }

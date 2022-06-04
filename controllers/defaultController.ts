@@ -39,7 +39,7 @@ export const roleVerify = (roles: string[]) => {
             } else throw new Error(`${acc.email + " " + acc.role}`)
         } catch (err) {
             console.log("Token lost / user role not fixed")
-            return res.status(400).send({ msg: `Need permission in ${roles.toString()} to perform this action` })
+            return res.status(400).send({ msg: config.errPermission })
         }
     }
 }

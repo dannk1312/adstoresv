@@ -25,14 +25,22 @@ route.post("/default/phoneOTP", DefaultController.phoneOTPRequest)
 // Field: email_or_phone**
 route.post("/default/otp", DefaultController.OTPRequest)
 
-// // Field: phone**
-// route.post("/default/phoneCheck",
-//     DefaultController.phoneCheck,
-//     (req, res) => {res.send({msg: "ok" })}
-// )
-
 // Field: (email_or_phone**, password**) | (email_or_phone**, code**) | googleToken**
 route.post("/default/login", AccountController.AccountSignin, AccountController.AccountInfo)
+
+// require: accessToken
+// role: ["Customer", "Sale", "Admin"]
+route.get("/default/info",
+    DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
+    AccountController.AccountInfo
+)
+
+// require: accessToken
+// role: ["Customer", "Sale", "Admin"]
+route.get("/default/surface",
+    DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
+    AccountController.AccountSurface
+)
 
 // require: accessToken
 // role: ["Customer", "Sale", "Admin"]
@@ -42,15 +50,10 @@ route.post("/default/updateInfo",
     AccountController.AccountUpdateInfo
 )
 
+
 // require: accessToken
 // role: ["Customer", "Sale", "Admin"]
-route.get("/default/info",
-    DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
-    AccountController.AccountInfo
-)
-// require: accessToken
-// role: ["Customer", "Sale", "Admin"]
-// field: newPhone**, code**
+// field: phone**, code**
 route.post("/default/updatePhone",
     DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
     DefaultController.phoneOTPCheck,
@@ -58,7 +61,7 @@ route.post("/default/updatePhone",
 )
 // require: accessToken
 // role: ["Customer", "Sale", "Admin"]
-// field: password**, newPassword**
+// field: old_password**, password**
 route.post("/default/updatePassword",
     DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
     AccountController.AccountUpdatePassword
@@ -77,7 +80,7 @@ route.post("/chat/newChat",
 // role: ["Customer", "Sale"]
 route.get("/chat/getChat",
     DefaultController.roleVerify(["Customer", "Sale"]),
-    ChatController.GetChat
+    ChatController.GetChats
 )
 // require: accessToken
 // role: ["Customer", "Sale"]
@@ -116,6 +119,12 @@ route.post("/category/update",
 // field: name**
 route.post("/category/read", 
     CategoryCreate.CategoryRead
+)
+
+// require: accessToken
+// field: name**
+route.get("/category/list", 
+    CategoryCreate.CategoryList
 )
 
 // require: accessToken

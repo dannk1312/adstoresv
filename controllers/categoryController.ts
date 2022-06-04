@@ -8,22 +8,22 @@ import { Category } from "../models/category";
 export const CategoryCreate = async (req: Request, res: Response, next: NextFunction) => {
     const { name, image_base64, specsModel } = req.body
     if (!name || !image_base64 || !specsModel)
-        return res.status(400).send({ msg: "This perform need more field" })
+        return res.status(400).send({ msg: config.err400 })
     const category = new Category({
         name: name,
         image_url: name + ".jpg",
         specsModel: specsModel
     })
     uploadFromBuffer("category", Buffer.from(image_base64, "base64"), (img_err, img_info) => {
-        if (img_err) return res.status(400).send({ msg: "Cannot save image, try again later" })
+        if (img_err) return res.status(500).send({ msg: config.err500 })
         category.image_id = img_info?.public_id!
         category.image_url = img_info?.url!
         category.save((save_err) => {
             if (save_err) {
                 destroy(img_info?.public_id!)
-                return res.status(400).send({ msg: "Cannot save, maybe this name of category already exists." })
+                return res.status(400).send({ msg: config.err400 })
             }
-            res.send({ msg: "Success", category: category })
+            res.send({ msg: config.success, category: category })
         })
     })
 }
@@ -35,20 +35,21 @@ export const CategoryUpdate = async (req: Request, res: Response, next: NextFunc
 export const CategoryRead = async (req: Request, res: Response, next: NextFunction) => { 
     const { name } = req.body;
     if(!name)
-        return res.status(400).send({msg: "This perform need more field."})
+        return res.status(400).send({msg: config.err400})
     
     Category.findOne({name: name}, (err: any, doc: any) => {
         if(err)
-            return res.status(400).send({msg: `Cannot find Category with name {name}`})
-        return res.send({msg: "Success", info: doc})
+            return res.status(400).send({msg: config.err400})
+        return res.send({msg: config.success, info: doc})
     })
 }
 
 export const CategoryList = async (req: Request, res: Response, next: NextFunction) => { 
-    Category.find((err, docs) => {
-        if(err)
-            return res.status(500).send({ msg: "We've got some problems with confirm email, please try again later." })
-    })
+    // @ts-ignore
+    var data = await Category.surfaces();
+    if(data)
+        return res.send({msg: config.success, data})
+    return res.status(400).send({msg: config.err400 })
 }
 
 export const CategoryDelete = async (req: Request, res: Response, next: NextFunction) => { 

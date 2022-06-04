@@ -36,5 +36,25 @@ export const categorySchema = new Schema<ICategory>({
     }]
 }, { timestamps: true })
 
+categorySchema
+.virtual('surface')
+.get(function () {
+  return {
+      name: this.name,
+      image_url: this.image_url,
+      products_length: this.products.length,
+  };
+});
+
+categorySchema.statics.surfaces = async function(email: string): Promise<any> {
+    var docs = await Category.find();
+    var result: any = []
+    docs.forEach(element => {
+        // @ts-ignore
+        result.push(element.surface)
+    });
+    return result
+}
+
 
 export const Category = model<ICategory>('Category', categorySchema)

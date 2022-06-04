@@ -7,7 +7,9 @@ export const config = {
     err500: "We've got some problems, please try again later.",
     err400: "This perform need more field or some field are not correct.",
     errPassFormat: "Password format not correct.",
+    errPermission: "Dont have Permission to Access.",
     errEmailFormat: "Email format not correct.",
     errPhoneFormat: "Phone format not correct.",
+    errOutOfSaler: "We not have any saler yet.",
     success: "Dậy đi ông cháu ơi.",
 }
