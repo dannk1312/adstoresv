@@ -19,6 +19,9 @@ route.post("/default/signUp",
 // Field: email**
 route.post("/default/emailOTP", DefaultController.emailOTPRequest)
 
+// Field: phone**
+route.post("/default/phoneOTP", DefaultController.phoneOTPRequest)
+
 // Field: email_or_phone**
 route.post("/default/otp", DefaultController.OTPRequest)
 
@@ -26,11 +29,6 @@ route.post("/default/otp", DefaultController.OTPRequest)
 // route.post("/default/phoneCheck",
 //     DefaultController.phoneCheck,
 //     (req, res) => {res.send({msg: "ok" })}
-// )
-// // Field: phone**
-// route.post("/default/phoneOTP", 
-//         DefaultController.phoneCheck, 
-//         DefaultController.phoneOTPRequest
 // )
 
 // Field: (email_or_phone**, password**) | (email_or_phone**, code**) | googleToken**
