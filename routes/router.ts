@@ -10,29 +10,28 @@ route.get("/", (req: Request, res: Response) => {
 })
 
 //#region DEFAULT ACCOUNT
-// Field: email**, password**, code**, name, birth, gender
-route.post("/default/createByMail",
-    AccountController.AccountCreateByEmail
+// Field: email_or_phone**, password**, code**, name, birth, gender
+route.post("/default/signUp",
+    DefaultController.OTPCheck,
+    AccountController.AccountSignUp
 )
 
 // Field: email**
 route.post("/default/emailOTP", DefaultController.emailOTPRequest)
-// Field: phone**, code**
-route.post("/default/createByPhone",
-    DefaultController.phoneCheck,
-    DefaultController.phoneOTPCheck,
-    AccountController.AccountCreateByPhone
-)
-// Field: phone**
-route.post("/default/phoneCheck",
-    DefaultController.phoneCheck,
-    (req, res) => {res.send({msg: "ok" })}
-)
-// Field: phone**
-route.post("/default/phoneOTP", 
-        DefaultController.phoneCheck, 
-        DefaultController.phoneOTPRequest
-)
+
+// Field: email_or_phone**
+route.post("/default/otp", DefaultController.OTPRequest)
+
+// // Field: phone**
+// route.post("/default/phoneCheck",
+//     DefaultController.phoneCheck,
+//     (req, res) => {res.send({msg: "ok" })}
+// )
+// // Field: phone**
+// route.post("/default/phoneOTP", 
+//         DefaultController.phoneCheck, 
+//         DefaultController.phoneOTPRequest
+// )
 
 // Field: (email_or_phone**, password**) | (email_or_phone**, code**) | googleToken**
 route.post("/default/login", AccountController.AccountSignin, AccountController.AccountInfo)

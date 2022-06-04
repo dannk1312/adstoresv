@@ -1,60 +1,55 @@
 import { Schema, model, Types } from 'mongoose';
+import { AuthTypesSolution } from 'twilio/lib/rest/api/v2010/account/sip/domain/authTypes';
 
 export interface IDiscount {
-    _id: String,
+    _id: Types.ObjectId,
+    code: string,
+    // Limit of discounts
     dateStart: Date,
-    dateEnd: Date,
-    minPrice: Number,
-    maxPrice: Number,
-    discountPercent: Number,
-    discountPrice: Number,
-    discountShip: Number,
-    quantity: Number
+    dateEnd: Date, // undefined mean dont have quantity limit
+    quantity: Number, // undefined mean dont have quantity limit
+
+    // Price range of discounts
+    minPrice: Number, // undefined mean dont have minPrice
+    maxPrice: Number, // undefined mean dont have maxPrice
+
+    // Type of discount
+    is_percent: boolean, // in percent of price or in price
+    is_ship: boolean, // in ship price or in bill price
+    is_oid: boolean, // is one in day
+    is_oic: boolean, // is one in customer
+    value: Number, 
+
+    // depend on
+    products: [Types.ObjectId], // empty mean all can use 
+    categories: [Types.ObjectId], // empty mean all can use 
+    owners: [Types.ObjectId] // empty mean all can use 
 }
 
 
 export const discountSchema = new Schema<IDiscount>({
-    _id: {
-        type: String,
-        required: true,
-        unique: true,
-        trim: true
-    },
-    dateStart: { type: Date, required: [true, 'Discount date start cannot be empty'] },
-    dateEnd: { type: Date, required: [true, 'Discount date end cannot be empty'] },
-    minPrice: { type: Number, default: 0 },
-    maxPrice: { type: Number, required: [true, 'Discount max cannot be empty'] },
-    discountPercent: {
-        type: Number,
-        required: [
-            function () {
-                // @ts-ignore
-                return this.discountPrice === undefined && this.discountShip === undefined;
-            },
-            "Discount require discountPercent/discountPrice/discountShip"
-        ],
-    },
-    discountPrice: {
-        type: Number,
-        required: [
-            function () {
-                // @ts-ignore
-                return this.discountPercent === undefined && this.discountShip === undefined;
-            },
-            "Discount require discountPercent/discountPrice/discountShip"
-        ],
-    },
-    discountShip: {
-        type: Number,
-        required: [
-            function () {
-                // @ts-ignore
-                return this.discountPercent === undefined && this.discountPrice === undefined;
-            },
-            "Discount require discountPercent/discountPrice/discountShip"
-        ],
-    },
-    quantity: {type: Number, required: [true, 'Discount quantity cannot be empty']}
+    _id: Types.ObjectId,
+    code: {type: String, required: [true, "Discount code cannot be empty"], unique: true, trim: true, lowercase: true},
+    // Limit of discounts
+    dateStart: {type: Date, default: Date.now},
+    dateEnd: Date,
+    quantity: Number,
+
+    // Price range of discounts
+    minPrice: Number,
+    maxPrice: Number,
+
+    // Type of discount
+    is_percent: {type: Boolean, default: false},
+    is_ship: {type: Boolean, default: false},
+    is_oid: {type: Boolean, default: true},
+    is_oic: {type: Boolean, default: true}, 
+    value: Number, 
+
+    // depend on
+    products: [{ type: Schema.Types.ObjectId, required: true, ref: 'Product' }], 
+    categories: [{ type: Schema.Types.ObjectId, required: true, ref: 'Category' }], 
+    owners: [{ type: Schema.Types.ObjectId, required: true, ref: 'Account' }]
 }, { timestamps: true })
 
 

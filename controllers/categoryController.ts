@@ -44,6 +44,13 @@ export const CategoryRead = async (req: Request, res: Response, next: NextFuncti
     })
 }
 
+export const CategoryList = async (req: Request, res: Response, next: NextFunction) => { 
+    Category.find((err, docs) => {
+        if(err)
+            return res.status(500).send({ msg: "We've got some problems with confirm email, please try again later." })
+    })
+}
+
 export const CategoryDelete = async (req: Request, res: Response, next: NextFunction) => { 
 
 }

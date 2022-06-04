@@ -20,7 +20,15 @@ const randomCode = (): string => {
 export const roleVerify = (roles: string[]) => {
     return async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const token: string = req.signedCookies['accessToken'];
+            var token: string;
+            if(req.headers.authorization &&
+                req.headers.authorization.split(" ")[0] === "Bearer") {
+                // Get from Header
+                token = req.headers.authorization.split(" ")[1]
+            } else {
+                // Try to get from signedtoken
+                token = req.signedCookies['accessToken']
+            }
             // @ts-ignore
             const id: string = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!).id;
             // @ts-ignore
@@ -30,7 +38,7 @@ export const roleVerify = (roles: string[]) => {
                 next();
             } else throw new Error(`${acc.email + " " + acc.role}`)
         } catch (err) {
-            console.log("Error with " + err)
+            console.log("Token lost / user role not fixed")
             return res.status(400).send({ msg: `Need permission in ${roles.toString()} to perform this action` })
         }
     }
@@ -101,46 +109,42 @@ export const emailOTPCheck = async (req: Request, res: Response, next: NextFunct
     }
 }
 
-export const optRequest = async (req: Request, res: Response, next: NextFunction) => {
+export const OTPRequest =async (req: Request, res: Response, next: NextFunction) => {
+    const { email_or_phone } = req.body
+    if(config.emailRegEx.test(email_or_phone)) {
+        const code: string = randomCode()
+        if (await sender.SendMail(email_or_phone, 'Email Verify', `Confirm your email, code: ${code}`)) {
+            console.log('otp', email_or_phone, code)
+            codeCache.set(email_or_phone, code, config.waitVerifyTimeout)
+            res.send({ msg: `Confirm email code was sent, You have ${config.waitVerifyTimeout}s to confirm it.` })
+        } else {
+            res.status(500).send({ msg: config.err500 })
+        }
+    } else if(config.phoneRegEx.test(email_or_phone)) {
+        const code: string = randomCode()
+        if (await sender.SendSMS(`Confirm your phone, code: ${code}`, email_or_phone)) {
+            console.log('otp', email_or_phone, code)
+            codeCache.set(email_or_phone, code, config.waitVerifyTimeout)
+            res.send({ msg: `Confirm email code was sent, You have ${config.waitVerifyTimeout}s to confirm it.` })
+        } else {
+            res.status(500).send({ msg: config.err500 })
+        }
+    } else 
+        return res.status(400).send({msg: config.err400 })
+}
+
+export const OTPCheck =async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { email_or_phone } = req.body
-        if (config.emailRegEx.test(email_or_phone)) {
-            return emailOTPRequest(req, res, next)
-        } else if (config.phoneRegEx.test(email_or_phone)) {
-            return phoneOTPCheck(req, res, next)
-        } 
-        return res.status(400).send({ msg: `Email or Phone format not correct` })
+        const { email_or_phone, code } = req.body
+        if (codeCache.get(email_or_phone) === code) {
+            console.log(`${email_or_phone} pass otp check`)
+            next()
+        } else {
+            res.status(400).send({ msg: "Timeout" })
+        }
     } catch (err) {
-        console.log(err)
-        res.status(400).send('This perform need more field or have some problem.');
+        res.status(400).send({msg: config.err400 });
     }
 }
-
-export const emailCheck = async (req: Request, res: Response, next: NextFunction) => {
-    const email: string = req.body.email
-    if(email) {
-        if(!config.emailRegEx.test(email))
-            return res.status(400).send({msg: 'Email format is not correct'})
-        if(await Account.exists({email}))
-            return res.status(400).send({msg: 'Email has already been used'})
-        next()
-    } else {
-        res.status(400).send({msg: 'Not enough information for this perform'})
-    }
-}
-
-export const phoneCheck = async (req: Request, res: Response, next: NextFunction) => {
-    const phone: string = req.body.phone
-    if(phone) {
-        if(!config.phoneRegEx.test(phone)) 
-            return res.status(400).send({msg: 'Phone format is not correct'})
-        if(await Account.exists({phone}))
-            return res.status(400).send({msg: 'Phone has already been used'})
-        next()
-    } else {
-        res.status(400).send({msg: 'Not enough information for this perform'})
-    }
-}
-
 
 

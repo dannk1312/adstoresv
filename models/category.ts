@@ -1,8 +1,9 @@
 import { Schema, model, Types } from 'mongoose';
 
 export interface ICategory {
-    _id: string,
+    _id: Types.ObjectId,
     name: string,
+    // Cloudinary
     image_id: string,
     image_url: string,
     products: [Types.ObjectId],
@@ -19,18 +20,18 @@ export interface ICategory {
 export const categorySchema = new Schema<ICategory>({
     name: {
         type: String,
-        required: true,
+        required: [true, "Category name cannot be empty"],
         unique: true,
         trim: true
     },
-    image_id: String,
-    image_url: String,
-    products: [Types.ObjectId],
+    image_id: {type: String, required: [true, "Category image cannot be empty"]},
+    image_url: {type: String, required: [true, "Category image cannot be empty"]},
+    products: [{ type: Schema.Types.ObjectId, required: true, ref: 'Product' }],
     specsModel: [{
-        name: String, 
+        name: {type: String, required: [true, "Category specsModel name cannot be empty"]}, 
         values: [{
-            value: String,
-            products: [Types.ObjectId]
+            value: {type: String, required: [true, "Category specsModel values unit cannot be empty"]},
+            products: [{ type: Schema.Types.ObjectId, required: true, ref: 'Product' }]
         }]
     }]
 }, { timestamps: true })

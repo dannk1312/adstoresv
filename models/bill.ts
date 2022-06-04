@@ -2,28 +2,35 @@ import { Schema, model, Types } from 'mongoose';
 
 export interface IBill {
     _id: Types.ObjectId,
+    // Buyer Info
     phone: String,
     address: String,
+
+    // Bill Info
     products: [{
         product: Types.ObjectId,
         quantity: number,
         price: Number,
         sale?: number
     }],
-    discountPrice: number,
     discountCode?: string,
     status: string,
     desc: string,
+
+    // Timestamps
     createdAt: Date,
     updatedAt: Date
 }
 
-
 export const billSchema = new Schema<IBill>({
+    // Buyer Info
+    phone: {type: String, required: [true, "Bill phone cannot be empty"]},
+    address: {type: String, required: [true, "Bill address cannot be empty"]},
+
+    // Bill Info
     products: [{
         product: {
-            type: Schema.Types.ObjectId,
-            required: [true, 'Product id in bill cannot be empty.'],
+            type: Schema.Types.ObjectId, required: [true, 'Product id in bill cannot be empty.'],
             ref: 'Product'
         },
         quantity: {
@@ -39,12 +46,6 @@ export const billSchema = new Schema<IBill>({
             default: 0
         }
     }],
-    discountPrice: {
-        type: Number,
-        default: 0
-    },
-    phone: {type: String, required: [true, "Bill phone cannot be empty"]},
-    address: {type: String, required: [true, "Bill address cannot be empty"]},
     discountCode: {type: String, ref: 'Discount'},
     status: {
         type: String,

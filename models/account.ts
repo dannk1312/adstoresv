@@ -4,18 +4,20 @@ import { Schema, model, Types } from 'mongoose';
 import { config } from '../services/config';
 import { billSchema, IBill } from './bill';
 
-
 export interface IAccount {
     _id: Types.ObjectId,
-    // Information
-    email?: string,
-    password: string,
+    // Login Info 
+    email?: string, // ** need exists: email || phone
     phone?: string,
-    name: string,
-    birth: Date,
-    gender: String,
+    password?: string,
+
+    // Information
+    name?: string,
+    birth?: Date,
+    gender?: boolean,
     address?: [string],
     role: string,
+
     // Features
     chats: [Types.ObjectId],
     bag: [{
@@ -27,13 +29,19 @@ export interface IAccount {
         message: string,
         createdAt: Date
     }],
-    rated: [Types.ObjectId],
+    rates: [{
+        product: Types.ObjectId,
+        star: number
+    }],
+
+    // Timestamps
     createdAt: Date,
     updatedAt: Date
 }
 
+// phone & email need to check unique in application level
 export const accountSchema = new Schema<IAccount>({
-    // Information
+    // Login Info 
     email: {
         type: String,
         required: function () {
@@ -60,38 +68,76 @@ export const accountSchema = new Schema<IAccount>({
         },
         validate: {
             validator: function (v: string) {
-                console.log(config.phoneRegEx.test(v));
                 return config.phoneRegEx.test(v)
             },
             message: 'Phone format is not correct.'
         },
         trim: true
     },
+
+    // Information
     name: String,
     birth: Date,
-    gender: { type: String, enum: { values: ['Male', 'Female'], message: "Account gender must be Male or Female" } },
+    gender: Boolean,
     address: [String],
     role: {
         type: String,
         enum: {
-            values: ['Guest', 'Customer', 'Sale', 'Admin'],
+            values: ['Customer', 'Sale', 'Admin'],
             message: 'Role {VALUE} is not supported'
         },
-        default: 'Guest'
+        default: 'Customer'
     },
+    
     // Features
-    chats: [{ type: Schema.Types.ObjectId, ref: 'Chat' }],
+    chats: [{ type: Schema.Types.ObjectId, required: true, ref: 'Chat' }],
     bag: [{
-        product: { type: Schema.Types.ObjectId, ref: 'Product' },
+        product: { type: Schema.Types.ObjectId, required: true, ref: 'Product' },
         quantity: Number
     }],
-    rated: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
-    bill: [billSchema],
+    rates: [{
+        product: { type: Schema.Types.ObjectId, required: true, ref: 'Product' },
+        star: Number
+    }],
+    bill: [{ type: Schema.Types.ObjectId, required: true, ref: 'Bill' }],
     notifications: [{
         message: { type: String, required: true, trim: true },
         createdAt: { type: Date, default: Date.now }
     }]
 }, { timestamps: true })
 
+accountSchema
+.virtual('surface')
+.get(function () {
+  return {
+      email: this.email,
+      phone: this.phone,
+      name: this.name,
+      notifications_length: this.notifications.length,
+      bag_items_length: this.bag.length
+  };
+});
+
+accountSchema
+.virtual('info')
+.get(function () {
+  return {
+      email: this.email,
+      phone: this.phone,
+      name: this.name,
+      birth: this.birth,
+      gender: this.gender,
+      address: this.address,
+      role: this.role
+  };
+});
+
+accountSchema.statics.emailExists = async function(email: string): Promise<Boolean> {
+    return !!(await Account.findOne({email}))
+}
+
+accountSchema.statics.emailExists = async function(phone: string): Promise<Boolean> {
+    return !!(await Account.findOne({phone}))
+}
 
 export const Account = model<IAccount>('Account', accountSchema)
