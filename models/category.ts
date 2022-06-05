@@ -79,7 +79,33 @@ categorySchema.statics.surfaces = async function (email: string): Promise<any> {
     return result
 }
 
-categorySchema.methods.checkNewSpecsModel = function (newSpecsModel: any): Boolean {
+categorySchema.methods.checkProductSpecs = function(specs: any): boolean {
+    for (let i = 0; i < this.specsModel.length; i++) {
+        var e = this.specsModel[i]
+        var flag = false
+        // @ts-ignore
+        for (let j = 0; j < specs.length; j++) {
+            if(specs.hasOwnProperty(e._id)) {
+                flag = true
+                // Check values
+                var flag_value = false
+                // @ts-ignore
+                for (let a = 0; a < e.values.length; a++) {
+                    var v = e.values[a]
+                    if(specs[e._id] == v._id) {
+                        flag_value = true
+                        break
+                    }
+                }
+                if(!flag_value) return false
+            }
+        }
+        if(!flag) return false
+    }
+    return true;
+}
+
+categorySchema.methods.checkNewSpecsModel = function (newSpecsModel: any): boolean {
     if(!this.specsModel || this.products.length == 0) {
         return true;
     }

@@ -15,7 +15,7 @@ export const CategoryCreate = async (req: Request, res: Response, next: NextFunc
         name: name,
         specsModel: specsModel
     })
-    uploadFromBuffer("category", Buffer.from(image_base64, "base64"), (img_err, img_info) => {
+    uploadFromBuffer("category", Buffer.from(image_base64, "base64"), (img_err: any, img_info: any) => {
         if (img_err) return res.status(500).send({ msg: config.err500 })
         category.image_id = img_info?.public_id!
         category.image_url = img_info?.url!
@@ -53,7 +53,7 @@ export const CategoryUpdate = async (req: Request, res: Response, next: NextFunc
         if (!!category.image_id)
             destroy(category.image_id)
 
-        uploadFromBuffer("category", Buffer.from(image_base64, "base64"), (img_err, img_info) => {
+        uploadFromBuffer("category", Buffer.from(image_base64, "base64"), (img_err: any, img_info: any) => {
             if (img_err) return res.status(500).send({ msg: config.err500 })
             category!.image_id = img_info?.public_id!
             category!.image_url = img_info?.url!
