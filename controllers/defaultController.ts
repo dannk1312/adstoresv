@@ -112,6 +112,8 @@ export const emailOTPCheck = async (req: Request, res: Response, next: NextFunct
 export const OTPRequest = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { email_or_phone } = req.body
+        if(!email_or_phone || codeCache.has(email_or_phone))
+            return res.status(400).send({msg: config.err400 })
         if (config.emailRegEx.test(email_or_phone)) {
             const code: string = randomCode()
             if (await sender.SendMail(email_or_phone, 'Email Verify', `Confirm your email, code: ${code}`)) {
