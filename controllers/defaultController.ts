@@ -21,7 +21,7 @@ export const roleVerify = (roles: string[]) => {
     return async (req: Request, res: Response, next: NextFunction) => {
         try {
             var token: string;
-            if(req.headers.authorization &&
+            if (req.headers.authorization &&
                 req.headers.authorization.split(" ")[0] === "Bearer") {
                 // Get from Header
                 token = req.headers.authorization.split(" ")[1]
@@ -48,7 +48,7 @@ export const phoneOTPRequest = async (req: Request, res: Response, next: NextFun
     try {
         const { phone } = req.body
         const code: string = randomCode();
-        if(!config.phoneRegEx.test(phone))
+        if (!config.phoneRegEx.test(phone))
             return res.status(400).send({ msg: `Phone format not correct` })
         if (await SendSMS(`Confirm your phone number, code: ${code}`, phone)) {
             console.log('otp', phone, code)
@@ -81,7 +81,7 @@ export const emailOTPRequest = async (req: Request, res: Response, next: NextFun
     try {
         const { email } = req.body
         const code: string = randomCode();
-        if(!config.emailRegEx.test(email))
+        if (!config.emailRegEx.test(email))
             return res.status(400).send({ msg: `Email format not correct` })
         if (await sender.SendMail(email, 'Email Verify', `Confirm your email, code: ${code}`)) {
             console.log('otp', email, code)
@@ -109,31 +109,36 @@ export const emailOTPCheck = async (req: Request, res: Response, next: NextFunct
     }
 }
 
-export const OTPRequest =async (req: Request, res: Response, next: NextFunction) => {
-    const { email_or_phone } = req.body
-    if(config.emailRegEx.test(email_or_phone)) {
-        const code: string = randomCode()
-        if (await sender.SendMail(email_or_phone, 'Email Verify', `Confirm your email, code: ${code}`)) {
-            console.log('otp', email_or_phone, code)
-            codeCache.set(email_or_phone, code, config.waitVerifyTimeout)
-            res.send({ msg: `Confirm email code was sent, You have ${config.waitVerifyTimeout}s to confirm it.` })
-        } else {
-            res.status(500).send({ msg: config.err500 })
-        }
-    } else if(config.phoneRegEx.test(email_or_phone)) {
-        const code: string = randomCode()
-        if (await sender.SendSMS(`Confirm your phone, code: ${code}`, email_or_phone)) {
-            console.log('otp', email_or_phone, code)
-            codeCache.set(email_or_phone, code, config.waitVerifyTimeout)
-            res.send({ msg: `Confirm email code was sent, You have ${config.waitVerifyTimeout}s to confirm it.` })
-        } else {
-            res.status(500).send({ msg: config.err500 })
-        }
-    } else 
-        return res.status(400).send({msg: config.err400 })
+export const OTPRequest = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { email_or_phone } = req.body
+        if (config.emailRegEx.test(email_or_phone)) {
+            const code: string = randomCode()
+            if (await sender.SendMail(email_or_phone, 'Email Verify', `Confirm your email, code: ${code}`)) {
+                console.log('otp', email_or_phone, code)
+                codeCache.set(email_or_phone, code, config.waitVerifyTimeout)
+                res.send({ msg: `Confirm email code was sent, You have ${config.waitVerifyTimeout}s to confirm it.` })
+            } else {
+                res.status(500).send({ msg: config.err500 })
+            }
+        } else if (config.phoneRegEx.test(email_or_phone)) {
+            const code: string = randomCode()
+            if (await sender.SendSMS(`Confirm your phone, code: ${code}`, email_or_phone)) {
+                console.log('otp', email_or_phone, code)
+                codeCache.set(email_or_phone, code, config.waitVerifyTimeout)
+                res.send({ msg: `Confirm email code was sent, You have ${config.waitVerifyTimeout}s to confirm it.` })
+            } else {
+                res.status(500).send({ msg: config.err500 })
+            }
+        } else
+            return res.status(400).send({ msg: config.err400 })
+    } catch (err) {
+        console.log(err)
+        res.status(500).send({ msg: config.err500 })
+    }
 }
 
-export const OTPCheck =async (req: Request, res: Response, next: NextFunction) => {
+export const OTPCheck = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { email_or_phone, code } = req.body
         if (codeCache.get(email_or_phone) === code) {
@@ -143,7 +148,7 @@ export const OTPCheck =async (req: Request, res: Response, next: NextFunction) =
             res.status(400).send({ msg: "Timeout" })
         }
     } catch (err) {
-        res.status(400).send({msg: config.err400 });
+        res.status(400).send({ msg: config.err400 });
     }
 }
 

@@ -133,7 +133,6 @@ route.post("/category/delete",
     CategoryController.CategoryDelete
 )
 
-// require: accessToken
 // field: name**, specs (specs: {name: value})
 route.post("/category/query", 
     CategoryController.CategoryQuery
