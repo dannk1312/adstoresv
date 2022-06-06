@@ -5,10 +5,12 @@ import { route } from './routes/router';
 import cors from "cors";
 import cookieParser from 'cookie-parser';
 import * as sender from './services/sender';
+import * as image from './services/image';
 
 
 dotenv.config();
 sender.Setup();
+image.Setup();
 dbconnect();
 
 const port = process.env.PORT || 5000

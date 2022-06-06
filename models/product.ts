@@ -8,6 +8,8 @@ export interface IProduct {
     name: string,
     code: string,
     desc: string,
+    quantity: number,
+    enable: boolean,
     colors: [{
         color: string,
         image_id: string,
@@ -16,7 +18,7 @@ export interface IProduct {
 
     // Information
     category: Types.ObjectId,
-    specs_link: [{}],
+    specs_link: any, // specs_id: value_id
     price: number,
     sale: number,
 
@@ -35,6 +37,8 @@ export const productSchema = new Schema<IProduct>({
     name: {type: String, required: [true, 'Product name cannot be empty'], trim: true},
     code: {type: String, required: [true, 'Product code cannot be empty'], unique: true, trim: true},
     desc: {type: String, default: '', trim: true},
+    quantity: {type: Number, default: 0},
+    enable: {type: Boolean, default: true},
     colors: [{
         color: {type: String, required: true, trim: true},
         image_id: String,
@@ -42,7 +46,7 @@ export const productSchema = new Schema<IProduct>({
     }],
 
     category: {type: Schema.Types.ObjectId, ref: 'Category'},
-    specs_link: [{}],
+    specs_link: Schema.Types.Mixed,
     price: {type: Number, required: [true, 'Product price cannot be empty']},
     sale: {
         type: Number, 
@@ -59,7 +63,7 @@ export const productSchema = new Schema<IProduct>({
     }]
 }, { timestamps: true })
 
-productSchema.methods.specs = async function () {
+productSchema.methods.catespecs = async function (): Promise<any> {
     var category = await Category.findById(this.category)
     if(!category)
         throw Error("Cannot get Category")
@@ -75,7 +79,27 @@ productSchema.methods.specs = async function () {
             }
         }
     });
-    return specs
+    return {category: category.name, specs}
+}
+
+productSchema.methods.info = async function() {
+    var data = {
+        name: this.name ?? "",
+        code: this.code,
+        desc: this.desc ?? "",
+        category: "",
+        specs: {},
+        colors: this.colors,
+        price: this.price,
+        sale: this.sale,
+        total_rate: this.total_rate
+    }
+    const catespecs = await this.catespecs() 
+    if(!!catespecs) {
+        data.category = catespecs.category,
+        data.specs = catespecs.specs
+    }
+    return data
 }
 
 export const Product = model<IProduct>('Product', productSchema)

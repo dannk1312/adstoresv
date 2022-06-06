@@ -2,7 +2,8 @@ import express, { NextFunction, Request, Response } from 'express';
 import * as AccountController from '../controllers/accountController';
 import * as ChatController from '../controllers/chatController';
 import * as DefaultController from '../controllers/defaultController';
-import * as CategoryCreate from '../controllers/categoryController';
+import * as CategoryController from '../controllers/categoryController';
+import * as ProductController from '../controllers/productController';
 
 export const route = express.Router();
 route.get("/", (req: Request, res: Response) => {
@@ -104,7 +105,7 @@ route.post("/chat/getMessages",
 // field: name**, image_base64**, specsModel**
 route.post("/category/create", 
     DefaultController.roleVerify(["Admin"]), 
-    CategoryCreate.CategoryCreate
+    CategoryController.CategoryCreate
 )
 
 // require: accessToken
@@ -112,18 +113,16 @@ route.post("/category/create",
 // field: _id, name, image_base64, specsModel
 route.post("/category/update", 
     DefaultController.roleVerify(["Admin"]), 
-    CategoryCreate.CategoryUpdate
+    CategoryController.CategoryUpdate
 )
 
-// require: accessToken
 // field: name**
 route.post("/category/read", 
-    CategoryCreate.CategoryRead
+    CategoryController.CategoryRead
 )
 
-// require: accessToken
 route.get("/category/list", 
-    CategoryCreate.CategoryList
+    CategoryController.CategoryList
 )
 
 // require: accessToken
@@ -131,13 +130,28 @@ route.get("/category/list",
 // field: name**
 route.post("/category/delete", 
     DefaultController.roleVerify(["Admin"]), 
-    CategoryCreate.CategoryDelete
+    CategoryController.CategoryDelete
 )
 
 // require: accessToken
 // field: name**, specs (specs: {name: value})
 route.post("/category/query", 
-    CategoryCreate.CategoryQuery
+    CategoryController.CategoryQuery
 )
 
 //#endregion
+
+//#region Product
+// require: accessToken
+// role: ["Admin"]
+// field: name**, code**, desc, colors**, category_id**, specs_link**, price**, sale
+route.post("/product/create", 
+    DefaultController.roleVerify(["Admin"]), 
+    ProductController.ProductCreate
+)
+
+// field: _id
+route.post("/product/read", 
+    ProductController.ProductRead
+)
+

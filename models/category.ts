@@ -1,5 +1,6 @@
 import { Schema, model, Types } from 'mongoose';
 import { Account } from './account';
+import { IProduct } from './product';
 
 export interface ICategory {
     _id: Types.ObjectId,
@@ -79,20 +80,22 @@ categorySchema.statics.surfaces = async function (email: string): Promise<any> {
     return result
 }
 
-categorySchema.methods.checkProductSpecs = function(specs: any): boolean {
+categorySchema.methods.checkProductSpecsLink = function(this: ICategory,specs_link: any): boolean {
     for (let i = 0; i < this.specsModel.length; i++) {
         var e = this.specsModel[i]
         var flag = false
+
         // @ts-ignore
-        for (let j = 0; j < specs.length; j++) {
-            if(specs.hasOwnProperty(e._id)) {
+        for (let j = 0; j < specs_link.length; j++) {
+            var spec_id = e._id.toString()
+            if(specs_link.hasOwnProperty(spec_id)) {
                 flag = true
                 // Check values
                 var flag_value = false
                 // @ts-ignore
                 for (let a = 0; a < e.values.length; a++) {
                     var v = e.values[a]
-                    if(specs[e._id] == v._id) {
+                    if(specs_link[spec_id] == v._id) {
                         flag_value = true
                         break
                     }
@@ -105,7 +108,7 @@ categorySchema.methods.checkProductSpecs = function(specs: any): boolean {
     return true;
 }
 
-categorySchema.methods.checkNewSpecsModel = function (newSpecsModel: any): boolean {
+categorySchema.methods.checkNewSpecsModel = function (this: ICategory, newSpecsModel: any): boolean {
     if(!this.specsModel || this.products.length == 0) {
         return true;
     }
@@ -141,6 +144,24 @@ categorySchema.methods.checkNewSpecsModel = function (newSpecsModel: any): boole
     }
 
     return true
+}
+
+categorySchema.methods.addProduct = function (this: ICategory, product: IProduct) {
+    this.products.push(product._id)
+    for (let i = 0; i < this.specsModel.length; i++) {
+        var e = this.specsModel[i]
+        var spec_id = e._id.toString();
+        if(product.specs_link.hasOwnProperty(spec_id)) {
+            // @ts-ignore
+            for (let a = 0; a < e.values.length; a++) {
+                var v = e.values[a]
+                if(product.specs_link[spec_id] == v._id) {
+                    v.products.push(product._id)
+                    break
+                }
+            }
+        }
+    }
 }
 
 

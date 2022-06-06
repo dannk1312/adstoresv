@@ -1,23 +1,21 @@
 import cloudinary from "cloudinary"
-import streamifier = require('streamifier')
 
-cloudinary.v2.config({ 
-    cloud_name: 'adstore', 
-    api_key: '129941679962871', 
-    api_secret: 'a2_7fL6w25GMioKLN_L3Aj2v5Xs' 
-});
+var cloudinary_temp = cloudinary.v2
 
-export const uploadFromBuffer = async (folder: string, buffer: any, callbacks: cloudinary.UploadResponseCallback | undefined) => {
-   return new Promise(() => {
-     let cld_upload_stream = cloudinary.v2.uploader.upload_stream({folder: folder, format: "jpg"}, callbacks);
-     streamifier.createReadStream(buffer).pipe(cld_upload_stream);
-   });
-};
-
-export const destroy = async (public_id: string) => {
-    return new Promise(() => {
-        cloudinary.v2.uploader.destroy(public_id)
+export const Setup = () => {
+    cloudinary_temp.config({ 
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
+        api_key: process.env.CLOUDINARY_API_KEY, 
+        api_secret: process.env.CLOUDINARY_API_SECRET
     });
-};
- 
+}
 
+export const base64 = (image_base64: string): string => `data:image/jpeg;base64,${image_base64}`
+
+export const upload = (data: string, folder: string) => {
+    return cloudinary_temp.uploader.upload(data, {folder: folder})
+}
+
+export const destroy = (pulic_id: string) => {
+    return cloudinary_temp.uploader.destroy(pulic_id)
+}
