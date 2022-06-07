@@ -12,7 +12,10 @@ export const config = {
     errPhoneFormat: "Định dạng số điện thoại không đúng.",
     errPermission: "Không có quyền truy cập.",
     errNotExists: "Dữ liệu tìm kiếm không tồn tại. ",
+    errEmailExists: "Email đã tồn tại",
+    errPhoneExists: "Phone đã tồn tại",
     errOutOfSaler: "Lỗi, không có đủ saler.",
+    
     success: "Thành công.",
     failure: "Thất bại."
 }
