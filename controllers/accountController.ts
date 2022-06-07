@@ -11,7 +11,6 @@ import { config } from "../services/config";
 // do Account Create
 
 export const AccountSignUp = async (req: Request, res: Response, next: NextFunction) => {
-    
     try {
         var { email_or_phone, password, name, birth, gender } = req.body;
         if (!email_or_phone || !password)
@@ -42,6 +41,7 @@ export const AccountSignUp = async (req: Request, res: Response, next: NextFunct
             return res.send({ msg: config.success, data: account.surface, accessToken: token })
         } else return res.status(400).send({ msg: config.err400 })
     } catch (err) {
+        console.log(err)
         return res.status(500).send({ msg: config.err500 })
     }
 };

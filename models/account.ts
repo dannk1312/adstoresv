@@ -136,7 +136,7 @@ accountSchema.statics.emailExists = async function(email: string): Promise<Boole
     return !!(await Account.findOne({email}))
 }
 
-accountSchema.statics.emailExists = async function(phone: string): Promise<Boolean> {
+accountSchema.statics.phoneExists = async function(phone: string): Promise<Boolean> {
     return !!(await Account.findOne({phone}))
 }
 
