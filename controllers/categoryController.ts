@@ -95,7 +95,7 @@ export const CategoryRead = async (req: Request, res: Response, next: NextFuncti
 
     Category.findOne({ name: name }, (err: any, doc: any) => {
         if (err) return res.status(500).send({ msg: config.err500 })
-        if (!doc) return res.status(400).send({ msg: config.errExists })
+        if (!doc) return res.status(400).send({ msg: config.errNotExists })
         return res.send({ msg: config.success, data: doc.info })
     })
 }
@@ -115,7 +115,7 @@ export const CategoryDelete = async (req: Request, res: Response, next: NextFunc
 
     const category = await Category.findOne({ name })
     if (!category)
-        return res.status(400).send({ msg: config.errExists })
+        return res.status(400).send({ msg: config.errNotExists })
     if (category.products.length > 0) {
         return res.send({ msg: config.failure, reason: `Category relate ${category.products.length} products` })
     }

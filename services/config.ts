@@ -4,14 +4,15 @@ export const config = {
     // Minimum eight characters, at least one letter and one number
     passwordRegEx: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/,
     phoneRegEx: /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im,
-    err500: "We've got some problems, please try again later.",
-    err400: "This perform need more field or some field are not correct.",
-    errPassFormat: "Password format not correct.",
-    errPermission: "Dont have Permission to Access.",
-    errExists: "Data need to query not exists. ",
-    errEmailFormat: "Email format not correct.",
-    errPhoneFormat: "Phone format not correct.",
-    errOutOfSaler: "We not have any saler yet.",
-    success: "Dậy đi ông cháu ơi.",
-    failure: "Chưa được ông cháu ơi.",
+
+    err500: "Lỗi nội bộ, bạn thử lại sau.",
+    err400: "Điền thiếu dữ liệu hoặc dữ liệu không chính xác.",
+    errPassFormat: "Định dạng mật khẩu không đúng.",
+    errEmailFormat: "Định dạng email không đúng.",
+    errPhoneFormat: "Định dạng số điện thoại không đúng.",
+    errPermission: "Không có quyền truy cập.",
+    errNotExists: "Dữ liệu tìm kiếm không tồn tại. ",
+    errOutOfSaler: "Lỗi, không có đủ saler.",
+    success: "Thành công.",
+    failure: "Thất bại."
 }
