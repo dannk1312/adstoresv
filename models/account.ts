@@ -88,7 +88,7 @@ export const accountSchema = new Schema<IAccount>({
         },
         default: 'Customer'
     },
-    
+
     // Features
     chats: [{ type: Schema.Types.ObjectId, required: true, ref: 'Chat' }],
     bag: [{
@@ -107,37 +107,49 @@ export const accountSchema = new Schema<IAccount>({
 }, { timestamps: true })
 
 accountSchema
-.virtual('surface')
-.get(function () {
-  return {
-      email: this.email,
-      phone: this.phone,
-      name: this.name,
-      notifications_length: this.notifications.length,
-      bag_items_length: this.bag.length
-  };
-});
+    .virtual('info')
+    .get(function () {
+        return {
+            email: this.email,
+            phone: this.phone,
+            name: this.name,
+            birth: this.birth,
+            gender: this.gender,
+            address: this.address,
+            role: this.role
+        };
+    });
 
-accountSchema
-.virtual('info')
-.get(function () {
-  return {
-      email: this.email,
-      phone: this.phone,
-      name: this.name,
-      birth: this.birth,
-      gender: this.gender,
-      address: this.address,
-      role: this.role
-  };
-});
-
-accountSchema.statics.emailExists = async function(email: string): Promise<Boolean> {
-    return !!(await Account.findOne({email}))
+accountSchema.statics.emailExists = async function (email: string): Promise<Boolean> {
+    return !!(await Account.findOne({ email }))
 }
 
-accountSchema.statics.phoneExists = async function(phone: string): Promise<Boolean> {
-    return !!(await Account.findOne({phone}))
+accountSchema.statics.phoneExists = async function (phone: string): Promise<Boolean> {
+    return !!(await Account.findOne({ phone }))
+}
+
+accountSchema.methods.surface = async function () {
+    var pipeline = [
+        {   // Get the length of the booking array
+            "$project": {
+                "notifications_length": { "$size": "$notifications" },
+                "bag_items_length": { "$size": "$bag" },
+            }
+        },
+        {
+            "$match": {
+                "_id": this._id
+            }
+        }
+    ]
+    var doc = await Account.aggregate(pipeline)
+    return {
+        email: this.email,
+        phone: this.phone,
+        name: this.name,
+        notifications_length: doc.length > 0 ? doc[0].notifications_length : -1,
+        bag_items_length: doc.length > 0 ? doc[0].bag_items_length : -1,
+    };
 }
 
 export const Account = model<IAccount>('Account', accountSchema)

@@ -38,7 +38,7 @@ export const AccountSignUp = async (req: Request, res: Response, next: NextFunct
             const token = jwt.sign({ id: account._id }, process.env.ACCESS_TOKEN_SECRET!)
             res.cookie("accessToken", token, {httpOnly: false, signed: true})
             // @ts-ignore
-            return res.send({ msg: config.success, data: account.surface, accessToken: token })
+            return res.send({ msg: config.success, data: await account.surface(), accessToken: token })
         } else return res.status(400).send({ msg: config.err400 })
     } catch (err) {
         console.log(err)
@@ -56,7 +56,7 @@ export const AccountSignin = async (req: Request, res: Response, next: NextFunct
                 const token = jwt.sign({ id: account._id }, process.env.ACCESS_TOKEN_SECRET!)
                 res.cookie("accessToken", token, {httpOnly: false, signed: true})
                 // @ts-ignore
-                return res.send({ msg: config.success, data: account.surface, accessToken: token })
+                return res.send({ msg: config.success, data: await account.surface(), accessToken: token })
             }
             return res.status(400).send({ msg: config.err400 })
         } else if (code) {
@@ -66,7 +66,7 @@ export const AccountSignin = async (req: Request, res: Response, next: NextFunct
                     const token = jwt.sign({ id: account._id }, process.env.ACCESS_TOKEN_SECRET!)
                     res.cookie("accessToken", token, {httpOnly: false, signed: true})
                     // @ts-ignore
-                    return res.send({ msg: config.success, data: account.surface, accessToken: token })
+                    return res.send({ msg: config.success, data: await account.surface(), accessToken: token })
                 } else {
                     // create new account for customer
                     var data = config.emailRegEx.test(email_or_phone) ? new Account({ email: email_or_phone }) : new Account({ phone: email_or_phone })
@@ -76,7 +76,7 @@ export const AccountSignin = async (req: Request, res: Response, next: NextFunct
                         const token = jwt.sign({ id: account._id }, process.env.ACCESS_TOKEN_SECRET!)
                         res.cookie("accessToken", token, {httpOnly: false, signed: true})
                         // @ts-ignore
-                        return res.send({ msg: config.success, data: account.surface, accessToken: token })
+                        return res.send({ msg: config.success, data: await account.surface(), accessToken: token })
                     } else return res.status(400).send({ msg: config.err400 })
                 }
             }
@@ -89,7 +89,7 @@ export const AccountSignin = async (req: Request, res: Response, next: NextFunct
 // GET SURFACE
 export const AccountSurface = async (req: Request, res: Response, next: NextFunction) => {
     const account: any = req.body.account;
-    res.send({ msg: config.success, data: account.surface })
+    res.send({ msg: config.success, data: await account.surface() })
 }
 
 // GET INFO
@@ -135,4 +135,57 @@ export const AccountUpdatePassword = async (req: Request, res: Response, next: N
     }
 }
 
-// FEAUTURES
+// Features
+export const AccountReadBag = async (req: Request, res: Response, next: NextFunction) => {
+    Account.findById(req.body.account._id).populate("bag.product").exec((err, doc) => {
+        if(err) return res.status(500).send({msg: config.err500})
+        if(!doc) return res.status(400).send({msg: config.err400})
+        return res.send({msg: config.success, data: doc.bag})
+    })
+}
+
+export const AccountUpdateBag = async (req: Request, res: Response, next: NextFunction) => {
+    const bag: any[] = req.body.data
+    const account = req.body.account
+    account.updateOne({bag}).exec((err: any) => {
+        if(err) return res.status(500).send({msg: config.err500})
+        return res.send({msg: config.success})
+    })
+}
+
+export const AccountReadNotifications = async (req: Request, res: Response, next: NextFunction) => {
+    const skip: number = req.body.skip??0
+    const limit: number = req.body.limit??10
+    Account.findById(req.body.account._id).select("notifications").slice("notifications", [skip, limit]).exec((err, doc) => {
+        if(err) return res.status(500).send({msg: config.err500})
+        if(!doc) return res.status(400).send({msg: config.err400})
+        return res.send({msg: config.success, data: doc.notifications})
+    })
+}
+
+export const AccountDeleteNotifications = async (req: Request, res: Response) => {
+    const account = req.body.account
+    const _id = req.body._id
+    account.updateOne({
+        $pull: {notifications: {_id},},
+    }).exec((err: any) => {
+        if(err) {
+            console.log(err)
+            return res.status(500).send({msg: config.err500})
+        }
+        return res.send({msg: config.success})
+    });
+}
+
+export const SendNotifications = async (dest_id: string, message: string): Promise<Boolean> => {
+    return !!(await Account.findByIdAndUpdate(dest_id, {$push: {"notifications": { $each: [{message}], $position: 0 }}}).select("_id").exec())
+}
+
+export const AccountSendNotification = async (req: Request, res: Response) => {
+    const dest_id: string = req.body.dest_id
+    const message: string = req.body.message
+
+    if(!!dest_id && !!message && await SendNotifications(dest_id, message))
+        return res.send({msg: config.success})
+    return res.status(400).send({msg: config.err400})
+}

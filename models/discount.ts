@@ -4,6 +4,8 @@ import { AuthTypesSolution } from 'twilio/lib/rest/api/v2010/account/sip/domain/
 export interface IDiscount {
     _id: Types.ObjectId,
     code: string,
+    enable: boolean,
+
     // Limit of discounts
     dateStart: Date,
     dateEnd: Date, // undefined mean dont have quantity limit
@@ -21,15 +23,22 @@ export interface IDiscount {
     value: Number, 
 
     // depend on
-    products: [Types.ObjectId], // empty mean all can use 
-    categories: [Types.ObjectId], // empty mean all can use 
-    owners: [Types.ObjectId] // empty mean all can use 
+    products: Types.ObjectId[], // empty mean all can use 
+    categories: Types.ObjectId[], // empty mean all can use 
+    owners: Types.ObjectId[], // empty mean all can use 
+
+    // history
+    used: [{
+        account: Types.ObjectId,
+        at: Date
+    }]
 }
 
 
 export const discountSchema = new Schema<IDiscount>({
     _id: Types.ObjectId,
     code: {type: String, required: [true, "Discount code cannot be empty"], unique: true, trim: true, lowercase: true},
+    enable: {type: Boolean, default: false},
     // Limit of discounts
     dateStart: {type: Date, default: Date.now},
     dateEnd: Date,
@@ -49,7 +58,11 @@ export const discountSchema = new Schema<IDiscount>({
     // depend on
     products: [{ type: Schema.Types.ObjectId, required: true, ref: 'Product' }], 
     categories: [{ type: Schema.Types.ObjectId, required: true, ref: 'Category' }], 
-    owners: [{ type: Schema.Types.ObjectId, required: true, ref: 'Account' }]
+    owners: [{ type: Schema.Types.ObjectId, required: true, ref: 'Account' }],
+
+    used: [
+
+    ]
 }, { timestamps: true })
 
 

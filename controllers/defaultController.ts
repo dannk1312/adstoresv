@@ -31,12 +31,13 @@ export const roleVerify = (roles: string[]) => {
             }
             // @ts-ignore
             const id: string = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!).id;
-            // @ts-ignore
-            const acc: Document<unknown, any, IAccount> & IAccount & { _id: Types.ObjectId } = await Account.findById(id)
-            if (roles.includes(acc.role)) {
-                req.body.account = acc;
+            const account = await Account.findById(id).select("-chats -bag -rates -bill -notifications").exec()
+            if(!account)
+                return res.status(400).send({msg: config.err400})
+            if (roles.includes(account.role)) {
+                req.body.account = account;
                 next();
-            } else throw new Error(`${acc.email + " " + acc.role}`)
+            } else throw new Error(`${account.email + " " + account.role}`)
         } catch (err) {
             console.log("Token lost / user role not fixed")
             return res.status(400).send({ msg: config.errPermission })

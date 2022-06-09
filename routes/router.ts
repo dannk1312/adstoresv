@@ -62,6 +62,44 @@ route.post("/default/updatePassword",
     DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
     AccountController.AccountUpdatePassword
 )
+
+// require: accessToken
+// role: ["Customer", "Sale", "Admin"]
+route.post("/default/readBag",
+    DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
+    AccountController.AccountReadBag
+)
+
+// require: accessToken
+// role: ["Customer", "Sale", "Admin"]
+route.post("/default/readNotifications",
+    DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
+    AccountController.AccountReadNotifications
+)
+
+// require: accessToken
+// role: ["Customer", "Sale", "Admin"]
+// field: _id // id off notifications
+route.post("/default/deleteNotification",
+    DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
+    AccountController.AccountDeleteNotifications
+)
+
+// require: accessToken
+// role: ["Admin"]
+// field: dest_id**, message**
+route.post("/default/sendNotification",
+    DefaultController.roleVerify(["Admin"]),
+    AccountController.AccountSendNotification
+)
+
+// require: accessToken
+// role: ["Customer"]
+// field: dest_id**, message**
+route.post("/default/updateBag",
+    DefaultController.roleVerify(["Customer", "Admin"]), // Admin để test cho tiện
+    AccountController.AccountUpdateBag
+)
 //#endregion
 
 //#region CHAT
@@ -167,5 +205,4 @@ route.post("/product/import",
     DefaultController.roleVerify(["Admin"]), 
     ProductController.ProductImport
 )
-
-
+//#endregion
