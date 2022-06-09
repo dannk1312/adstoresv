@@ -71,7 +71,7 @@ export const DiscountUpdate =async (req: Request, res: Response, next: NextFunct
 
     if(!!accounts){
         discount.markModified("accounts")
-        discount.accounts = products
+        discount.accounts = accounts
     }
 
     if(!!categories_add){
