@@ -29,7 +29,7 @@ export const AccountSignUp = async (req: Request, res: Response, next: NextFunct
         else if (config.phoneRegEx.test(email_or_phone) && !(await Account.phoneExists(email_or_phone)))
             data = new Account({ phone: email_or_phone, password, name, birth, gender });
         else
-            return res.status(400).send({ msg: config.errEmailFormat + " / " + config.errPhoneFormat })
+            return res.status(400).send({ msg: config.errEmailFormat + " / " + config.errPhoneFormat + " or already exists." })
 
         const account = await (new Account(data)).save();
         if (account) {

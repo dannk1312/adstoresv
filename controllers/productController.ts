@@ -5,6 +5,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import * as image from "../services/image";
 import { Category } from "../models/category";
 import { Product } from "../models/product";
+import { Import } from "../models/import";
 
 export const ProductCreate = async (req: Request, res: Response, next: NextFunction) => {
     const name: string = req.body.name
@@ -62,13 +63,178 @@ export const ProductCreate = async (req: Request, res: Response, next: NextFunct
     })
 }
 
-
 export const ProductRead = async (req: Request, res: Response, next: NextFunction) => {
     const _id: string = req.body._id;
     Product.findById(_id, async (err: any, doc: any) => {
-        if(err) return res.status(500).send({msg: config.err500 })
-        if(!doc) return res.status(400).send({msg: config.err400})
-        
-        return res.send({msg: config.success, data: await doc.info()})
+        if (err) return res.status(500).send({ msg: config.err500 })
+        if (!doc) return res.status(400).send({ msg: config.err400 })
+
+        return res.send({ msg: config.success, data: await doc.info() })
     });
+}
+
+export const ProductReadComment = async (req: Request, res: Response, next: NextFunction) => {
+    const _id: string = req.body._id;
+    const skip: number = req.body.skip ?? 0;
+    const limit: number = req.body.skip ?? 20;
+    Product.findById(_id).select("comments").slice("comments", [skip, limit]).populate("comments.account").exec((err, doc) => {
+        if (err) return res.status(500).send({ msg: config.err500 })
+        if (!doc) return res.status(400).send({ msg: config.errNotExists })
+        const edit_result: any[] = []
+        for (let i = 0; i < doc.comments.length; i++) {
+            const e = doc.comments[i]
+            // @ts-ignore
+            edit_result.push({ account: e.account.name ?? e.account.email ?? e.account.phone, message: e.message, rate: e.rate, at: e.at })
+        }
+        return res.send({ msg: config.success, data: edit_result })
+    });
+}
+
+export const ProductUpdate = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const _id: string = req.body._id;
+        const desc: string = req.body.desc
+        const colors: any = req.body.colors
+        const price: number = req.body.price
+        const enable: boolean = req.body.enable
+        const specs_link: number = req.body.specs_link
+        const sale: number = req.body.sale
+        const catalogue: any[] = req.body.catalogue;
+
+        // Get product
+        if (!_id)
+            return res.status(400).send({ msg: config.err400 })
+
+        const product = await Product.findById(_id).select("-comments");
+
+        if (!product)
+            return res.status(400).send({ msg: config.err400 })
+
+        if (enable !== undefined) {
+            product.markModified('enable')
+            product.enable = enable
+        }
+
+        if (!!specs_link) {
+            product.markModified('specs_link')
+            product.specs_link = specs_link
+        }
+
+        if (!!desc) {
+            product.markModified('desc')
+            product.desc = desc
+        }
+
+        if (!!price) {
+            product.markModified('price')
+            product.price = price
+        }
+
+        if (!!sale){
+            product.markModified('sale')
+            product.sale = sale
+        }
+
+        if (!!catalogue) {
+            product.markModified('catalogue')
+            // Remove deleted image
+            for (let i = 0; i < product.catalogue.length; i++) {
+                var flag = false
+                for (let j = 0; j < catalogue.length; j++) {
+                    if (catalogue[j].image_id == product.catalogue[i].image_id) {
+                        flag = true
+                        break
+                    }
+                }
+                if (!flag) {
+                    image.destroy(product.catalogue[i].image_id)
+                }
+            }
+            // Add new image
+            for (let i = 0; i < catalogue.length; i++) {
+                if (!!catalogue[i].image_base64) {
+                    var img_info = await image.upload(image.base64(catalogue[i].image_base64), "product_catalogue")
+                    if (!!img_info) {
+                        product.catalogue.push({
+                            image_id: img_info.public_id,
+                            image_url: img_info.url
+                        })
+                    }
+                }
+            }
+        }
+
+        if (!!colors) {
+            product.markModified('colors')
+            // Remove deleted color and update color exists
+            for (let i = 0; i < product.colors.length; i++) {
+                var flag = false
+                for (let j = 0; j < colors.length; j++) {
+                    if (colors[j].color == product.colors[i].color) {
+                        if (!!colors[j].image_base64) {
+                            image.destroy(product.colors[i].image_id)
+                            var img_info = await image.upload(image.base64(colors[j].image_base64), "product_catalogue")
+                            if (!!img_info) {
+                                product.colors[i].image_id = img_info.public_id,
+                                    product.colors[i].image_url = img_info.url
+                            }
+                            colors[j].image_base64 = undefined
+                        }
+                        flag = true
+                        break
+                    }
+                }
+                if (!flag) {
+                    image.destroy(product.catalogue[i].image_id)
+                }
+            }
+            // Add new image
+            for (let i = 0; i < colors.length; i++) {
+                if (!!colors[i].image_base64) {
+                    var img_info = await image.upload(image.base64(catalogue[i].image_base64), "product_catalogue")
+                    if (!!img_info)
+                        product.colors.push({
+                            color: colors[i].color,
+                            image_id: img_info.public_id,
+                            image_url: img_info.url
+                        })
+                }
+            }
+        }
+        // Save
+        product.save((err: any) => {
+            if (err) return res.status(500).send({ msg: config.err500 })
+            return res.send({ msg: config.success })
+        })
+    } catch (err) {
+        console.log(err)
+        return res.status(500).send({ msg: config.err500 })
+    }
+
+}
+
+export const ProductImport = async (req: Request, res: Response, next: NextFunction) => {
+    const data = req.body.data // [{code, quanity, price}]
+    if (!data)
+        return res.status(400).send({ msg: config.err400 })
+
+    const success: any[] = []
+    const failure: any[] = []
+    for (let i = 0; i < data.length; i++) {
+        const {code, quantity, price} = data[i]
+        const doc = await Product.findOneAndUpdate({code}, {$inc: {"quantity": quantity}}).select("_id").exec();
+        if(!doc)
+            failure.push({code, quantity, price})
+        else
+            success.push({product: doc._id, quantity, price})
+    }
+
+    // save add bill
+    console.log("Import by Admin: " + req.body.account._id)
+    const importBill = new Import({data: success, admin: req.body.account._id})
+    importBill.save((err, doc) => {
+        if(err || !doc)
+            return res.status(400).send({ msg: config.success + ". Nhưng không thể save import bill, hãy lưu bill xuống file txt và gọi IT để fix lỗi", success, failure })
+        return res.send({ msg: config.success, import_bill: doc, failure })
+    })
 }

@@ -127,8 +127,14 @@ export const CategoryDelete = async (req: Request, res: Response, next: NextFunc
 }
 
 export const CategoryQuery = async (req: Request, res: Response, next: NextFunction) => {
-    const name: string = req.body.name;
-    const specs: any = req.body.specs; // {name: value}
+    const name: string = req.body.name
+    const specs: any = req.body.specs??{} // {name: value}
+    const min_price: number = req.body.min_price??0
+    const max_price: number = req.body.max_price??1000000000
+    const colors: string[] = req.body.colors
+    const skip: any = req.body.skip??0
+    const limit: number = req.body.limit??20
+
     if (!name)
         return res.status(400).send({ msg: config.err400 })
     const category = await Category.findOne({ name });
@@ -137,31 +143,52 @@ export const CategoryQuery = async (req: Request, res: Response, next: NextFunct
 
     var products = category.products;
 
-    if (!!specs)
+    if (!!specs) {
         //query result 
         for (let i = 0; i < category.specsModel.length && products.length > 0; i++) {
             const e = category.specsModel[i];
+            var specsProduct: string[] = []
 
             if (specs.hasOwnProperty(e.name)) {
-                var value = specs[e.name]
+                var values: string[] = specs[e.name]
                 for (let j = 0; j < e.values.length; j++) {
-                    if (e.values[j].value == value) {
-                        const value_products = e.values[j].products;
-                        products = products.filter(e => value_products.includes(e));
-                        break;
+                    if (values.includes(e.values[j].value)) {
+                        e.values[j].products.forEach(id => specsProduct.push(id.toString()))
                     }
                 }
             }
+            // Types.ObjectId cannot use with includes
+            products = products.filter(id => specsProduct.includes(id.toString()));
         }
+    }
 
 
     if (products.length == 0)
-        return res.send({ msg: config.success, data: [] })
-
-    const result = await Product.find({ '_id': { $in: products } }).select('-colors -comments -desc').exec();
+        if(!req.body.skip)
+            return res.send({ msg: config.success, data: [], count: 0 })
+        else 
+            return res.send({ msg: config.success, data: []})
+            
+    var options: any = { '_id': { $in: products }, price: { $lte: max_price, $gte: min_price }}
+    if(!!colors)
+        options["colors.color"] = { $in: colors}
+    if(!!max_price)
+    var count = (!req.body.skip) ? await Product.countDocuments(options): undefined
+    var result = await Product
+    .find(options)
+    .skip(skip)
+    .limit(limit)
+    .select('-colors -comments -desc -specs_link -category')
+    .exec();
     if (!result)
         return res.status(500).send({ msg: config.err500 })
-    return res.send({ msg: config.success, data: result })
+
+    const edit_result: any[] = []
+    for (let i = 0; i < result.length; i++) {
+        edit_result.push(result[i].toJSON())
+        edit_result[i].category = category.name;
+    }
+    return res.send({ msg: config.success, data: edit_result, count: count })
 }
 
 

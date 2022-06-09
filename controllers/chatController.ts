@@ -88,8 +88,8 @@ export const GetMessages = async (req: Request, res: Response, next: NextFunctio
         const account: Document<unknown, any, IAccount> & IAccount & { _id: Types.ObjectId; } = req.body.account;
         const {chatId} = req.body;
         const skip: number = req.body.skip??-1;
-        const get: number = req.body.get??1;
-        Chat.findById(chatId, { accounts: 1, _id : 1, messages: { createAt: 1, message: 1, isCustomer: 1} }).slice("messages", [skip, get]).populate(['customer', 'saler']).exec((err, doc) => {
+        const limit: number = req.body.limit??1;
+        Chat.findById(chatId, { accounts: 1, _id : 1, messages: { createAt: 1, message: 1, isCustomer: 1} }).slice("messages", [skip, limit]).populate(['customer', 'saler']).exec((err, doc) => {
             if (err)
                 return res.status(500).send({msg: config.err500})
             if (!doc || !doc.customer.equals(account._id) && !doc.saler.equals(account._id))

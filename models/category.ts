@@ -11,7 +11,7 @@ export interface ICategory {
     products: Types.ObjectId[],
     specsModel: [{
         _id: Types.ObjectId,
-        name: string,
+        name: string, 
         values: [{
             _id: Types.ObjectId,
             value: string,

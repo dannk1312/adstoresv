@@ -21,6 +21,12 @@ export interface IProduct {
     specs_link: any, // specs_id: value_id
     price: number,
     sale: number,
+    catalogue: [
+        {
+            image_id: string,
+            image_url: string
+        }
+    ],
 
     // Features
     total_rate: number, // total rate
@@ -54,6 +60,12 @@ export const productSchema = new Schema<IProduct>({
         min: [0, 'Product discount percent must more than or equal 0'], 
         max: [1, 'Product discount percent must less than or equal 1']
     },
+    catalogue: [
+        {
+            image_id: String,
+            image_url: String
+        }
+    ],
     total_rate: {type: Number, default: 0},
     comments: [{
         account: {type: Schema.Types.ObjectId, required: true, ref: 'Account'},
@@ -87,12 +99,15 @@ productSchema.methods.info = async function() {
         name: this.name ?? "",
         code: this.code,
         desc: this.desc ?? "",
+        quantity: this.quantity,
         category: "",
         specs: {},
+        specs_link: this.specs_link,
         colors: this.colors,
         price: this.price,
         sale: this.sale,
-        total_rate: this.total_rate
+        total_rate: this.total_rate,
+        enable: this.enable
     }
     const catespecs = await this.catespecs() 
     if(!!catespecs) {

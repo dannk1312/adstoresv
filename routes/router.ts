@@ -17,17 +17,11 @@ route.post("/default/signUp",
     AccountController.AccountSignUp
 )
 
-// Field: email**
-route.post("/default/emailOTP", DefaultController.emailOTPRequest)
-
-// Field: phone**
-route.post("/default/phoneOTP", DefaultController.phoneOTPRequest)
-
 // Field: email_or_phone**
 route.post("/default/otp", DefaultController.OTPRequest)
 
 // Field: (email_or_phone**, password**) | (email_or_phone**, code**) | googleToken**
-route.post("/default/login", AccountController.AccountSignin, AccountController.AccountInfo)
+route.post("/default/login", AccountController.AccountSignin)
 
 // require: accessToken
 // role: ["Customer", "Sale", "Admin"]
@@ -60,6 +54,7 @@ route.post("/default/updatePhone",
     DefaultController.phoneOTPCheck,
     AccountController.AccountUpdatePhone
 )
+
 // require: accessToken
 // role: ["Customer", "Sale", "Admin"]
 // field: old_password**, password**
@@ -149,8 +144,28 @@ route.post("/product/create",
     ProductController.ProductCreate
 )
 
-// field: _id
+// field: _id**
 route.post("/product/read", 
     ProductController.ProductRead
 )
+
+// field: _id**
+route.post("/product/readComments", 
+    ProductController.ProductReadComment
+)
+
+// field: accessToken, _id**, desc
+// role: ["Admin"]
+route.post("/product/update", 
+    DefaultController.roleVerify(["Admin"]), 
+    ProductController.ProductUpdate
+)
+
+// field: accessToken, data
+// role: ["Admin"]
+route.post("/product/import", 
+    DefaultController.roleVerify(["Admin"]), 
+    ProductController.ProductImport
+)
+
 
