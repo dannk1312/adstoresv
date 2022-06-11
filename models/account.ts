@@ -122,12 +122,12 @@ accountSchema
     .virtual('info')
     .get(function () {
         return {
-            email: this.email,
-            phone: this.phone,
-            name: this.name,
-            birth: this.birth,
-            gender: this.gender,
-            address: this.address,
+            email: this.email ?? "",
+            phone: this.phone ?? "",
+            name: this.name ?? "",
+            birth: this.birth ?? "",
+            gender: this.gender ?? "",
+            address: this.address ?? "",
             role: this.role
         };
     });

@@ -112,13 +112,16 @@ export const UpdateInfo = async (req: Request, res: Response, next: NextFunction
 export const UpdatePhone = async (req: Request, res: Response, next: NextFunction) => {
     const { account, phone } = req.body
     // @ts-ignore
+    console.log(await Account.phoneExists(phone))
+    // @ts-ignore
     if (phone && config.phoneRegEx.test(phone) && !(await Account.phoneExists(phone)))
         account.updateOne({ phone }, (_err: Error) => {
             if (_err)
                 return res.status(500).send({ msg: config.err500 })
             return res.send({ msg: config.success })
         })
-    return res.status(400).send({ msg: config.err400 });
+    else
+        return res.status(400).send({ msg: config.err400 });
 }
 
 export const UpdatePassword = async (req: Request, res: Response, next: NextFunction) => {
