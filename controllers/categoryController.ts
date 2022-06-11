@@ -9,8 +9,8 @@ import { Product } from "../models/product";
 export const Create = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const name: string = req.body.name;
-        const image_base64: string = req.body.name;
-        const specsModel: any = req.body.name;   // [{name: "Ram", values: [{value: "2gb"}, {value: "4gb"}]}]
+        const image_base64: string = req.body.image_base64;
+        const specsModel: any = req.body.specsModel;   // [{name: "Ram", values: [{value: "2gb"}, {value: "4gb"}]}]
         if (!name || !image_base64 || !specsModel)
             return res.status(400).send({ msg: config.err400 })
 
@@ -26,7 +26,6 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
         // Save image 
         var img_info = await image.upload(image.base64(image_base64), "category")
         if (!img_info) return res.send({ msg: config.success + " without image." })
-        console.log(img_info)
         category_doc.image_id = img_info.public_id
         category_doc.image_url = img_info.url
 
@@ -36,7 +35,7 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
         return res.send({ msg: config.success })
     } catch (err) {
         console.log(err)
-        return res.status(500).send({ msg: config.err500 })
+        return res.status(400).send({ msg: config.err400 })
     }
 }
 
