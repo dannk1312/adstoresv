@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { Document, Types } from "mongoose";
 import { Discount } from '../models/discount';
+import { Product } from '../models/product';
 import { config } from '../services/config';
 import { SendNotifications } from './accountController';
 

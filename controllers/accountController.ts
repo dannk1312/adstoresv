@@ -100,9 +100,28 @@ export const AccountInfo = async (req: Request, res: Response, next: NextFunctio
 
 // UPDATE INFO
 export const AccountUpdateInfo = async (req: Request, res: Response, next: NextFunction) => {
-    const { name, birth, gender, address } = req.body
+    const { name, birth, gender } = req.body
     const account: Document = req.body.account
-    account.updateOne({ name, birth, gender, address }, (err: Error) => {
+    account.updateOne({ name, birth, gender }, (err: Error) => {
+        if (err)
+            return res.status(400).send({ msg: err.message })
+        return res.send({ msg: config.success })
+    })
+}
+
+export const AccountUpdateAddress = async (req: Request, res: Response, next: NextFunction) => {
+    const { address, address_add } = req.body
+    const account: Document = req.body.account
+    if(!address && !address_add)
+        return res.status(400).send({msg: config.err400 })
+    var options = !!address ? {
+        address
+    }: {
+        $push: {
+            "address": address_add
+        }
+    }
+    account.updateOne(options, (err: Error) => {
         if (err)
             return res.status(400).send({ msg: err.message })
         return res.send({ msg: config.success })
@@ -149,7 +168,7 @@ export const AccountUpdateBag = async (req: Request, res: Response, next: NextFu
     const account = req.body.account
     account.updateOne({bag}).exec((err: any) => {
         if(err) return res.status(500).send({msg: config.err500})
-        return res.send({msg: config.success})
+        return res.send({msg: config.success + req.body.valid_bag_msg})
     })
 }
 

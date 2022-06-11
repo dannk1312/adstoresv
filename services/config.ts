@@ -5,17 +5,17 @@ export const config = {
     passwordRegEx: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/,
     phoneRegEx: /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im,
 
-    err500: "Lỗi nội bộ, bạn thử lại sau.",
-    err400: "Điền thiếu dữ liệu hoặc dữ liệu không chính xác.",
-    errPassFormat: "Định dạng mật khẩu không đúng.",
-    errEmailFormat: "Định dạng email không đúng.",
-    errPhoneFormat: "Định dạng số điện thoại không đúng.",
-    errPermission: "Không có quyền truy cập.",
+    err500: "Lỗi nội bộ, bạn thử lại sau. ",
+    err400: "Điền thiếu dữ liệu hoặc dữ liệu không chính xác. ",
+    errPassFormat: "Định dạng mật khẩu không đúng. ",
+    errEmailFormat: "Định dạng email không đúng. ",
+    errPhoneFormat: "Định dạng số điện thoại không đúng. ",
+    errPermission: "Không có quyền truy cập. ",
     errNotExists: "Dữ liệu tìm kiếm không tồn tại. ",
-    errEmailExists: "Email đã tồn tại",
-    errPhoneExists: "Phone đã tồn tại",
-    errOutOfSaler: "Lỗi, không có đủ saler.",
+    errEmailExists: "Email đã tồn tại. ",
+    errPhoneExists: "Phone đã tồn tại. ",
+    errOutOfSaler: "Lỗi, không có đủ saler. ",
     
-    success: "Thành công.",
-    failure: "Thất bại."
+    success: "Thành công. ",
+    failure: "Thất bại. "
 }

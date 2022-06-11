@@ -50,8 +50,8 @@ export const billSchema = new Schema<IBill>({
     status: {
         type: String,
         enum: {
-            values: ['Preparing', 'Delivering', 'Done', 'Cancel'], 
-            message: 'Role {VALUE} is not supported'
+            values: ['Editing', 'Preparing', 'Delivering', 'Done', 'Cancel'], 
+            message: 'Value {VALUE} is not supported'
         },
         default: 'Preparing'
     }

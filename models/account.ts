@@ -15,7 +15,11 @@ export interface IAccount {
     name?: string,
     birth?: Date,
     gender?: boolean,
-    address?: [string],
+    address?: [{
+        province: string,
+        district: string,
+        address: string
+    }],
     role: string,
 
     // Features
@@ -24,7 +28,7 @@ export interface IAccount {
         product: Types.ObjectId,
         quantity: number
     }],
-    bill: [IBill],
+    bills: IBill[],
     notifications: [{
         message: string,
         createdAt: Date
@@ -79,7 +83,11 @@ export const accountSchema = new Schema<IAccount>({
     name: String,
     birth: Date,
     gender: Boolean,
-    address: [String],
+    address: [{
+        province: String,
+        district: String,
+        address: String
+    }],
     role: {
         type: String,
         enum: {
@@ -99,7 +107,7 @@ export const accountSchema = new Schema<IAccount>({
         product: { type: Schema.Types.ObjectId, required: true, ref: 'Product' },
         star: Number
     }],
-    bill: [{ type: Schema.Types.ObjectId, required: true, ref: 'Bill' }],
+    bills: [{ type: Schema.Types.ObjectId, required: true, ref: 'Bill' }],
     notifications: [{
         message: { type: String, required: true, trim: true },
         createdAt: { type: Date, default: Date.now }

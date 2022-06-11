@@ -17,7 +17,7 @@ export interface IDiscount {
 
     // Type of discount
     is_percent: boolean, // in percent of price or in price
-    is_ship: boolean, // in ship price or in bill price
+    is_ship: boolean,
     is_oid: boolean, // is one in day
     is_oic: boolean, // is one in customer
     value: Number, 
@@ -28,7 +28,7 @@ export interface IDiscount {
     accounts: Types.ObjectId[], // empty mean all can use 
 
     // history
-    used: {}
+    used: any
 }
 
 

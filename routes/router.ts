@@ -4,6 +4,7 @@ import * as ChatController from '../controllers/chatController';
 import * as DefaultController from '../controllers/defaultController';
 import * as CategoryController from '../controllers/categoryController';
 import * as ProductController from '../controllers/productController';
+import * as BillController from '../controllers/billController';
 
 export const route = express.Router();
 route.get("/", (req: Request, res: Response) => {
@@ -39,7 +40,7 @@ route.get("/default/surface",
 
 // require: accessToken
 // role: ["Customer", "Sale", "Admin"]
-// field: name, birth, gender, address
+// field: name, birth, gender
 route.post("/default/updateInfo",
     DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
     AccountController.AccountUpdateInfo
@@ -61,6 +62,15 @@ route.post("/default/updatePhone",
 route.post("/default/updatePassword",
     DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
     AccountController.AccountUpdatePassword
+)
+
+
+// require: accessToken
+// role: ["Customer"]
+// field: address** || add_address**
+route.post("/default/updateAddress",
+    DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
+    AccountController.AccountUpdateAddress
 )
 
 // require: accessToken
@@ -98,6 +108,7 @@ route.post("/default/sendNotification",
 // field: dest_id**, message**
 route.post("/default/updateBag",
     DefaultController.roleVerify(["Customer", "Admin"]), // Admin để test cho tiện
+    ProductController.ValidBag,
     AccountController.AccountUpdateBag
 )
 //#endregion
@@ -206,3 +217,12 @@ route.post("/product/import",
     ProductController.ProductImport
 )
 //#endregion
+
+// field: accessToken, data
+// role: ["Customer", "Admin"]
+route.post("/bill/billCalc", 
+    DefaultController.roleVerify(["Customer", "Admin"]), 
+    BillController.BillCalc
+)
+//#endregion
+
