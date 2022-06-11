@@ -12,7 +12,7 @@ import { config } from "../services/config";
 
 export const SignUp = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        var { email_or_phone, password, name, birth, gender } = req.body;
+        var { email_or_phone, password, name, birth, gender, address } = req.body;
         if (!email_or_phone || !password)
             return res.status(400).send({ msg: config.err400 })
         
@@ -24,10 +24,10 @@ export const SignUp = async (req: Request, res: Response, next: NextFunction) =>
         var data;
         // @ts-ignore
         if (config.emailRegEx.test(email_or_phone) && !(await Account.emailExists(email_or_phone)))
-            data = new Account({ email: email_or_phone, password, name, birth, gender });
+            data = new Account({ email: email_or_phone, password, name, birth, gender, address });
         // @ts-ignore
         else if (config.phoneRegEx.test(email_or_phone) && !(await Account.phoneExists(email_or_phone)))
-            data = new Account({ phone: email_or_phone, password, name, birth, gender });
+            data = new Account({ phone: email_or_phone, password, name, birth, gender, address });
         else
             return res.status(400).send({ msg: config.errEmailFormat + " / " + config.errPhoneFormat + " or already exists." })
 
@@ -100,28 +100,9 @@ export const Info = async (req: Request, res: Response, next: NextFunction) => {
 
 // UPDATE INFO
 export const UpdateInfo = async (req: Request, res: Response, next: NextFunction) => {
-    const { name, birth, gender } = req.body
+    const { name, birth, gender, address } = req.body
     const account: Document = req.body.account
-    account.updateOne({ name, birth, gender }, (err: Error) => {
-        if (err)
-            return res.status(400).send({ msg: err.message })
-        return res.send({ msg: config.success })
-    })
-}
-
-export const UpdateAddress = async (req: Request, res: Response, next: NextFunction) => {
-    const { address, address_add } = req.body
-    const account: Document = req.body.account
-    if(!address && !address_add)
-        return res.status(400).send({msg: config.err400 })
-    var options = !!address ? {
-        address
-    }: {
-        $push: {
-            "address": address_add
-        }
-    }
-    account.updateOne(options, (err: Error) => {
+    account.updateOne({ name, birth, gender, address }, (err: Error) => {
         if (err)
             return res.status(400).send({ msg: err.message })
         return res.send({ msg: config.success })
@@ -155,15 +136,15 @@ export const UpdatePassword = async (req: Request, res: Response, next: NextFunc
 }
 
 // Features
-export const AccountReadBag = async (req: Request, res: Response, next: NextFunction) => {
-    Account.findById(req.body.account._id).populate("bag.product").exec((err, doc) => {
+export const ReadBag = async (req: Request, res: Response, next: NextFunction) => {
+    Account.findById(req.body.account._id).populate("bag.product").select("bag").exec((err, doc) => {
         if(err) return res.status(500).send({msg: config.err500})
         if(!doc) return res.status(400).send({msg: config.err400})
         return res.send({msg: config.success, data: doc.bag})
     })
 }
 
-export const AccountUpdateBag = async (req: Request, res: Response, next: NextFunction) => {
+export const UpdateBag = async (req: Request, res: Response, next: NextFunction) => {
     const bag: any[] = req.body.data
     const account = req.body.account
     account.updateOne({bag}).exec((err: any) => {
@@ -172,7 +153,7 @@ export const AccountUpdateBag = async (req: Request, res: Response, next: NextFu
     })
 }
 
-export const AccountReadNotifications = async (req: Request, res: Response, next: NextFunction) => {
+export const ReadNotifications = async (req: Request, res: Response, next: NextFunction) => {
     const skip: number = req.body.skip??0
     const limit: number = req.body.limit??10
     Account.findById(req.body.account._id).select("notifications").slice("notifications", [skip, limit]).exec((err, doc) => {
@@ -182,7 +163,7 @@ export const AccountReadNotifications = async (req: Request, res: Response, next
     })
 }
 
-export const AccountDeleteNotifications = async (req: Request, res: Response) => {
+export const DeleteNotification = async (req: Request, res: Response) => {
     const account = req.body.account
     const _id = req.body._id
     account.updateOne({
@@ -196,15 +177,15 @@ export const AccountDeleteNotifications = async (req: Request, res: Response) =>
     });
 }
 
-export const SendNotifications = async (dest_id: string, message: string): Promise<Boolean> => {
+export const SendNotificationsFunc = async (dest_id: string, message: string): Promise<Boolean> => {
     return !!(await Account.findByIdAndUpdate(dest_id, {$push: {"notifications": { $each: [{message}], $position: 0 }}}).select("_id").exec())
 }
 
-export const AccountSendNotification = async (req: Request, res: Response) => {
+export const SendNotification = async (req: Request, res: Response) => {
     const dest_id: string = req.body.dest_id
     const message: string = req.body.message
 
-    if(!!dest_id && !!message && await SendNotifications(dest_id, message))
+    if(!!dest_id && !!message && await SendNotificationsFunc(dest_id, message))
         return res.send({msg: config.success})
     return res.status(400).send({msg: config.err400})
 }

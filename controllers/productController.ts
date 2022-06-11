@@ -1,4 +1,4 @@
-import { Document, Types } from "mongoose";
+import mongoose, { Document, Types } from "mongoose";
 import jwt from "jsonwebtoken";
 import { config } from '../services/config';
 import express, { NextFunction, Request, Response } from 'express';
@@ -7,83 +7,64 @@ import { Category } from "../models/category";
 import { Product } from "../models/product";
 import { Import } from "../models/import";
 
-export const ProductCreate = async (req: Request, res: Response, next: NextFunction) => {
+export const Create = async (req: Request, res: Response, next: NextFunction) => {
     const name: string = req.body.name
     const code: string = req.body.code
     const desc: string = req.body.desc
-    const colors: any = req.body.colors        //  [{color: "Red", image_base64: "?"}]
-    const category_id: string = req.body.category_id      // id
-    const specs_link: any = req.body.specs_link  // {spec_id: value_id}
+    const category: string = req.body.category      
+    const specs: any = req.body.specs  
     const price: number = req.body.price
     const sale: number = req.body.sale
-    const catalogue: any[] = req.body.catalogue;
+    const image_base64: string = req.body.image_base64
 
     // Handle Required Data
-    if (!name || !code || !colors || colors.length == 0 || !category_id || !specs_link || !price) {
+    if (!name || !code || !category || !specs || !price || !image_base64) {
         return res.status(400).send({ msg: config.err400 })
     }
 
-    // Handle Category & Specs Link
-    var category = await Category.findById(category_id);
+    const img_info = await image.upload(image.base64(image_base64), "product_color");
+    if(!img_info) return res.status(500).send({msg: config.errSaveImage})
+
+    // Handle Category & Specs
+    var categoryDoc = await Category.findById(category);
+
+    if (!categoryDoc)
+        return res.status(400).send({ msg: config.err400 })
 
     // @ts-ignore
-    if (!category || category.checkProductSpecsLink(specs_link))
-        return res.status(400).send({ msg: config.err400 })
+    const specs_link =  categoryDoc.getSpecsLink(specs)
 
-    // Handle Colors
-    var saved_colors: any = []
-    for (let i = 0; i < colors.length; i++) {
-        const e = colors[i];
-        const img_info = await image.upload(image.base64(e.image_base64), "product");
-        if (!!img_info)
-            saved_colors.push({
-                color: e.color,
-                image_id: img_info.public_id,
-                image_url: img_info.url
-            })
+    var product = new Product({ name, code, desc, category: categoryDoc._id, specs_link: specs_link, price, sale, image_id: img_info.public_id, image_url: img_info.url })
+    
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        const opts = { session };
+        const productDoc = await product.save(opts)
+        // @ts-ignore
+        categoryDoc.addProduct(productDoc)
+        categoryDoc = await categoryDoc.save() 
+        if (!productDoc || !categoryDoc)
+            throw Error("Fail")
+
+        await session.commitTransaction();
+        session.endSession();
+        return res.send({ msg: config.success })
+    } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(500).send({ msg: "Lỗi không lưu đồng bộ với category" })
     }
-
-    if (saved_colors.length == 0)
-        return res.status(400).send({ msg: config.err400 })
-
-    // Handle Catalogue
-    var saved_cata: any = []
-    for (let i = 0; i < catalogue.length; i++) {
-        if (!!catalogue[i].image_base64) {
-            var img_info = await image.upload(image.base64(catalogue[i].image_base64), "product_catalogue")
-            if (!!img_info) {
-                saved_cata.push({
-                    image_id: img_info.public_id,
-                    image_url: img_info.url
-                })
-            }
-        }
-    }
-
-    if (saved_cata.length == 0)
-        return res.status(400).send({ msg: config.err400 })
-
-    var product = new Product({ name, code, desc, colors: saved_colors, category: category_id, specs_link, price, sale, catalogue: saved_cata })
-    product.save((err, doc) => {
-        if (!err && !!doc) {
-            // @ts-ignore
-            category?.addProduct(doc)
-            console.log(category?.specsModel)
-            category?.save() // need to use transaction on this, but idc
-            return res.send({ msg: config.success })
-        }
-
-        saved_colors.forEach((e: { image_id: string; }) => image.destroy(e.image_id))
-
-        console.log(err)
-        if (err) return res.status(500).send({ msg: config.err500 })
-        if (!doc) return res.status(400).send({ msg: config.err400 })
-    })
 }
 
-export const ProductRead = async (req: Request, res: Response, next: NextFunction) => {
-    const _id: string = req.body._id;
-    Product.findById(_id, async (err: any, doc: any) => {
+export const Read = async (req: Request, res: Response, next: NextFunction) => {
+    const _id: string = req.body._id
+    const code: string = req.body.code
+
+    if (!_id && !code)
+        return res.status(400).send({ msg: config.err400 })
+
+    Product.findOne({$or: [{_id: _id}, {code: code}]}, async (err: any, doc: any) => {
         if (err) return res.status(500).send({ msg: config.err500 })
         if (!doc) return res.status(400).send({ msg: config.err400 })
 
@@ -91,11 +72,13 @@ export const ProductRead = async (req: Request, res: Response, next: NextFunctio
     });
 }
 
-export const ProductReadComment = async (req: Request, res: Response, next: NextFunction) => {
-    const _id: string = req.body._id;
-    const skip: number = req.body.skip ?? 0;
-    const limit: number = req.body.skip ?? 20;
-    Product.findById(_id).select("comments").slice("comments", [skip, limit]).populate("comments.account").exec((err, doc) => {
+export const ReadComment = async (req: Request, res: Response, next: NextFunction) => {
+    const _id: string = req.body._id
+    const code: string = req.body.code
+    const skip: number = req.body.skip ?? 0
+    const limit: number = req.body.skip ?? 20
+    
+    Product.findOne({$or: [{_id: _id}, {code: code}]}).select("comments").slice("comments", [skip, limit]).populate("comments.account").exec((err, doc) => {
         if (err) return res.status(500).send({ msg: config.err500 })
         if (!doc) return res.status(400).send({ msg: config.errNotExists })
         const edit_result: any[] = []
@@ -108,22 +91,114 @@ export const ProductReadComment = async (req: Request, res: Response, next: Next
     });
 }
 
-export const ProductUpdate = async (req: Request, res: Response, next: NextFunction) => {
+export const AddColor = async (req: Request, res: Response, next: NextFunction) => {
+    const _id: string = req.body._id
+    const code: string = req.body.code
+    const image_base64: any = req.body.image_base64
+    const color: any = req.body.color
+
+    if ((!_id && !code) || !image_base64 || !color)
+        return res.status(400).send({ msg: config.err400 })
+
+    const img_info = await image.upload(image.base64(image_base64), "product_color");
+    if(!img_info) return res.status(500).send({msg: config.errSaveImage})
+    const color_save = {color: color, image_id: img_info.public_id, image_url: img_info.url}
+    
+    Product.findOneAndUpdate({$or: [{_id: _id}, {code: code}]}, {$push: {colors: color_save}}).exec((err, doc) => {
+        if (err) return res.status(500).send({ msg: config.err500 })
+        if (!doc) return res.status(400).send({ msg: config.errNotExists })
+
+        return res.send({ msg: config.success, data: color_save })
+    });
+}
+
+export const DeleteColor = async (req: Request, res: Response, next: NextFunction) => {
+    const _id: string = req.body._id
+    const code: string = req.body.code
+    const color: string = req.body.color
+
+    if ((!_id && !code) || !color)
+        return res.status(400).send({ msg: config.err400 })
+    
+    var doc = await Product.findOne({$or: [{_id: _id}, {code: code}]}).select("colors").exec()
+    if(!doc)
+        return res.status(400).send({ msg: config.err400 })
+
+    for(let i = 0; i < doc.colors.length; i++) {
+        if(doc.colors[i].color == color) {
+            doc.colors.slice(i, 1)
+            if(!!(await doc.save())) {
+                image.destroy(doc.colors[i].image_id)
+            } else 
+                return res.status(500).send({msg: config.err500})
+        }
+    }
+    return res.send({msg: config.success})
+}
+
+export const AddCatalogue = async (req: Request, res: Response, next: NextFunction) => {
+    const _id: string = req.body._id
+    const code: string = req.body.code
+    const image_base64: string = req.body.image_base64
+
+    if ((!_id && !code) || !image_base64)
+        return res.status(400).send({ msg: config.err400 })
+
+    const img_info = await image.upload(image.base64(image_base64), "product");
+    if(!img_info)
+        return res.status(500).send({msg: config.errSaveImage})
+    const catelogue = {image_id: img_info.public_id, image_url: img_info.url}
+    
+    Product.findOneAndUpdate({$or: [{_id: _id}, {code: code}]}, {$push: {catalogue: catelogue}}).exec((err, doc) => {
+        if (err) return res.status(500).send({ msg: config.err500 })
+        if (!doc) return res.status(400).send({ msg: config.errNotExists })
+
+        return res.send({ msg: config.success, data: catelogue })
+    });
+}
+
+export const DeleteCatalogue = async (req: Request, res: Response, next: NextFunction) => {
+    const _id: string = req.body._id
+    const code: string = req.body.code
+    const catalogue_id: string = req.body.catalogue_id
+
+    if ((!_id && !code) || !catalogue_id)
+        return res.status(400).send({ msg: config.err400 })
+    
+    var doc = await Product.findOne({$or: [{_id: _id}, {code: code}]}).select("catalogue").exec()
+    if(!doc)
+        return res.status(400).send({ msg: config.err400 })
+
+    for(let i = 0; i < doc.colors.length; i++) {
+        // @ts-ignore
+        if(doc.catalogue[i]._id == catalogue_id) {
+            doc.catalogue.slice(i, 1)
+            if(!!(await doc.save())) {
+                image.destroy(doc.catalogue[i].image_id)
+            } else 
+                return res.status(500).send({msg: config.err500})
+        }
+    }
+    return res.send({msg: config.success})
+}
+
+export const Update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const _id: string = req.body._id;
+        const _id: string = req.body._id
+        const code: string = req.body.code
+        const name: string = req.body.name
         const desc: string = req.body.desc
-        const colors: any = req.body.colors
         const price: number = req.body.price
         const enable: boolean = req.body.enable
-        const specs_link: number = req.body.specs_link
+        const specs: number = req.body.specs
         const sale: number = req.body.sale
-        const catalogue: any[] = req.body.catalogue;
+        const image_base64: string = req.body.image_base64
 
         // Get product
-        if (!_id)
+        if (!_id && !code)
             return res.status(400).send({ msg: config.err400 })
 
-        const product = await Product.findById(_id).select("-comments");
+        const product = await Product.findOne({$or: [{_id: _id}, {code: code}]}).select("-comments");
 
         if (!product)
             return res.status(400).send({ msg: config.err400 })
@@ -133,9 +208,18 @@ export const ProductUpdate = async (req: Request, res: Response, next: NextFunct
             product.enable = enable
         }
 
-        if (!!specs_link) {
+        if (!!name) {
+            product.markModified('name')
+            product.name = name
+        }
+
+        if (!!specs) {
             product.markModified('specs_link')
-            product.specs_link = specs_link
+            const category = await Category.findById(product.category)
+            if(!category)
+                return res.status(500).send({msg: config.err500})
+            // @ts-ignore
+            product.specs_link = category.getSpecsLink(specs)
         }
 
         if (!!desc) {
@@ -153,72 +237,14 @@ export const ProductUpdate = async (req: Request, res: Response, next: NextFunct
             product.sale = sale
         }
 
-        if (!!catalogue) {
-            product.markModified('catalogue')
-            // Remove deleted image
-            for (let i = 0; i < product.catalogue.length; i++) {
-                var flag = false
-                for (let j = 0; j < catalogue.length; j++) {
-                    if (catalogue[j].image_id == product.catalogue[i].image_id) {
-                        flag = true
-                        break
-                    }
-                }
-                if (!flag) {
-                    image.destroy(product.catalogue[i].image_id)
-                }
-            }
-            // Add new image
-            for (let i = 0; i < catalogue.length; i++) {
-                if (!!catalogue[i].image_base64) {
-                    var img_info = await image.upload(image.base64(catalogue[i].image_base64), "product_catalogue")
-                    if (!!img_info) {
-                        product.catalogue.push({
-                            image_id: img_info.public_id,
-                            image_url: img_info.url
-                        })
-                    }
-                }
-            }
+        if(!!image_base64) {
+            const img_info = await image.upload(image.base64(image_base64), "product_color");
+            if(!img_info) return res.status(500).send({msg: config.errSaveImage})
+            image.destroy(product.image_id)
+            product.image_id = img_info.public_id
+            product.image_url = img_info.url
         }
-
-        if (!!colors) {
-            product.markModified('colors')
-            // Remove deleted color and update color exists
-            for (let i = 0; i < product.colors.length; i++) {
-                var flag = false
-                for (let j = 0; j < colors.length; j++) {
-                    if (colors[j].color == product.colors[i].color) {
-                        if (!!colors[j].image_base64) {
-                            image.destroy(product.colors[i].image_id)
-                            var img_info = await image.upload(image.base64(colors[j].image_base64), "product_catalogue")
-                            if (!!img_info) {
-                                product.colors[i].image_id = img_info.public_id,
-                                    product.colors[i].image_url = img_info.url
-                            }
-                            colors[j].image_base64 = undefined
-                        }
-                        flag = true
-                        break
-                    }
-                }
-                if (!flag) {
-                    image.destroy(product.catalogue[i].image_id)
-                }
-            }
-            // Add new image
-            for (let i = 0; i < colors.length; i++) {
-                if (!!colors[i].image_base64) {
-                    var img_info = await image.upload(image.base64(catalogue[i].image_base64), "product_catalogue")
-                    if (!!img_info)
-                        product.colors.push({
-                            color: colors[i].color,
-                            image_id: img_info.public_id,
-                            image_url: img_info.url
-                        })
-                }
-            }
-        }
+        
         // Save
         product.save((err: any) => {
             if (err) return res.status(500).send({ msg: config.err500 })
@@ -231,7 +257,7 @@ export const ProductUpdate = async (req: Request, res: Response, next: NextFunct
 
 }
 
-export const ProductImport = async (req: Request, res: Response, next: NextFunction) => {
+export const Imports = async (req: Request, res: Response, next: NextFunction) => {
     const data = req.body.data // [{code, quanity, price}]
     if (!data)
         return res.status(400).send({ msg: config.err400 })

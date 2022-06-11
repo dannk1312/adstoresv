@@ -15,11 +15,11 @@ export interface IAccount {
     name?: string,
     birth?: Date,
     gender?: boolean,
-    address?: [{
+    address?: {
         province: string,
         district: string,
         address: string
-    }],
+    },
     role: string,
 
     // Features
@@ -85,11 +85,11 @@ export const accountSchema = new Schema<IAccount>({
     name: String,
     birth: Date,
     gender: Boolean,
-    address: [{
+    address: {
         province: String,
         district: String,
         address: String
-    }],
+    },
     role: {
         type: String,
         enum: {

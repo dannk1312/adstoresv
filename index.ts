@@ -1,11 +1,16 @@
 import express, { Express, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import { dbconnect } from './services/database';
-import { route } from './routes/router';
 import cors from "cors";
 import cookieParser from 'cookie-parser';
 import * as sender from './services/sender';
 import * as image from './services/image';
+import { accountRoute } from './routes/accountRoute';
+import { billRoute } from './routes/billRoute';
+import { categoryRoute } from './routes/categoryRoute';
+import { chatRoute } from './routes/chatRoute';
+import { discountRoute } from './routes/discountRoute';
+import { productRoute } from './routes/productRoute';
 
 
 dotenv.config();
@@ -21,7 +26,15 @@ app.use(cookieParser(process.env.ACCESS_TOKEN_SECRET))
 
 app.use(express.json({ limit: '200mb' }))
 app.use(express.urlencoded({ extended: true, limit: '200mb' }))
-app.use(route)
+app.use(accountRoute)
+app.use(billRoute)
+app.use(categoryRoute)
+app.use(chatRoute)
+app.use(discountRoute)
+app.use(productRoute)
+app.use("/", (req: Request, res: Response) => {
+  res.send(`ADStore Server`);
+})
 
 app.listen(port, () => {
   console.log(`[log] Server is running at http://localhost:${port}`)

@@ -66,25 +66,17 @@ route.post("/default/updatePassword",
 
 
 // require: accessToken
-// role: ["Customer"]
-// field: address** || add_address**
-route.post("/default/updateAddress",
-    DefaultController.Role(["Customer", "Sale", "Admin"]),
-    AccountController.UpdateAddress
-)
-
-// require: accessToken
 // role: ["Customer", "Sale", "Admin"]
 route.post("/default/readBag",
     DefaultController.Role(["Customer", "Sale", "Admin"]),
-    AccountController.AccountReadBag
+    AccountController.ReadBag
 )
 
 // require: accessToken
 // role: ["Customer", "Sale", "Admin"]
 route.post("/default/readNotifications",
     DefaultController.Role(["Customer", "Sale", "Admin"]),
-    AccountController.AccountReadNotifications
+    AccountController.ReadNotifications
 )
 
 // require: accessToken
@@ -92,7 +84,7 @@ route.post("/default/readNotifications",
 // field: _id // id off notifications
 route.post("/default/deleteNotification",
     DefaultController.Role(["Customer", "Sale", "Admin"]),
-    AccountController.AccountDeleteNotifications
+    AccountController.DeleteNotification
 )
 
 // require: accessToken
@@ -100,7 +92,7 @@ route.post("/default/deleteNotification",
 // field: dest_id**, message**
 route.post("/default/sendNotification",
     DefaultController.Role(["Admin"]),
-    AccountController.AccountSendNotification
+    AccountController.SendNotification
 )
 
 // require: accessToken
@@ -109,7 +101,7 @@ route.post("/default/sendNotification",
 route.post("/default/updateBag",
     DefaultController.Role(["Customer", "Admin"]), // Admin để test cho tiện
     ProductController.ValidBag,
-    AccountController.AccountUpdateBag
+    AccountController.UpdateBag
 )
 //#endregion
 
@@ -119,13 +111,13 @@ route.post("/default/updateBag",
 // field: message**
 route.post("/chat/newChat",
     DefaultController.Role(["Customer"]),
-    ChatController.NewChat
+    ChatController.New
 )
 // require: accessToken
 // role: ["Customer", "Sale"]
 route.get("/chat/getChat",
     DefaultController.Role(["Customer", "Sale"]),
-    ChatController.GetChats
+    ChatController.List
 )
 // require: accessToken
 // role: ["Customer", "Sale"]
@@ -190,31 +182,31 @@ route.post("/category/query",
 // field: name**, code**, desc, colors**, category_id**, specs_link**, price**, sale
 route.post("/product/create", 
     DefaultController.Role(["Admin"]), 
-    ProductController.ProductCreate
+    ProductController.Create
 )
 
 // field: _id**
 route.post("/product/read", 
-    ProductController.ProductRead
+    ProductController.Read
 )
 
 // field: _id**
 route.post("/product/readComments", 
-    ProductController.ProductReadComment
+    ProductController.ReadComment
 )
 
 // field: accessToken, _id**, desc
 // role: ["Admin"]
 route.post("/product/update", 
     DefaultController.Role(["Admin"]), 
-    ProductController.ProductUpdate
+    ProductController.Update
 )
 
 // field: accessToken, data
 // role: ["Admin"]
 route.post("/product/import", 
     DefaultController.Role(["Admin"]), 
-    ProductController.ProductImport
+    ProductController.Imports
 )
 //#endregion
 
@@ -222,7 +214,7 @@ route.post("/product/import",
 // role: ["Customer", "Admin"]
 route.post("/bill/billCalc", 
     DefaultController.Role(["Customer", "Admin"]), 
-    BillController.BillCalc
+    BillController.Calculate
 )
 //#endregion
 

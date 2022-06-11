@@ -8,7 +8,7 @@ import { Account } from '../models/account';
 import mongoose from 'mongoose';
 
 
-export const BillCalc = async (req: Request, res: Response, next: NextFunction) => {
+export const Calculate = async (req: Request, res: Response, next: NextFunction) => {
     const discountCode: string = req.body.discountCode
     const bag_details: any[] = req.body.bag_details
     const address: any = req.body.address
@@ -96,7 +96,7 @@ export const BillCalc = async (req: Request, res: Response, next: NextFunction) 
     res.send({ msg: config.success, warning: req.body.valid_bag_msg + msg, data: { bag_details, ship, total, discount: reduce } })
 }
 
-export const BillCreate = async (req: Request, res: Response, next: NextFunction) => {
+export const Create = async (req: Request, res: Response, next: NextFunction) => {
     const discountCode: string = req.body.discountCode
     const bag_details: any[] = req.body.bag_details
     const address: any = req.body.address
@@ -216,12 +216,15 @@ export const BillCreate = async (req: Request, res: Response, next: NextFunction
     }
 }
 
-export const BillUpdate = async (req: Request, res: Response, next: NextFunction) => {
+export const Update = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const _id: string = req.body._id
         const status: string = req.body.status
         const account: any = req.body.account
         const desc: string = req.body.desc
+
+        if(!_id || !status)
+            return res.status(400).send({msg: config.err400 })
 
         const bill = await Bill.findById(_id)
         if (!bill)

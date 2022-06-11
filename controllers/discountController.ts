@@ -3,9 +3,9 @@ import { Document, Types } from "mongoose";
 import { Discount } from '../models/discount';
 import { Product } from '../models/product';
 import { config } from '../services/config';
-import { SendNotifications } from './accountController';
+import { SendNotificationsFunc } from './accountController';
 
-export const DiscountCreate = async (req:Request, res:Response, next: NextFunction) => {
+export const Create = async (req:Request, res:Response, next: NextFunction) => {
     const code: string = req.body.code
     const enable: boolean = req.body.enable
 
@@ -22,11 +22,9 @@ export const DiscountCreate = async (req:Request, res:Response, next: NextFuncti
     const is_oic: boolean = req.body.is_oic
     const value: boolean = req.body.value
     
-    const categories: string[] = req.body.categories
-    
     const discount = new Discount({
         code, enable, dateStart, dateEnd, quantity, minPrice, maxPrice, is_percent, is_ship,
-        is_oid, is_oic, value, categories
+        is_oid, is_oic, value
     })
 
     discount.save((err, doc) => {
@@ -36,8 +34,9 @@ export const DiscountCreate = async (req:Request, res:Response, next: NextFuncti
     })
 }
 
-export const DiscountUpdate =async (req: Request, res: Response, next: NextFunction) => {
+export const Update =async (req: Request, res: Response, next: NextFunction) => {
     const _id: string = req.body._id
+    const code: string = req.body.code
     const enable: boolean = req.body.enable
     const categories: any[] = req.body.categories
     const products: any[] = req.body.products
@@ -48,10 +47,10 @@ export const DiscountUpdate =async (req: Request, res: Response, next: NextFunct
     const accounts_add: any[] = req.body.caccounts_add
     const quantity: number = req.body.quanity
 
-    if(!_id)
+    if(!_id || !code)
         return res.status(400).send({msg: config.err400})
 
-    const discount = await Discount.findById(_id).select("-used")
+    const discount = await Discount.findOne({$or: [{_id: _id}, {code: code}]}).select("-used")
     if(!discount)
         return res.status(400).send({msg: config.err400})
 
@@ -88,7 +87,7 @@ export const DiscountUpdate =async (req: Request, res: Response, next: NextFunct
     if(!!accounts_add){
         discount.markModified("accounts")
         accounts_add.forEach(async e => {
-            if(await SendNotifications(e, `Bạn vừa được liên kết với mã Discount ${discount.code}`))
+            if(await SendNotificationsFunc(e, `Bạn vừa được liên kết với mã Discount ${discount.code}`))
                 discount.accounts.push(e)
         })
     }

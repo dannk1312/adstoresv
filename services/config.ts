@@ -15,6 +15,7 @@ export const config = {
     errEmailExists: "Email đã tồn tại. ",
     errPhoneExists: "Phone đã tồn tại. ",
     errOutOfSaler: "Lỗi, không có đủ saler. ",
+    errSaveImage: "Lỗi, không thể save ảnh. ",
     
     success: "Thành công. ",
     failure: "Thất bại. "

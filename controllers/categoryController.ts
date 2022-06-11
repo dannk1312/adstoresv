@@ -7,43 +7,34 @@ import { Category } from "../models/category";
 import { Product } from "../models/product";
 
 export const Create = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const name: string = req.body.name;
-        const image_base64: string = req.body.image_base64;
-        const specsModel: any = req.body.specsModel;   // [{name: "Ram", values: [{value: "2gb"}, {value: "4gb"}]}]
-        if (!name || !image_base64 || !specsModel)
-            return res.status(400).send({ msg: config.err400 })
-
-        // Try to save category
-        const category = new Category({
-            name: name,
-            specsModel: specsModel
-        })
-        const category_doc = await category.save()
-        if (!category_doc)
-            return res.status(400).send({ msg: config.err400 })
-
-        // Save image 
-        var img_info = await image.upload(image.base64(image_base64), "category")
-        if (!img_info) return res.send({ msg: config.success + " without image." })
-        category_doc.image_id = img_info.public_id
-        category_doc.image_url = img_info.url
-
-        //and save category again
-        if (!(await category_doc.save()))
-            return res.status(400).send({ msg: config.err400 })
-        return res.send({ msg: config.success })
-    } catch (err) {
-        console.log(err)
+    const name: string = req.body.name;
+    const image_base64: string = req.body.image_base64;
+    const specsModel: any = req.body.specsModel;   // [{name: "Ram", values: [{value: "2gb"}, {value: "4gb"}]}]
+    if (!name || !image_base64 || !specsModel)
         return res.status(400).send({ msg: config.err400 })
-    }
+
+    var img_info = await image.upload(image.base64(image_base64), "category")
+    if (!img_info) return res.status(500).send({ msg: config.errSaveImage })
+
+    // Try to save category
+    const category = new Category({
+        name: name,
+        specsModel: specsModel,
+        image_id: img_info.public_id,
+        image_url: img_info.url,
+    })
+    category.save((err, doc) => {
+        if(err) return res.status(500).send({ msg: config.err500 })
+        if(!doc) return res.status(400).send({ msg: config.err400 })
+        return res.send({msg: config.success})
+    })
 }
 
 export const Update = async (req: Request, res: Response, next: NextFunction) => {
     const _id: string = req.body._id;
     const name: string = req.body.name;
     const image_base64: string = req.body.image_base64;
-    const specsModel: any = req.body.specsModel;   // [{_id, name: "Ram", values: [{_id, value: "2gb"}, {value: "4gb"}]}]
+    const specsModel: any = req.body.specsModel;  
     if (!_id || (!name && !image_base64 && !specsModel))
         return res.status(400).send({ msg: config.err400 })
 
@@ -57,35 +48,25 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
 
     // Apply new specs model
     // @ts-ignore
-    if (!!specsModel && category.checkNewSpecsModel(specsModel))
+    if (!!specsModel && category.checkSpecsModel(specsModel))
         category.specsModel = specsModel
     else
         return res.status(400).send({ msg: config.err400 })
 
     if (!!image_base64) {
-        if (!!category.image_id)
-            image.destroy(category.image_id)
+        image.destroy(category.image_id)
 
-        const category_doc = await category.save()
-        if (!category_doc)
-            return res.status(400).send({ msg: config.err400 })
-
-        // Save image 
         var img_info = await image.upload(image.base64(image_base64), "category")
         if (!img_info) return res.send({ msg: config.success + " without image." })
-        category_doc.image_id = img_info.public_id
-        category_doc.image_url = img_info.url
+        category.image_id = img_info.public_id
+        category.image_url = img_info.url
+    } 
 
-        //and save category again
-        if (!(await category_doc.save()))
-            return res.status(400).send({ msg: config.err400 })
-        return res.send({ msg: config.success })
-    } else {
-        category.save((save_err) => {
-            if (save_err) return res.status(500).send({ msg: config.err500 })
-            res.send({ msg: config.success })
-        })
-    }
+    category.save((err, doc) => {
+        if (err) return res.status(500).send({ msg: config.err500 })
+        if(!doc) return res.status(400).send({ msg: config.err400 })
+        res.send({ msg: config.success })
+    })
 }
 
 export const Read = async (req: Request, res: Response, next: NextFunction) => {

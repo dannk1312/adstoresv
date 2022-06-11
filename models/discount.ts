@@ -9,18 +9,18 @@ export interface IDiscount {
     // Limit of discounts
     dateStart: Date,
     dateEnd: Date, // undefined mean dont have quantity limit
-    quantity: Number, // undefined mean dont have quantity limit
+    quantity: number, // undefined mean dont have quantity limit
 
     // Price range of discounts
-    minPrice: Number, // undefined mean dont have minPrice
-    maxPrice: Number, // undefined mean dont have maxPrice
+    minPrice: number, // undefined mean dont have minPrice
+    maxPrice: number, // undefined mean dont have maxPrice
 
     // Type of discount
     is_percent: boolean, // in percent of price or in price
     is_ship: boolean,
     is_oid: boolean, // is one in day
     is_oic: boolean, // is one in customer
-    value: Number, 
+    value: number, 
 
     // depend on
     products: Types.ObjectId[], // empty mean all can use 
@@ -50,7 +50,7 @@ export const discountSchema = new Schema<IDiscount>({
     is_ship: {type: Boolean, default: false},
     is_oid: {type: Boolean, default: true},
     is_oic: {type: Boolean, default: true}, 
-    value: Number, 
+    value: {type: Number, required: true}, 
 
     // depend on
     products: [{ type: Schema.Types.ObjectId, required: true, ref: 'Product' }], 

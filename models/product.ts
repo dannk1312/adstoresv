@@ -14,7 +14,9 @@ export interface IProduct {
         color: string,
         image_id: string,
         image_url: string,
-    }]
+    }],
+    image_id: string,
+    image_url: string,
 
     // Information
     category: Types.ObjectId,
@@ -23,6 +25,7 @@ export interface IProduct {
     sale: number,
     catalogue: [
         {
+            _id: Types.ObjectId,
             image_id: string,
             image_url: string
         }

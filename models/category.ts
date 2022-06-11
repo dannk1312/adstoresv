@@ -80,35 +80,23 @@ categorySchema.statics.surfaces = async function (email: string): Promise<any> {
     return result
 }
 
-categorySchema.methods.checkProductSpecsLink = function(this: ICategory,specs_link: any): boolean {
+categorySchema.methods.getSpecsLink = function(this: ICategory, specs: any): object {
+    var specs_link: any = {}
     for (let i = 0; i < this.specsModel.length; i++) {
         var e = this.specsModel[i]
-        var flag = false
-
-        // @ts-ignore
-        for (let j = 0; j < specs_link.length; j++) {
-            var spec_id = e._id.toString()
-            if(specs_link.hasOwnProperty(spec_id)) {
-                flag = true
-                // Check values
-                var flag_value = false
-                // @ts-ignore
-                for (let a = 0; a < e.values.length; a++) {
-                    var v = e.values[a]
-                    if(specs_link[spec_id] == v._id) {
-                        flag_value = true
-                        break
-                    }
+        if(specs.hasOwnProperty(e.name)) {
+            for (let j = 0; j < e.values.length; j++) {
+                if(specs[e.name] == e.values[j].value) {
+                    specs_link[e._id.toString()] = e.values[j]._id.toString()
+                    break
                 }
-                if(!flag_value) return false
             }
         }
-        if(!flag) return false
     }
-    return true;
+    return specs_link
 }
 
-categorySchema.methods.checkNewSpecsModel = function (this: ICategory, newSpecsModel: any): boolean {
+categorySchema.methods.checkSpecsModel = function(this: ICategory, newSpecsModel: any): boolean {
     if(!this.specsModel || this.products.length == 0) {
         return true;
     }
@@ -145,6 +133,7 @@ categorySchema.methods.checkNewSpecsModel = function (this: ICategory, newSpecsM
 
     return true
 }
+
 
 categorySchema.methods.addProduct = function (this: ICategory, product: IProduct) {
     this.products.push(product._id)
