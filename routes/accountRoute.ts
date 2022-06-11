@@ -12,8 +12,8 @@ const route = express.Router();
 //      password**: string
 //      name: string 
 //      birth: Date
-//      gender: string
-//      address: string
+//      gender: boolean
+//      address: object - {province: string, district: string, address: string}
 route.post("/account/signUp", Default.OTPCheck, Account.SignUp)
 
 // field: email_or_phone, email, phone
