@@ -28,8 +28,8 @@ export const categorySchema = new Schema<ICategory>({
         unique: true,
         trim: true
     },
-    image_id: { type: String, required: [true, "Category image cannot be empty"] },
-    image_url: { type: String, required: [true, "Category image cannot be empty"] },
+    image_id: { type: String },
+    image_url: { type: String  },
     products: [{ type: Schema.Types.ObjectId, required: true, ref: 'Product' }],
     specsModel: [{
         name: { type: String, required: [true, "Category specsModel name cannot be empty"] },

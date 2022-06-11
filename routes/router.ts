@@ -15,35 +15,35 @@ route.get("/", (req: Request, res: Response) => {
 // Field: email_or_phone**, password**, code**, name, birth, gender
 route.post("/default/signUp",
     DefaultController.OTPCheck,
-    AccountController.AccountSignUp
+    AccountController.SignUp
 )
 
 // Field: email_or_phone**
 route.post("/default/otp", DefaultController.OTPRequest)
 
 // Field: (email_or_phone**, password**) | (email_or_phone**, code**) | googleToken**
-route.post("/default/login", AccountController.AccountSignin)
+route.post("/default/login", AccountController.SignIn)
 
 // require: accessToken
 // role: ["Customer", "Sale", "Admin"]
 route.get("/default/info",
-    DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
-    AccountController.AccountInfo
+    DefaultController.Role(["Customer", "Sale", "Admin"]),
+    AccountController.Info
 )
 
 // require: accessToken
 // role: ["Customer", "Sale", "Admin"]
 route.get("/default/surface",
-    DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
-    AccountController.AccountSurface
+    DefaultController.Role(["Customer", "Sale", "Admin"]),
+    AccountController.Surface
 )
 
 // require: accessToken
 // role: ["Customer", "Sale", "Admin"]
 // field: name, birth, gender
 route.post("/default/updateInfo",
-    DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
-    AccountController.AccountUpdateInfo
+    DefaultController.Role(["Customer", "Sale", "Admin"]),
+    AccountController.UpdateInfo
 )
 
 
@@ -51,17 +51,17 @@ route.post("/default/updateInfo",
 // role: ["Customer", "Sale", "Admin"]
 // field: phone**, code**
 route.post("/default/updatePhone",
-    DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
+    DefaultController.Role(["Customer", "Sale", "Admin"]),
     DefaultController.phoneOTPCheck,
-    AccountController.AccountUpdatePhone
+    AccountController.UpdatePhone
 )
 
 // require: accessToken
 // role: ["Customer", "Sale", "Admin"]
 // field: old_password**, password**
 route.post("/default/updatePassword",
-    DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
-    AccountController.AccountUpdatePassword
+    DefaultController.Role(["Customer", "Sale", "Admin"]),
+    AccountController.UpdatePassword
 )
 
 
@@ -69,21 +69,21 @@ route.post("/default/updatePassword",
 // role: ["Customer"]
 // field: address** || add_address**
 route.post("/default/updateAddress",
-    DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
-    AccountController.AccountUpdateAddress
+    DefaultController.Role(["Customer", "Sale", "Admin"]),
+    AccountController.UpdateAddress
 )
 
 // require: accessToken
 // role: ["Customer", "Sale", "Admin"]
 route.post("/default/readBag",
-    DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
+    DefaultController.Role(["Customer", "Sale", "Admin"]),
     AccountController.AccountReadBag
 )
 
 // require: accessToken
 // role: ["Customer", "Sale", "Admin"]
 route.post("/default/readNotifications",
-    DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
+    DefaultController.Role(["Customer", "Sale", "Admin"]),
     AccountController.AccountReadNotifications
 )
 
@@ -91,7 +91,7 @@ route.post("/default/readNotifications",
 // role: ["Customer", "Sale", "Admin"]
 // field: _id // id off notifications
 route.post("/default/deleteNotification",
-    DefaultController.roleVerify(["Customer", "Sale", "Admin"]),
+    DefaultController.Role(["Customer", "Sale", "Admin"]),
     AccountController.AccountDeleteNotifications
 )
 
@@ -99,7 +99,7 @@ route.post("/default/deleteNotification",
 // role: ["Admin"]
 // field: dest_id**, message**
 route.post("/default/sendNotification",
-    DefaultController.roleVerify(["Admin"]),
+    DefaultController.Role(["Admin"]),
     AccountController.AccountSendNotification
 )
 
@@ -107,7 +107,7 @@ route.post("/default/sendNotification",
 // role: ["Customer"]
 // field: dest_id**, message**
 route.post("/default/updateBag",
-    DefaultController.roleVerify(["Customer", "Admin"]), // Admin để test cho tiện
+    DefaultController.Role(["Customer", "Admin"]), // Admin để test cho tiện
     ProductController.ValidBag,
     AccountController.AccountUpdateBag
 )
@@ -118,27 +118,27 @@ route.post("/default/updateBag",
 // role: ["Customer"]
 // field: message**
 route.post("/chat/newChat",
-    DefaultController.roleVerify(["Customer"]),
+    DefaultController.Role(["Customer"]),
     ChatController.NewChat
 )
 // require: accessToken
 // role: ["Customer", "Sale"]
 route.get("/chat/getChat",
-    DefaultController.roleVerify(["Customer", "Sale"]),
+    DefaultController.Role(["Customer", "Sale"]),
     ChatController.GetChats
 )
 // require: accessToken
 // role: ["Customer", "Sale"]
 // field: chatId**, message**
 route.post("/chat/addMessage",
-    DefaultController.roleVerify(["Customer", "Sale"]),
+    DefaultController.Role(["Customer", "Sale"]),
     ChatController.AddMessage
 )
 // require: accessToken
 // role: ["Customer", "Sale"]
 // field: chatId**, skip, get
 route.post("/chat/getMessages",
-    DefaultController.roleVerify(["Customer", "Sale"]),
+    DefaultController.Role(["Customer", "Sale"]),
     ChatController.GetMessages
 )
 //#endregion
@@ -148,38 +148,38 @@ route.post("/chat/getMessages",
 // role: ["Admin"]
 // field: name**, image_base64**, specsModel**
 route.post("/category/create", 
-    DefaultController.roleVerify(["Admin"]), 
-    CategoryController.CategoryCreate
+    DefaultController.Role(["Admin"]), 
+    CategoryController.Create
 )
 
 // require: accessToken
 // role: ["Admin"]
 // field: _id, name, image_base64, specsModel
 route.post("/category/update", 
-    DefaultController.roleVerify(["Admin"]), 
-    CategoryController.CategoryUpdate
+    DefaultController.Role(["Admin"]), 
+    CategoryController.Update
 )
 
 // field: name**
 route.post("/category/read", 
-    CategoryController.CategoryRead
+    CategoryController.Read
 )
 
 route.get("/category/list", 
-    CategoryController.CategoryList
+    CategoryController.List
 )
 
 // require: accessToken
 // role: ["Admin"]
 // field: name**
 route.post("/category/delete", 
-    DefaultController.roleVerify(["Admin"]), 
-    CategoryController.CategoryDelete
+    DefaultController.Role(["Admin"]), 
+    CategoryController.Delete
 )
 
 // field: name**, specs (specs: {name: value})
 route.post("/category/query", 
-    CategoryController.CategoryQuery
+    CategoryController.Query
 )
 
 //#endregion
@@ -189,7 +189,7 @@ route.post("/category/query",
 // role: ["Admin"]
 // field: name**, code**, desc, colors**, category_id**, specs_link**, price**, sale
 route.post("/product/create", 
-    DefaultController.roleVerify(["Admin"]), 
+    DefaultController.Role(["Admin"]), 
     ProductController.ProductCreate
 )
 
@@ -206,14 +206,14 @@ route.post("/product/readComments",
 // field: accessToken, _id**, desc
 // role: ["Admin"]
 route.post("/product/update", 
-    DefaultController.roleVerify(["Admin"]), 
+    DefaultController.Role(["Admin"]), 
     ProductController.ProductUpdate
 )
 
 // field: accessToken, data
 // role: ["Admin"]
 route.post("/product/import", 
-    DefaultController.roleVerify(["Admin"]), 
+    DefaultController.Role(["Admin"]), 
     ProductController.ProductImport
 )
 //#endregion
@@ -221,7 +221,7 @@ route.post("/product/import",
 // field: accessToken, data
 // role: ["Customer", "Admin"]
 route.post("/bill/billCalc", 
-    DefaultController.roleVerify(["Customer", "Admin"]), 
+    DefaultController.Role(["Customer", "Admin"]), 
     BillController.BillCalc
 )
 //#endregion

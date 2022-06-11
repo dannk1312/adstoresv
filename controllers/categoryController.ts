@@ -6,7 +6,7 @@ import * as image from "../services/image";
 import { Category } from "../models/category";
 import { Product } from "../models/product";
 
-export const CategoryCreate = async (req: Request, res: Response, next: NextFunction) => {
+export const Create = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const name: string = req.body.name;
         const image_base64: string = req.body.name;
@@ -26,6 +26,7 @@ export const CategoryCreate = async (req: Request, res: Response, next: NextFunc
         // Save image 
         var img_info = await image.upload(image.base64(image_base64), "category")
         if (!img_info) return res.send({ msg: config.success + " without image." })
+        console.log(img_info)
         category_doc.image_id = img_info.public_id
         category_doc.image_url = img_info.url
 
@@ -39,11 +40,11 @@ export const CategoryCreate = async (req: Request, res: Response, next: NextFunc
     }
 }
 
-export const CategoryUpdate = async (req: Request, res: Response, next: NextFunction) => {
+export const Update = async (req: Request, res: Response, next: NextFunction) => {
     const _id: string = req.body._id;
     const name: string = req.body.name;
-    const image_base64: string = req.body.name;
-    const specsModel: any = req.body.name;   // [{_id, name: "Ram", values: [{_id, value: "2gb"}, {value: "4gb"}]}]
+    const image_base64: string = req.body.image_base64;
+    const specsModel: any = req.body.specsModel;   // [{_id, name: "Ram", values: [{_id, value: "2gb"}, {value: "4gb"}]}]
     if (!_id || (!name && !image_base64 && !specsModel))
         return res.status(400).send({ msg: config.err400 })
 
@@ -88,19 +89,20 @@ export const CategoryUpdate = async (req: Request, res: Response, next: NextFunc
     }
 }
 
-export const CategoryRead = async (req: Request, res: Response, next: NextFunction) => {
+export const Read = async (req: Request, res: Response, next: NextFunction) => {
     const name: string = req.body.name;
-    if (!name)
+    const _id: string = req.body._id;
+    if (!name && !_id)
         return res.status(400).send({ msg: config.err400 })
 
-    Category.findOne({ name: name }, (err: any, doc: any) => {
+    Category.findOne({ $or:[ {'_id': _id}, {'name': name}] }, (err: any, doc: any) => {
         if (err) return res.status(500).send({ msg: config.err500 })
         if (!doc) return res.status(400).send({ msg: config.errNotExists })
         return res.send({ msg: config.success, data: doc.info })
     })
 }
 
-export const CategoryList = async (req: Request, res: Response, next: NextFunction) => {
+export const List = async (req: Request, res: Response, next: NextFunction) => {
     // @ts-ignore
     const data = await Category.surfaces();
     if (data)
@@ -108,12 +110,13 @@ export const CategoryList = async (req: Request, res: Response, next: NextFuncti
     return res.status(400).send({ msg: config.err400 })
 }
 
-export const CategoryDelete = async (req: Request, res: Response, next: NextFunction) => {
+export const Delete = async (req: Request, res: Response, next: NextFunction) => {
     const name: string = req.body.name;
-    if (!name)
+    const _id: string = req.body._id;
+    if (!name && !_id)
         return res.status(400).send({ msg: config.err400 })
 
-    const category = await Category.findOne({ name })
+    const category = await Category.findOne({ $or:[ {'_id': _id}, {'name': name}] })
     if (!category)
         return res.status(400).send({ msg: config.errNotExists })
     if (category.products.length > 0) {
@@ -126,13 +129,13 @@ export const CategoryDelete = async (req: Request, res: Response, next: NextFunc
     })
 }
 
-export const CategoryQuery = async (req: Request, res: Response, next: NextFunction) => {
+export const Query = async (req: Request, res: Response, next: NextFunction) => {
     const name: string = req.body.name
     const specs: any = req.body.specs??{} // {name: value}
     const min_price: number = req.body.min_price??0
     const max_price: number = req.body.max_price??1000000000
     const colors: string[] = req.body.colors
-    const skip: any = req.body.skip??0
+    const skip: number = req.body.skip??0
     const limit: number = req.body.limit??20
 
     if (!name)
@@ -162,9 +165,8 @@ export const CategoryQuery = async (req: Request, res: Response, next: NextFunct
         }
     }
 
-
     if (products.length == 0)
-        if(!req.body.skip)
+        if(req.body.skip == undefined)
             return res.send({ msg: config.success, data: [], count: 0 })
         else 
             return res.send({ msg: config.success, data: []})
@@ -172,8 +174,8 @@ export const CategoryQuery = async (req: Request, res: Response, next: NextFunct
     var options: any = { '_id': { $in: products }, price: { $lte: max_price, $gte: min_price }}
     if(!!colors)
         options["colors.color"] = { $in: colors}
-    if(!!max_price)
-    var count = (!req.body.skip) ? await Product.countDocuments(options): undefined
+
+    var count = (req.body.skip == undefined) ? await Product.countDocuments(options): undefined
     var result = await Product
     .find(options)
     .skip(skip)

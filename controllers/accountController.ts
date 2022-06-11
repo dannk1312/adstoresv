@@ -10,7 +10,7 @@ import { config } from "../services/config";
 // SIGN UP
 // do Account Create
 
-export const AccountSignUp = async (req: Request, res: Response, next: NextFunction) => {
+export const SignUp = async (req: Request, res: Response, next: NextFunction) => {
     try {
         var { email_or_phone, password, name, birth, gender } = req.body;
         if (!email_or_phone || !password)
@@ -47,7 +47,7 @@ export const AccountSignUp = async (req: Request, res: Response, next: NextFunct
 };
 
 // SIGN IN
-export const AccountSignin = async (req: Request, res: Response, next: NextFunction) => {
+export const SignIn = async (req: Request, res: Response, next: NextFunction) => {
     const { email_or_phone, password, googleToken, code } = req.body
     if (email_or_phone) {
         if (password) {
@@ -87,19 +87,19 @@ export const AccountSignin = async (req: Request, res: Response, next: NextFunct
 }
 
 // GET SURFACE
-export const AccountSurface = async (req: Request, res: Response, next: NextFunction) => {
+export const Surface = async (req: Request, res: Response, next: NextFunction) => {
     const account: any = req.body.account;
     res.send({ msg: config.success, data: await account.surface() })
 }
 
 // GET INFO
-export const AccountInfo = async (req: Request, res: Response, next: NextFunction) => {
+export const Info = async (req: Request, res: Response, next: NextFunction) => {
     const account: any = req.body.account;
     res.send({ msg: config.success, data: account.info })
 }
 
 // UPDATE INFO
-export const AccountUpdateInfo = async (req: Request, res: Response, next: NextFunction) => {
+export const UpdateInfo = async (req: Request, res: Response, next: NextFunction) => {
     const { name, birth, gender } = req.body
     const account: Document = req.body.account
     account.updateOne({ name, birth, gender }, (err: Error) => {
@@ -109,7 +109,7 @@ export const AccountUpdateInfo = async (req: Request, res: Response, next: NextF
     })
 }
 
-export const AccountUpdateAddress = async (req: Request, res: Response, next: NextFunction) => {
+export const UpdateAddress = async (req: Request, res: Response, next: NextFunction) => {
     const { address, address_add } = req.body
     const account: Document = req.body.account
     if(!address && !address_add)
@@ -128,7 +128,7 @@ export const AccountUpdateAddress = async (req: Request, res: Response, next: Ne
     })
 }
 
-export const AccountUpdatePhone = async (req: Request, res: Response, next: NextFunction) => {
+export const UpdatePhone = async (req: Request, res: Response, next: NextFunction) => {
     const { account, phone } = req.body
     // @ts-ignore
     if (phone && config.phoneRegEx.test(phone) && !(await Account.phoneExists(phone)))
@@ -140,7 +140,7 @@ export const AccountUpdatePhone = async (req: Request, res: Response, next: Next
     return res.status(400).send({ msg: config.err400 });
 }
 
-export const AccountUpdatePassword = async (req: Request, res: Response, next: NextFunction) => {
+export const UpdatePassword = async (req: Request, res: Response, next: NextFunction) => {
     var { old_password, password, account } = req.body
     if (!!old_password && !! password && config.passwordRegEx.test(password) && await argon2.verify(account.password, old_password)) {
         password = await argon2.hash(password)

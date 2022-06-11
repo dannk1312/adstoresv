@@ -17,7 +17,7 @@ const randomCode = (): string => {
     return result;
 }
 
-export const roleVerify = (roles: string[]) => {
+export const Role = (role: string[] | string) => {
     return async (req: Request, res: Response, next: NextFunction) => {
         try {
             var token: string;
@@ -34,7 +34,7 @@ export const roleVerify = (roles: string[]) => {
             const account = await Account.findById(id).select("-chats -bag -rates -bill -notifications").exec()
             if(!account)
                 return res.status(400).send({msg: config.err400})
-            if (roles.includes(account.role)) {
+            if ((typeof(role) == "string" && (role == "All" || role == account.role)) || role.includes(account.role)) {
                 req.body.account = account;
                 next();
             } else throw new Error(`${account.email + " " + account.role}`)
@@ -112,7 +112,11 @@ export const emailOTPCheck = async (req: Request, res: Response, next: NextFunct
 
 export const OTPRequest = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { email_or_phone } = req.body
+        var { email_or_phone, email, phone } = req.body
+        if(!!email)
+            email_or_phone = email
+        else if(!!phone)
+            email_or_phone = phone
         if(!email_or_phone)
             return res.status(400).send({msg: config.err400 })
         else if(codeCache.has(email_or_phone))
@@ -145,7 +149,11 @@ export const OTPRequest = async (req: Request, res: Response, next: NextFunction
 
 export const OTPCheck = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { email_or_phone, code } = req.body
+        var { email_or_phone, code, email, phone } = req.body
+        if(!!email)
+            email_or_phone = email
+        else if(!!phone)
+            email_or_phone = phone
         if (codeCache.get(email_or_phone) === code) {
             console.log(`${email_or_phone} pass otp check`)
             next()

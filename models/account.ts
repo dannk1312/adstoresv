@@ -37,6 +37,8 @@ export interface IAccount {
         product: Types.ObjectId,
         star: number
     }],
+    self_cancel: number,
+    enable: boolean,
 
     // Timestamps
     createdAt: Date,
@@ -111,7 +113,9 @@ export const accountSchema = new Schema<IAccount>({
     notifications: [{
         message: { type: String, required: true, trim: true },
         createdAt: { type: Date, default: Date.now }
-    }]
+    }],
+    self_cancel: {type: Number, default: 0},
+    enable: {type: Boolean, default: true}
 }, { timestamps: true })
 
 accountSchema
