@@ -61,9 +61,6 @@ route.post("/account/updatePassword", Default.Role("All"), Account.UpdatePasswor
 
 
 // header: accessToken - role: Customer
-route.get("/account/readBag", Default.Role("Customer"), Account.ReadBag)
-
-// header: accessToken - role: Customer
 route.get("/account/readNotifications", Default.Role("Customer"), Account.ReadNotifications)
 
 // header: accessToken - role: Customer - field: _id
@@ -71,12 +68,16 @@ route.get("/account/readNotifications", Default.Role("Customer"), Account.ReadNo
 //      _id: string - id notification
 route.post("/account/deleteNotification", Default.Role("Customer"), Account.DeleteNotification)
 
-// header: accessToken - role: Customer - field: dest_id, message
+// header: accessToken - role: Admin - field: dest_id, message
 // type: 
 //      dest_id: string - id accounts
 //      message: string
 // rule: dest_id**, message**
-route.post("/account/sendNotification", Default.Role("Customer"), Account.SendNotification)
+route.post("/account/sendNotification", Default.Role("Admin"), Account.SendNotification)
+
+
+// header: accessToken - role: Customer
+route.get("/account/readBag", Default.Role("Customer"), Account.ReadBag)
 
 // header: accessToken - role: Customer - field: bag
 // type: 
