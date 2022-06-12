@@ -1,0 +1,21 @@
+
+###
+POST http://localhost:5000/account/login HTTP/1.1
+Content-Type: application/json
+
+{
+    "email_or_phone": "adstore7491@gmail.com",
+    "password": "ad1811007491"
+}
+
+
+###
+POST http://localhost:5000/account/login HTTP/1.1
+Content-Type: application/json
+
+{
+    "email_or_phone": "dannk1312@gmail.com",
+    "password": "ad1811007491"
+}
+
+

@@ -78,5 +78,5 @@ POST http://localhost:5000/category/query HTTP/1.
 Content-Type: application/json
 
 {
-    "name": "Laptop",
+    "name": "Laptop"
 }

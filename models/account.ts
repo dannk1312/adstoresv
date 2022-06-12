@@ -14,7 +14,7 @@ export interface IAccount {
     // Information
     name?: string,
     birth?: Date,
-    gender?: boolean,
+    gender?: string,
     address?: {
         province: string,
         district: string,
@@ -84,7 +84,7 @@ export const accountSchema = new Schema<IAccount>({
     // Information
     name: String,
     birth: Date,
-    gender: Boolean,
+    gender: String,
     address: {
         province: String,
         district: String,
@@ -160,7 +160,7 @@ accountSchema.methods.surface = async function () {
         phone: this.phone,
         name: this.name,
         notifications_length: doc.length > 0 ? doc[0].notifications_length : -1,
-        bag_items_length: doc.length > 0 ? doc[0].bag_items_length : -1,
+        bag_items_length: doc.length > 0 ? doc[0].bag_items_length : -1
     };
 }
 

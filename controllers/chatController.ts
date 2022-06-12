@@ -1,13 +1,8 @@
 import { Account, IAccount } from "../models/account";
 import { Request, Response, NextFunction } from 'express';
 import { Document, Types } from "mongoose";
-import jwt from "jsonwebtoken";
-import argon2 from "argon2";
-import * as sender from "../services/sender";
-import { codeCache } from "../services/cache";
 import { config } from "../services/config";
 import { Chat, IChat } from "../models/chat";
-import { Console, debug } from "console";
 
 export const New = async (req: Request, res: Response, next: NextFunction) => {
     try {
