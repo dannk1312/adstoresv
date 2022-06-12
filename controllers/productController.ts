@@ -7,12 +7,29 @@ import { Category } from "../models/category";
 import { Product } from "../models/product";
 import { Import } from "../models/import";
 
+export const List = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const skip: number = req.body.skip ?? 0
+        const limit: number = req.body.limit ?? 20
+
+        const count = (req.body.skip == undefined) ? await Product.countDocuments() : undefined
+        const result = await Product.find().skip(skip).limit(limit).select("-colors -comments -desc -specs_link -category").exec()
+        if (!result)
+            return res.status(500).send({ msg: config.err500 })
+
+        return res.send({ msg: config.success, data: result, count: count })
+    } catch (err) {
+        console.log(err)
+        return res.status(500).send({ msg: config.err500 })
+    }
+}
+
 export const Create = async (req: Request, res: Response, next: NextFunction) => {
     const name: string = req.body.name
     const code: string = req.body.code
     const desc: string = req.body.desc
-    const category: string = req.body.category      
-    const specs: any = req.body.specs  
+    const category: string = req.body.category
+    const specs: any = req.body.specs
     const price: number = req.body.price
     const sale: number = req.body.sale
     const image_base64: string = req.body.image_base64
@@ -23,7 +40,7 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
     }
 
     const img_info = await image.upload(image.base64(image_base64), "product_color");
-    if(!img_info) return res.status(500).send({msg: config.errSaveImage})
+    if (!img_info) return res.status(500).send({ msg: config.errSaveImage })
 
     // Handle Category & Specs
     var categoryDoc = await Category.findById(category);
@@ -32,10 +49,10 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
         return res.status(400).send({ msg: config.err400 })
 
     // @ts-ignore
-    const specs_link =  categoryDoc.getSpecsLink(specs)
+    const specs_link = categoryDoc.getSpecsLink(specs)
 
     var product = new Product({ name, code, desc, category: categoryDoc._id, specs_link: specs_link, price, sale, image_id: img_info.public_id, image_url: img_info.url })
-    
+
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
@@ -43,7 +60,7 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
         const productDoc = await product.save(opts)
         // @ts-ignore
         categoryDoc.addProduct(productDoc)
-        categoryDoc = await categoryDoc.save() 
+        categoryDoc = await categoryDoc.save()
         if (!productDoc || !categoryDoc)
             throw Error("Fail")
 
@@ -64,7 +81,7 @@ export const Read = async (req: Request, res: Response, next: NextFunction) => {
     if (!_id && !code)
         return res.status(400).send({ msg: config.err400 })
 
-    Product.findOne({$or: [{_id: _id}, {code: code}]}, async (err: any, doc: any) => {
+    Product.findOne({ $or: [{ _id: _id }, { code: code }] }, async (err: any, doc: any) => {
         if (err) return res.status(500).send({ msg: config.err500 })
         if (!doc) return res.status(400).send({ msg: config.err400 })
 
@@ -77,8 +94,8 @@ export const ReadComment = async (req: Request, res: Response, next: NextFunctio
     const code: string = req.body.code
     const skip: number = req.body.skip ?? 0
     const limit: number = req.body.skip ?? 20
-    
-    Product.findOne({$or: [{_id: _id}, {code: code}]}).select("comments").slice("comments", [skip, limit]).populate("comments.account").exec((err, doc) => {
+
+    Product.findOne({ $or: [{ _id: _id }, { code: code }] }).select("comments").slice("comments", [skip, limit]).populate("comments.account").exec((err, doc) => {
         if (err) return res.status(500).send({ msg: config.err500 })
         if (!doc) return res.status(400).send({ msg: config.errNotExists })
         const edit_result: any[] = []
@@ -101,10 +118,10 @@ export const AddColor = async (req: Request, res: Response, next: NextFunction) 
         return res.status(400).send({ msg: config.err400 })
 
     const img_info = await image.upload(image.base64(image_base64), "product_color");
-    if(!img_info) return res.status(500).send({msg: config.errSaveImage})
-    const color_save = {color: color, image_id: img_info.public_id, image_url: img_info.url}
-    
-    Product.findOneAndUpdate({$or: [{_id: _id}, {code: code}]}, {$push: {colors: color_save}}).exec((err, doc) => {
+    if (!img_info) return res.status(500).send({ msg: config.errSaveImage })
+    const color_save = { color: color, image_id: img_info.public_id, image_url: img_info.url }
+
+    Product.findOneAndUpdate({ $or: [{ _id: _id }, { code: code }] }, { $push: { colors: color_save } }).exec((err, doc) => {
         if (err) return res.status(500).send({ msg: config.err500 })
         if (!doc) return res.status(400).send({ msg: config.errNotExists })
 
@@ -119,21 +136,21 @@ export const DeleteColor = async (req: Request, res: Response, next: NextFunctio
 
     if ((!_id && !code) || !color)
         return res.status(400).send({ msg: config.err400 })
-    
-    var doc = await Product.findOne({$or: [{_id: _id}, {code: code}]}).select("colors").exec()
-    if(!doc)
+
+    var doc = await Product.findOne({ $or: [{ _id: _id }, { code: code }] }).select("colors").exec()
+    if (!doc)
         return res.status(400).send({ msg: config.err400 })
 
-    for(let i = 0; i < doc.colors.length; i++) {
-        if(doc.colors[i].color == color) {
+    for (let i = 0; i < doc.colors.length; i++) {
+        if (doc.colors[i].color == color) {
             doc.colors.slice(i, 1)
-            if(!!(await doc.save())) {
+            if (!!(await doc.save())) {
                 image.destroy(doc.colors[i].image_id)
-            } else 
-                return res.status(500).send({msg: config.err500})
+            } else
+                return res.status(500).send({ msg: config.err500 })
         }
     }
-    return res.send({msg: config.success})
+    return res.send({ msg: config.success })
 }
 
 export const AddCatalogue = async (req: Request, res: Response, next: NextFunction) => {
@@ -145,11 +162,11 @@ export const AddCatalogue = async (req: Request, res: Response, next: NextFuncti
         return res.status(400).send({ msg: config.err400 })
 
     const img_info = await image.upload(image.base64(image_base64), "product");
-    if(!img_info)
-        return res.status(500).send({msg: config.errSaveImage})
-    const catelogue = {image_id: img_info.public_id, image_url: img_info.url}
-    
-    Product.findOneAndUpdate({$or: [{_id: _id}, {code: code}]}, {$push: {catalogue: catelogue}}).exec((err, doc) => {
+    if (!img_info)
+        return res.status(500).send({ msg: config.errSaveImage })
+    const catelogue = { image_id: img_info.public_id, image_url: img_info.url }
+
+    Product.findOneAndUpdate({ $or: [{ _id: _id }, { code: code }] }, { $push: { catalogue: catelogue } }).exec((err, doc) => {
         if (err) return res.status(500).send({ msg: config.err500 })
         if (!doc) return res.status(400).send({ msg: config.errNotExists })
 
@@ -164,22 +181,22 @@ export const DeleteCatalogue = async (req: Request, res: Response, next: NextFun
 
     if ((!_id && !code) || !catalogue_id)
         return res.status(400).send({ msg: config.err400 })
-    
-    var doc = await Product.findOne({$or: [{_id: _id}, {code: code}]}).select("catalogue").exec()
-    if(!doc)
+
+    var doc = await Product.findOne({ $or: [{ _id: _id }, { code: code }] }).select("catalogue").exec()
+    if (!doc)
         return res.status(400).send({ msg: config.err400 })
 
-    for(let i = 0; i < doc.colors.length; i++) {
+    for (let i = 0; i < doc.colors.length; i++) {
         // @ts-ignore
-        if(doc.catalogue[i]._id == catalogue_id) {
+        if (doc.catalogue[i]._id == catalogue_id) {
             doc.catalogue.slice(i, 1)
-            if(!!(await doc.save())) {
+            if (!!(await doc.save())) {
                 image.destroy(doc.catalogue[i].image_id)
-            } else 
-                return res.status(500).send({msg: config.err500})
+            } else
+                return res.status(500).send({ msg: config.err500 })
         }
     }
-    return res.send({msg: config.success})
+    return res.send({ msg: config.success })
 }
 
 export const Update = async (req: Request, res: Response, next: NextFunction) => {
@@ -198,7 +215,7 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
         if (!_id && !code)
             return res.status(400).send({ msg: config.err400 })
 
-        const product = await Product.findOne({$or: [{_id: _id}, {code: code}]}).select("-comments");
+        const product = await Product.findOne({ $or: [{ _id: _id }, { code: code }] }).select("-comments");
 
         if (!product)
             return res.status(400).send({ msg: config.err400 })
@@ -216,8 +233,8 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
         if (!!specs) {
             product.markModified('specs_link')
             const category = await Category.findById(product.category)
-            if(!category)
-                return res.status(500).send({msg: config.err500})
+            if (!category)
+                return res.status(500).send({ msg: config.err500 })
             // @ts-ignore
             product.specs_link = category.getSpecsLink(specs)
         }
@@ -237,14 +254,14 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
             product.sale = sale
         }
 
-        if(!!image_base64) {
+        if (!!image_base64) {
             const img_info = await image.upload(image.base64(image_base64), "product_color");
-            if(!img_info) return res.status(500).send({msg: config.errSaveImage})
+            if (!img_info) return res.status(500).send({ msg: config.errSaveImage })
             image.destroy(product.image_id)
             product.image_id = img_info.public_id
             product.image_url = img_info.url
         }
-        
+
         // Save
         product.save((err: any) => {
             if (err) return res.status(500).send({ msg: config.err500 })
@@ -289,7 +306,7 @@ export const ValidBag = async (req: Request, res: Response, next: NextFunction) 
         return res.status(400).send({ msg: config.err400 })
 
     const new_bag: any[] = []
-    const bag_details : any[] = []
+    const bag_details: any[] = []
     var msg: string = ""
     for (let i = 0; i < bag.length; i++) {
         const e = bag[i];
@@ -300,19 +317,19 @@ export const ValidBag = async (req: Request, res: Response, next: NextFunction) 
             }
             if (doc.quantity > e.quanity) {
                 new_bag.push(e)
-                bag_details.push({product: doc, quantity: e.quanity})
+                bag_details.push({ product: doc, quantity: e.quanity })
             }
             else {
                 e.quanity = doc.quantity
                 new_bag.push(e)
-                bag_details.push({product: doc, quantity: e.quanity})
+                bag_details.push({ product: doc, quantity: e.quanity })
                 msg += `Vật phẩm ${doc.name} - ${doc.code} không đủ số lượng, chỉ có ${doc.quantity}. `
             }
         } else {
             msg + `Vật phẩm ${e.product} không tồn tại. `
         }
     }
-    if(new_bag.length == 0) 
+    if (new_bag.length == 0)
         return res.send({ msg: "Giỏ hàng rỗng" })
     req.body.bag = new_bag
     req.body.bag_details = bag_details

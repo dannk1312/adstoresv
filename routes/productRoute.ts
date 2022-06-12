@@ -5,6 +5,14 @@ import * as Product from '../controllers/productController';
 
 const route = express.Router();
 
+
+// field: skip, limit
+// type: 
+//      skip: number - undefine = 0
+//      limit: number - undefine = 20
+// nếu skip = 0 thì có trả số lượng
+route.post("/product/list", Product.List)
+
 // field: _id, code
 // type: 
 //      _id: string - để query product
