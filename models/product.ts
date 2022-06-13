@@ -53,6 +53,8 @@ export const productSchema = new Schema<IProduct>({
         image_id: String,
         image_url: String
     }],
+    image_id: {type: String, require: true},
+    image_url: {type: String, require: true},
 
     category: {type: Schema.Types.ObjectId, ref: 'Category'},
     specs_link: Schema.Types.Mixed,
@@ -105,7 +107,7 @@ productSchema.methods.info = async function() {
         quantity: this.quantity,
         category: "",
         specs: {},
-        specs_link: this.specs_link,
+        image_url: this.image_url,
         colors: this.colors,
         price: this.price,
         sale: this.sale,

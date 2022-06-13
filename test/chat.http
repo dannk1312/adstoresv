@@ -15,7 +15,35 @@ Content-Type: application/json
 
 {
     "email_or_phone": "dannk1312@gmail.com",
-    "password": "ad1811007491"
+    "code": "000000"
 }
+
+###
+POST http://localhost:5000/chat/new HTTP/1.1
+Content-Type: application/json
+
+{
+    "message": "alo"
+}
+
+###
+POST http://localhost:5000/chat/addMessage HTTP/1.1
+Content-Type: application/json
+
+{
+    "_id": "62a6bd00f6649d1c7e549c94",
+    "message": "tra loi ne"
+}
+
+###
+POST http://localhost:5000/chat/getMessages HTTP/1.1
+Content-Type: application/json
+
+{
+    "_id": "62a6bd00f6649d1c7e549c94",
+    "skip": 0,
+    "limit": 2
+}
+
 
 

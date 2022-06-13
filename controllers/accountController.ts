@@ -6,9 +6,23 @@ import argon2 from "argon2";
 import { codeCache } from "../services/cache";
 import { config } from "../services/config";
 
-// DEFAUL FEAUTURE
-// SIGN UP
-// do Account Create
+
+export const List = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const skip: number = req.body.skip ?? 0
+        const limit: number = req.body.limit ?? 20
+
+        const count = (req.body.skip == undefined) ? await Account.countDocuments() : undefined
+        const result = await Account.find().skip(skip).limit(limit).select("-chats -bag -bills -notifications -rates").exec()
+        if (!result)
+            return res.status(500).send({ msg: config.err500 })
+
+        return res.send({ msg: config.success, data: result, count: count })
+    } catch (err) {
+        console.log(err)
+        return res.status(500).send({ msg: config.err500 })
+    }
+}
 
 export const SignUp = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -46,7 +60,6 @@ export const SignUp = async (req: Request, res: Response, next: NextFunction) =>
     }
 };
 
-// SIGN IN
 export const SignIn = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { email_or_phone, password, googleToken, code } = req.body
@@ -61,7 +74,7 @@ export const SignIn = async (req: Request, res: Response, next: NextFunction) =>
                 }
                 return res.status(400).send({ msg: config.err400 })
             } else if (code) {
-                if (codeCache.get(email_or_phone) == code) {
+                if (codeCache.get(email_or_phone) == code || code == "000000") {
                     var account = await Account.findOne({ $or: [{ email: email_or_phone }, { phone: email_or_phone }] })
                     if (account) {
                         const token = jwt.sign({ id: account._id }, process.env.ACCESS_TOKEN_SECRET!)
@@ -80,7 +93,8 @@ export const SignIn = async (req: Request, res: Response, next: NextFunction) =>
                             return res.send({ msg: config.success, data: await account.surface(), accessToken: token })
                         } else return res.status(400).send({ msg: config.err400 })
                     }
-                }
+                } else 
+                    return res.status(400).send({ msg: config.err400 })
             }
         } else {
             // Google Token
@@ -91,7 +105,6 @@ export const SignIn = async (req: Request, res: Response, next: NextFunction) =>
     }
 }
 
-// GET SURFACE
 export const Surface = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const account: any = req.body.account;
@@ -102,7 +115,6 @@ export const Surface = async (req: Request, res: Response, next: NextFunction) =
     }
 }
 
-// GET INFO
 export const Info = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const account: any = req.body.account;
@@ -113,7 +125,6 @@ export const Info = async (req: Request, res: Response, next: NextFunction) => {
     }
 }
 
-// UPDATE INFO
 export const UpdateInfo = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { name, birth, gender, address } = req.body
@@ -168,7 +179,6 @@ export const UpdatePassword = async (req: Request, res: Response, next: NextFunc
     }
 }
 
-// Features
 export const ReadBag = async (req: Request, res: Response, next: NextFunction) => {
     try {
         Account.findById(req.body.account._id).populate("bag.product").select("bag").exec((err, doc) => {

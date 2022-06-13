@@ -3,3 +3,7 @@
 ### localhost:5000
 ### adstoresv.herokuapp.com
 GET http://localhost:5000/ HTTP/1.1
+
+
+###
+POST http://localhost:5000/product/list HTTP/1.1

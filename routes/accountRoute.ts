@@ -5,6 +5,14 @@ import * as Product from '../controllers/productController';
 
 const route = express.Router();
 
+
+// field: skip, limit
+// type: 
+//      skip: number - undefine = 0
+//      limit: number - undefine = 20
+// nếu skip = 0 thì có trả số lượng
+route.post("/account/list", Default.Role("Admin"), Account.List)
+
 // field: code, email_or_phone, password, name, birth, gender, address
 // type: 
 //      code**: string

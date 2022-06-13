@@ -39,11 +39,11 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
         return res.status(400).send({ msg: config.err400 })
     }
 
-    const img_info = await image.upload(image.base64(image_base64), "product_color");
+    const img_info = await image.upload(image.base64(image_base64), "product_image");
     if (!img_info) return res.status(500).send({ msg: config.errSaveImage })
 
     // Handle Category & Specs
-    var categoryDoc = await Category.findById(category);
+    var categoryDoc = await Category.findOne({name: category});
 
     if (!categoryDoc)
         return res.status(400).send({ msg: config.err400 })
@@ -68,6 +68,8 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
         session.endSession();
         return res.send({ msg: config.success })
     } catch (error) {
+        console.log(error)
+        image.destroy(img_info.public_id)
         await session.abortTransaction();
         session.endSession();
         return res.status(500).send({ msg: "Lỗi không lưu đồng bộ với category" })
@@ -254,8 +256,9 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
             product.sale = sale
         }
 
+        var img_info: any;
         if (!!image_base64) {
-            const img_info = await image.upload(image.base64(image_base64), "product_color");
+            img_info = await image.upload(image.base64(image_base64), "product_color");
             if (!img_info) return res.status(500).send({ msg: config.errSaveImage })
             image.destroy(product.image_id)
             product.image_id = img_info.public_id
@@ -264,7 +267,11 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
 
         // Save
         product.save((err: any) => {
-            if (err) return res.status(500).send({ msg: config.err500 })
+            if (err) {
+                if(!!img_info)
+                    image.destroy(img_info.public_id)
+                return res.status(500).send({ msg: config.err500 })
+            } 
             return res.send({ msg: config.success })
         })
     } catch (err) {

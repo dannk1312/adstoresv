@@ -9,8 +9,7 @@ const route = express.Router();
 //      message**: string
 route.post("/chat/new", Default.Role("Customer"), Chat.New)
 
-
-// header: accessToken - role: ["Customer", "Sale"] - field: message
+// header: accessToken - role: ["Customer", "Sale"]
 route.get("/chat/list", Default.Role(["Customer", "Sale"]), Chat.List)
 
 // header: accessToken - role: ["Customer", "Sale"] - field: _id, message
