@@ -126,6 +126,7 @@ route.post("/chat/addMessage",
     DefaultController.Role(["Customer", "Sale"]),
     ChatController.AddMessage
 )
+
 // require: accessToken
 // role: ["Customer", "Sale"]
 // field: chatId**, skip, get

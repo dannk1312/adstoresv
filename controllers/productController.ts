@@ -12,7 +12,7 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
         const skip: number = req.body.skip ?? 0
         const limit: number = req.body.limit ?? 20
 
-        const count = (req.body.skip == undefined) ? await Product.countDocuments() : undefined
+        const count = (skip == 0) ? await Product.countDocuments() : undefined
         const result = await Product.find().skip(skip).limit(limit).select("-colors -comments -desc -specs_link -category").exec()
         if (!result)
             return res.status(500).send({ msg: config.err500 })

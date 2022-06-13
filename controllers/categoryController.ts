@@ -185,7 +185,7 @@ export const Query = async (req: Request, res: Response, next: NextFunction) => 
         if (!!colors)
             options["colors.color"] = { $in: colors }
 
-        var count = (req.body.skip == undefined) ? await Product.countDocuments(options) : undefined
+        var count = (skip == 0) ? await Product.countDocuments(options) : undefined
         var result = await Product
             .find(options)
             .skip(skip)
