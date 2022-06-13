@@ -159,6 +159,7 @@ accountSchema.methods.surface = async function () {
         email: this.email,
         phone: this.phone,
         name: this.name,
+        role: this.role,
         notifications_length: doc.length > 0 ? doc[0].notifications_length : -1,
         bag_items_length: doc.length > 0 ? doc[0].bag_items_length : -1
     };
