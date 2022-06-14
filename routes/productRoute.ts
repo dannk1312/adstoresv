@@ -9,8 +9,8 @@ const route = express.Router();
 
 // field: category, specs, colors, min_price, max_price, skip, limit, sortName, sortType
 // type:
-//      category**: string
-//      specs**: object - {name: string, value: any[]} - undefine = all
+//      category: string
+//      specs: object - {name: string, value: any[]} - undefine = all
 //      colors: string[] - undefine = all
 //      min_price: number - undefine = 0
 //      max_price: number - undefine = 1000000000
@@ -18,6 +18,9 @@ const route = express.Router();
 //      limit: number - undefine = 20
 //      sortName: string - in ["price", "sale", "sold", "total_rate"]
 //      sortType: number - 1 tăng dần, -1 giảm dần
+// rule:
+//      specs hiệu quả khi đi với category,
+//      sortType và sortName hiệu quả khi đi với nhau
 // example
 //      "name": "Laptop",
 //      "specs": {"Ram": ["8gb", "16gb"], "Display": ["1920x1080"]},
