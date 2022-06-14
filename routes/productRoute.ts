@@ -7,9 +7,9 @@ const route = express.Router();
 
 
 
-// field: name, specs, colors, min_price, max_price, skip, limit
+// field: category, specs, colors, min_price, max_price, skip, limit, sortName, sortType
 // type:
-//      name**: string
+//      category**: string
 //      specs**: object - {name: string, value: any[]} - undefine = all
 //      colors: string[] - undefine = all
 //      min_price: number - undefine = 0
