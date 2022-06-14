@@ -87,6 +87,8 @@ route.post("/category/delete", Default.Role("Admin"), Category.Delete)
 //      max_price: number - undefine = 1000000000
 //      skip: number - undefine = 0
 //      limit: number - undefine = 20
+//      sortName: string - in ["price", "sale", "sold", "total_rate"]
+//      sortType: number - 1 tăng dần, -1 giảm dần
 // example
 //      "name": "Laptop",
 //      "specs": {"Ram": ["8gb", "16gb"], "Display": ["1920x1080"]},

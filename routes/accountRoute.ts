@@ -93,4 +93,10 @@ route.get("/account/readBag", Default.Role("Customer"), Account.ReadBag)
 route.post("/account/updateBag", Default.Role("Customer"), Product.ValidBag, Account.UpdateBag)
 
 
+// header: accessToken - role: Customer - field: _id
+// type: 
+//      _id**: string
+route.post("/account/pushBag", Default.Role("Customer"), Account.PushBag)
+
+
 export const accountRoute = route

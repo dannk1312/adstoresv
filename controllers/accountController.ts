@@ -206,6 +206,40 @@ export const UpdateBag = async (req: Request, res: Response, next: NextFunction)
     }
 }
 
+export const PushBag = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const _id: string = req.body._id
+        const account = req.body.account
+
+        if(!!_id)
+            return res.status(400).send({msg: config.err400})
+        
+        const accountDoc = await Account.findById(_id).select("bag").exec()
+        if(accountDoc == null)
+            throw Error("")
+        
+        var flag = false
+        for(let i = 0; i < accountDoc.bag.length ; i++) {
+            if(accountDoc.bag[i].product.toString() == _id) {
+                flag = true;
+                accountDoc.bag[i].quantity+=1;
+                break;
+            }
+        }
+        if(!flag) {
+            accountDoc.bag.push({product: new Types.ObjectId(_id), quantity: 1})
+        }  
+        accountDoc.save((err) => {
+            if(err)
+                return  res.status(500).send({msg: config.err500})
+            return res.send({msg: config.success})
+        })
+    } catch (err) {
+        console.log(err)
+        return res.status(500).send({ msg: config.err500 })
+    }
+}
+
 export const ReadNotifications = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const skip: number = req.body.skip ?? 0
