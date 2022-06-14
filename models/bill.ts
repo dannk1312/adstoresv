@@ -3,6 +3,7 @@ import { Schema, model, Types } from 'mongoose';
 export interface IBill {
     _id: Types.ObjectId,
     // Buyer Info
+    account: Types.ObjectId,
     phone: String,
     address: String,
 
@@ -17,6 +18,10 @@ export interface IBill {
     status: string,
     desc: string,
 
+    ship: number, 
+    total: number,
+    discount: number,
+
     // Timestamps
     createdAt: Date,
     updatedAt: Date
@@ -24,6 +29,7 @@ export interface IBill {
 
 export const billSchema = new Schema<IBill>({
     // Buyer Info
+    account: {type: Schema.Types.ObjectId, required: true, ref: "Account"},
     phone: {type: String, required: [true, "Bill phone cannot be empty"]},
     address: {type: String, required: [true, "Bill address cannot be empty"]},
 
@@ -54,7 +60,10 @@ export const billSchema = new Schema<IBill>({
             message: 'Value {VALUE} is not supported'
         },
         default: 'Preparing'
-    }
+    },
+    ship: {type: Number, required: true}, 
+    total: {type: Number, required: true}, 
+    discount: {type: Number, required: true}, 
 }, { timestamps: true })
 
 

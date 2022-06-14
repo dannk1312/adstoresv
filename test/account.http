@@ -4,8 +4,8 @@ POST http://adstoresv.herokuapp.com/account/login HTTP/1.1
 Content-Type: application/json
 
 {
-    "email_or_phone": "adstore7491@gmail.com",
-    "password": "ad1811007491"
+    "email_or_phone": "admin@gmail.com",
+    "code": "000000"
 }
 
 ###
@@ -13,16 +13,16 @@ POST http://localhost:5000/account/signUp HTTP/1.1
 Content-Type: application/json
 
 {
-    "email_or_phone": "adstore7491@gmail.com",
+    "email_or_phone": "sale@gmail.com",
     "password": "ad1811007491",
-    "code": "379546",
-    "name": "Anh Danh",
+    "code": "000000",
+    "name": "Saler Account",
     "birth": "2000-12-13T00:00:00.000Z",
     "gender": true,
     "address": {
         "province": "TP HCM",
-        "district": "Q10",
-        "address": "30 Vĩnh Viễn"
+        "district": "TP Thủ Đức",
+        "address": "1 Võ Văn Ngân"
     }
 }
 

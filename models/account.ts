@@ -33,10 +33,7 @@ export interface IAccount {
         message: string,
         createdAt: Date
     }],
-    rates: [{
-        product: Types.ObjectId,
-        star: number
-    }],
+    rate_waits: [Types.ObjectId],
     self_cancel: number,
     enable: boolean,
 
@@ -105,10 +102,7 @@ export const accountSchema = new Schema<IAccount>({
         product: { type: Schema.Types.ObjectId, required: true, ref: 'Product' },
         quantity: Number
     }],
-    rates: [{
-        product: { type: Schema.Types.ObjectId, required: true, ref: 'Product' },
-        star: Number
-    }],
+    rate_waits: [{ type: Schema.Types.ObjectId, required: true, ref: 'Product' }],
     bills: [{ type: Schema.Types.ObjectId, required: true, ref: 'Bill' }],
     notifications: [{
         message: { type: String, required: true, trim: true },

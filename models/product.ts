@@ -32,6 +32,7 @@ export interface IProduct {
     ],
 
     // Features
+    sold: number,
     total_rate: number, // total rate
     comments: [{
         account: Types.ObjectId,
@@ -71,6 +72,7 @@ export const productSchema = new Schema<IProduct>({
             image_url: String
         }
     ],
+    sold: {type: Number, default: 0},
     total_rate: {type: Number, default: 0},
     comments: [{
         account: {type: Schema.Types.ObjectId, required: true, ref: 'Account'},
@@ -99,10 +101,10 @@ productSchema.methods.catespecs = async function (): Promise<any> {
     return {category: category.name, specs}
 }
 
-productSchema.statics.list = async function(options: any, skip: number, limit: number) {
+productSchema.statics.list = async function(queryOptions: any, sortOptions: any, skip: number, limit: number) {
     return {
-        data: await Product.find(options).skip(skip).limit(limit).lean().populate("category", "name").select("name code quantity image_url price sale total_rate enable").exec(),
-        count: skip == 0 ? await Product.countDocuments(options): undefined
+        data: await Product.find(queryOptions).sort(sortOptions).skip(skip).limit(limit).lean().populate("category", "name").select("name code quantity image_url price sale total_rate enable sold").exec(),
+        count: skip == 0 ? await Product.countDocuments(queryOptions): undefined
     }
 }
 
@@ -119,7 +121,8 @@ productSchema.methods.info = async function() {
         price: this.price,
         sale: this.sale,
         total_rate: this.total_rate,
-        enable: this.enable
+        enable: this.enable, 
+        sold: this.sold
     }
     const catespecs = await this.catespecs() 
     if(!!catespecs) {

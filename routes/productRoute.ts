@@ -6,11 +6,24 @@ import * as Product from '../controllers/productController';
 const route = express.Router();
 
 
-// field: skip, limit
-// type: 
+
+// field: name, specs, colors, min_price, max_price, skip, limit
+// type:
+//      name**: string
+//      specs**: object - {name: string, value: any[]} - undefine = all
+//      colors: string[] - undefine = all
+//      min_price: number - undefine = 0
+//      max_price: number - undefine = 1000000000
 //      skip: number - undefine = 0
 //      limit: number - undefine = 20
-// nếu skip = 0 thì có trả số lượng
+//      sortName: string - in ["price", "sale", "sold", "total_rate"]
+//      sortType: number - 1 tăng dần, -1 giảm dần
+// example
+//      "name": "Laptop",
+//      "specs": {"Ram": ["8gb", "16gb"], "Display": ["1920x1080"]},
+//      "colors": ["Red"],
+//      "max_price": 65000000
+// if skip == undefine => trả về count để phân trang
 route.post("/product/list", Product.List)
 
 // field: _id, code
@@ -91,5 +104,12 @@ route.post("/product/deleteCatalogue", Default.Role("Admin"), Product.DeleteCata
 // type: 
 //      data: object[] - [{code: string, quantity: number, price: number}]
 route.post("/product/imports", Default.Role("Admin"), Product.Imports)
+
+// header: accessToken - role: Customer - field: _id, rate, message
+// type: 
+//      _id**: string
+//      rate**: number
+//      message: string
+route.post("/product/rate", Default.Role("Customer"), Product.Rate)
 
 export const productRoute = route

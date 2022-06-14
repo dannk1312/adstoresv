@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import e, { Request, Response, NextFunction } from 'express';
 import axios from 'axios';
 import { Product } from '../models/product';
 import { config } from '../services/config';
@@ -189,20 +189,20 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
     const products: any[] = []
     bag_details.forEach(i => products.push({ product: i.product._id, quantity: i.quanity, price: i.product.price, sale: i.product.sale }))
 
-    const bill = new Bill({ phone: account.phone, address, products, discountCode })
+    const bill = new Bill({ account: account._id, phone: account.phone, address, products, discountCode, ship, total, discount: reduce })
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
         const opts = { session };
         const billDoc = await bill.save(opts)
-        const accountDoc = await account.updateOne({ $push: { bills: billDoc._id } }, opts)
+        const accountDoc = await account.updateOne({ $push: { bills: billDoc._id } }, opts).exec()
 
         if (!billDoc || !accountDoc)
             throw Error("Fail")
 
         for (let i = 0; i < products.length; i++) {
             const e = products[i]
-            if (!!(await Product.findByIdAndUpdate(e.product, { $inc: { quantity: -e.quantity } }, opts)))
+            if (!!(await Product.findByIdAndUpdate(e.product, { $inc: { quantity: -e.quantity, sold: 1 } }, opts).exec()))
                 throw Error("Fail")
         }
 
@@ -256,9 +256,20 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
             if (!billDoc)
                 throw Error("Fail")
 
-            for (let i = 0; i < bill.products.length; i++) {
-                const e = bill.products[i]
-                if (!!(await Product.findByIdAndUpdate(e.product, { $inc: { quantity: e.quantity } }, opts)))
+            if(status == "Cancel")
+                // Refill product
+                for (let i = 0; i < bill.products.length; i++) {
+                    const e = bill.products[i]
+                    if (!!(await Product.findByIdAndUpdate(e.product, { $inc: { quantity: e.quantity, sold: -1 } }, opts).exec()))
+                        throw Error("Fail")
+                }
+            else if(status == "Done") {
+                // Add product to rates of account
+                const products: any = {}
+                for (let i = 0; i < bill.products.length; i++) {
+                    products.push({product: bill.products[i].product})
+                }
+                if (!!(await Account.findByIdAndUpdate(account._id, { $push: { rate_waits: {$each: products} } }, opts).exec()))
                     throw Error("Fail")
             }
 
@@ -269,6 +280,41 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
             await session.abortTransaction();
             session.endSession();
             return res.status(400).send({ msg: "Lỗi không lưu bill" })
+        }
+    } catch (err) {
+        console.log(err)
+        res.status(500).send({ msg: config.err500 })
+    }
+}
+
+export const List = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const all_status = ['Preparing', 'Delivering', 'Done', 'Cancel']
+
+        const skip: number = req.body.skip ?? 0
+        const limit: number = req.body.limit ?? 20
+        const status: any = all_status.includes(req.body.status) ? req.body.status : undefined
+        const sort: number = req.body.sort
+        const account = req.body.account
+
+        if(account.role == "Admin") {
+            var bills: any
+            if(sort == 1 || sort == -1) 
+                bills = await Bill.find({status}).sort({ total : sort}).skip(skip).limit(limit).exec();
+            else 
+                bills = await Bill.find({status}).skip(skip).limit(limit).exec();
+            if(!bills)
+                throw Error("Fail")
+            return res.send({msg: config.success, data: bills})
+        } else {
+            var bills: any
+            if(sort == 1 || sort == -1) 
+                bills = await Bill.find({account: account._id, status}).sort({ total : sort}).skip(skip).limit(limit).exec();
+            else 
+                bills = await Bill.find({account: account._id, status}).skip(skip).limit(limit).exec();
+            if(!bills)
+                throw Error("Fail")
+            return res.send({msg: config.success, data: bills})
         }
     } catch (err) {
         console.log(err)
