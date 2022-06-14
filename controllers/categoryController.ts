@@ -185,22 +185,12 @@ export const Query = async (req: Request, res: Response, next: NextFunction) => 
         if (!!colors)
             options["colors.color"] = { $in: colors }
 
-        var count = (skip == 0) ? await Product.countDocuments(options) : undefined
-        var result = await Product
-            .find(options)
-            .skip(skip)
-            .limit(limit)
-            .select('-colors -comments -desc -specs_link -category')
-            .exec();
-        if (!result)
+        // @ts-ignore
+        var query = await Product.list(options, skip, limit)
+        if (!query.data)
             return res.status(500).send({ msg: config.err500 })
 
-        const edit_result: any[] = []
-        for (let i = 0; i < result.length; i++) {
-            edit_result.push(result[i].toJSON())
-            edit_result[i].category = category.name;
-        }
-        return res.send({ msg: config.success, data: edit_result, count: count })
+        return res.send({ msg: config.success, data: query.data, count: query.count })
     } catch (err) {
         console.log(err)
         return res.status(500).send({ msg: config.err500 })

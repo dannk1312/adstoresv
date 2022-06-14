@@ -99,6 +99,13 @@ productSchema.methods.catespecs = async function (): Promise<any> {
     return {category: category.name, specs}
 }
 
+productSchema.statics.list = async function(options: any, skip: number, limit: number) {
+    return {
+        data: await Product.find(options).skip(skip).limit(limit).lean().populate("category", "name").select("name code quantity image_url price sale total_rate enable").exec(),
+        count: skip == 0 ? await Product.countDocuments(options): undefined
+    }
+}
+
 productSchema.methods.info = async function() {
     var data = {
         name: this.name ?? "",
