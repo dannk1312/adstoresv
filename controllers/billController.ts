@@ -14,6 +14,9 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
     const address: any = req.body.address
     const account = req.body.account
 
+    if(!bag_details || bag_details.length == 0)
+        return res.status(400).send({msg: "Giỏ hàng rỗng"})
+
     var ship: number = -1
     var total: number = 0
     var weight: number = 0
@@ -103,6 +106,9 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
     const account = req.body.account
     if (!account.phone)
         return res.status(400).send({ msg: "Thiếu số điện thoại. " })
+
+    if(!bag_details || bag_details.length == 0)
+        return res.status(400).send({msg: "Giỏ hàng rỗng"})
 
     var ship: number = -1
     var total: number = 0

@@ -46,15 +46,15 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
             const categoryDoc = await Category.findOne({ name: category });
             if (!categoryDoc)
                 return res.status(400).send({ msg: config.err400 })
-    
+
             products = categoryDoc.products;
-    
+
             if (!!specs) {
                 //query result 
                 for (let i = 0; i < categoryDoc.specsModel.length && products.length > 0; i++) {
                     const e = categoryDoc.specsModel[i];
                     var specsProduct: string[] = []
-    
+
                     if (specs.hasOwnProperty(e.name)) {
                         var values: string[] = specs[e.name]
                         for (let j = 0; j < e.values.length; j++) {
@@ -67,25 +67,25 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
                     products = products.filter(id => specsProduct.includes(id.toString()));
                 }
             }
-    
+
             if (products.length == 0)
                 if (req.body.skip == undefined)
                     return res.send({ msg: config.success, data: [], count: 0 })
                 else
                     return res.send({ msg: config.success, data: [] })
         }
-        
+
         var queryOptions: any = { price: { $lte: max_price, $gte: min_price } }
-        
-        if(!!products)
+
+        if (!!products)
             queryOptions["_id"] = { $in: products }
-        
+
         if (!!colors)
             queryOptions["colors.color"] = { $in: colors }
 
         var sortOptions: any = {}
 
-        if(!!sortName && ["price", "sale", "sold", "total_rate"].includes(sortName) && (sortType == 1 || sortType == -1)) {
+        if (!!sortName && ["price", "sale", "sold", "total_rate"].includes(sortName) && (sortType == 1 || sortType == -1)) {
             sortOptions[sortName] = sortType
         }
 
@@ -359,7 +359,7 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
 }
 
 export const Imports = async (req: Request, res: Response, next: NextFunction) => {
-    const data = req.body.data // [{code, quanity, price}]
+    const data = req.body.data // [{code, quantity, price}]
     if (!data)
         return res.status(400).send({ msg: config.err400 })
 
@@ -399,22 +399,23 @@ export const ValidBag = async (req: Request, res: Response, next: NextFunction) 
             if (doc.enable == false) {
                 msg += `Vật phẩm ${doc.name} - ${doc.code} không thể mua vào lúc này. `
             }
-            if (doc.quantity > e.quanity) {
+            if (doc.quantity > e.quantity) {
                 new_bag.push(e)
-                bag_details.push({ product: doc, quantity: e.quanity })
+                bag_details.push({ product: doc, quantity: e.quantity })
             }
             else {
-                e.quanity = doc.quantity
-                new_bag.push(e)
-                bag_details.push({ product: doc, quantity: e.quanity })
+                if (doc.quantity > 0) {
+                    e.quantity = doc.quantity
+                    new_bag.push(e)
+                    bag_details.push({ product: doc, quantity: e.quantity })
+                }
                 msg += `Vật phẩm ${doc.name} - ${doc.code} không đủ số lượng, chỉ có ${doc.quantity}. `
             }
         } else {
             msg + `Vật phẩm ${e.product} không tồn tại. `
         }
     }
-    if (new_bag.length == 0)
-        return res.send({ msg: "Giỏ hàng rỗng" })
+
     req.body.bag = new_bag
     req.body.bag_details = bag_details
     req.body.valid_bag_msg = msg
@@ -429,28 +430,28 @@ export const Rate = async (req: Request, res: Response, next: NextFunction) => {
         const rate: number = req.body.rate
         const message: string = req.body.message
 
-        if(!rate || rate > 5 || rate < 0)
-            return res.status(400).send({msg: config.err400})
+        if (!rate || rate > 5 || rate < 0)
+            return res.status(400).send({ msg: config.err400 })
 
         // @ts-ignore
         const rate_waits = (await Account.findById(account._id).select("rate_waits").exec()).rate_waits;
         // @ts-ignore
-        if(!rate_waits.includes(_id)) 
-            return res.status(400).send({msg: "Để có thể đánh giá, bạn cần phải mua sản phẩm này trước. "})
-        
+        if (!rate_waits.includes(_id))
+            return res.status(400).send({ msg: "Để có thể đánh giá, bạn cần phải mua sản phẩm này trước. " })
+
         const session = await mongoose.startSession();
         session.startTransaction();
         try {
             const opts = { session };
 
-            if(!(await Account.findByIdAndUpdate(account._id, {$pull: { rate_waits: { _id }}}, opts).exec()))
+            if (!(await Account.findByIdAndUpdate(account._id, { $pull: { rate_waits: { _id } } }, opts).exec()))
                 throw Error("Fail to save Account")
-            
+
             const doc = await Product.findById(_id).select("total_rate comments").exec()
             // @ts-ignore 
             const total_rate = (doc.total_rate * doc.comments.length + rate) / (doc.comments.length + 1)
 
-            if(!(await Product.findByIdAndUpdate(_id, {total_rate, $push: { comments: {account: account.name??"Ẩn danh", message, rate}}}, opts).exec()))
+            if (!(await Product.findByIdAndUpdate(_id, { total_rate, $push: { comments: { account: account.name ?? "Ẩn danh", message, rate } } }, opts).exec()))
                 throw Error("Fail to save Product")
 
             await session.commitTransaction();
@@ -463,6 +464,6 @@ export const Rate = async (req: Request, res: Response, next: NextFunction) => {
         }
     } catch (err) {
         console.log(err)
-        return res.status(500).send({msg: config.err500})
+        return res.status(500).send({ msg: config.err500 })
     }
 }

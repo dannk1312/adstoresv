@@ -181,7 +181,14 @@ export const UpdatePassword = async (req: Request, res: Response, next: NextFunc
 
 export const ReadBag = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        Account.findById(req.body.account._id).populate("bag.product").select("bag").exec((err, doc) => {
+        Account.findById(req.body.account._id).populate({
+            path:     'bag',			
+            populate: { 
+                path:  'product',
+                model: 'Product',
+                select: 'name code image_url price sale'
+             }
+          }).select("bag").exec((err, doc) => {
             if (err) return res.status(500).send({ msg: config.err500 })
             if (!doc) return res.status(400).send({ msg: config.err400 })
             return res.send({ msg: config.success, data: doc.bag })
@@ -194,11 +201,11 @@ export const ReadBag = async (req: Request, res: Response, next: NextFunction) =
 
 export const UpdateBag = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const bag: any[] = req.body.data
+        const bag: any[] = req.body.bag
         const account = req.body.account
         account.updateOne({ bag }).exec((err: any) => {
             if (err) return res.status(500).send({ msg: config.err500 })
-            return res.send({ msg: config.success + req.body.valid_bag_msg })
+            next()
         })
     } catch (err) {
         console.log(err)
@@ -211,10 +218,10 @@ export const PushBag = async (req: Request, res: Response, next: NextFunction) =
         const _id: string = req.body._id
         const account = req.body.account
 
-        if(!!_id)
+        if(!_id)
             return res.status(400).send({msg: config.err400})
         
-        const accountDoc = await Account.findById(_id).select("bag").exec()
+        const accountDoc = await Account.findById(account._id).select("bag").exec()
         if(accountDoc == null)
             throw Error("")
         

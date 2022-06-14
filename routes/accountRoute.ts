@@ -90,7 +90,7 @@ route.get("/account/readBag", Default.Role("Customer"), Account.ReadBag)
 // header: accessToken - role: Customer - field: bag
 // type: 
 //      bag: object[] - [{product: string, quantity: number}] - product = product._id
-route.post("/account/updateBag", Default.Role("Customer"), Product.ValidBag, Account.UpdateBag)
+route.post("/account/updateBag", Default.Role("Customer"), Product.ValidBag, Account.UpdateBag, Account.ReadBag)
 
 
 // header: accessToken - role: Customer - field: _id
