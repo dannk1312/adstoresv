@@ -139,7 +139,7 @@ accountSchema.methods.surface = async function () {
         {   // Get the length of the booking array
             "$project": {
                 "notifications_length": { "$size": "$notifications" },
-                "bag_items_length": { "$size": "$bag" },
+                "bag_items_length": {"$sum" : "$bag.quantity"},
             }
         },
         {

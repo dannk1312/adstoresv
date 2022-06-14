@@ -191,7 +191,9 @@ export const ReadBag = async (req: Request, res: Response, next: NextFunction) =
           }).select("bag").exec((err, doc) => {
             if (err) return res.status(500).send({ msg: config.err500 })
             if (!doc) return res.status(400).send({ msg: config.err400 })
-            return res.send({ msg: config.success, data: doc.bag })
+            var count = 0
+            doc.bag.forEach(e => count += e.quantity)
+            return res.send({ msg: config.success, data: doc.bag, count })
         })
     } catch (err) {
         console.log(err)
