@@ -112,81 +112,92 @@ categorySchema.statics.checkSpecsModel = function(specsModel: any[]): boolean {
     return true;
 }
 
-categorySchema.methods.saveSpecsModel = async function(this: ICategory, newSpecsModel: any[], session_opts: any) {
+categorySchema.methods.saveSpecsModel = async function(this: ICategory, specsModel: any[], session_opts: any) {
     // @ts-ignore
-    if(!Category.checkSpecsModel(newSpecsModel))
+    if(!Category.checkSpecsModel(specsModel))
         throw Error("Trùng specs")
 
     if(!this.specsModel || this.products.length == 0) {
         // @ts-ignore
-        this.specsModel = newSpecsModel
-        var tempDoc = await Category.findByIdAndUpdate(this._id, {specsModel: newSpecsModel}, session_opts).exec()
+        this.specsModel = specsModel
+        var tempDoc = await Category.findByIdAndUpdate(this._id, specsModel, session_opts).exec()
         if(!tempDoc)
-            throw Error()
+            throw Error("Lỗi lưu")
     }
 
     var relate_set = new Set()
     var name_tree: any = {}
     var value_tree: any = {}
+    var newNameSet = new Set()
+    var newValueSet = new Set()
 
-    // Check with old specsModel for sure that not delete the specs have products relate
-    // @ts-ignore
-    for (let i = 0; i < this.specsModel.length; i++) {
-        var e = this.specsModel[i]
-        var flag = false
-        // @ts-ignore
-        for (let j = 0; j < newSpecsModel.length; j++) {
-            var new_e = newSpecsModel[i]
-            if(!new_e._id) {
-                this.specsModel.push(new_e)
+    for(let i = 0 ;i< this.specsModel.length;i++) {
+        var oitem = this.specsModel[i]
+        var flag_item = false
+        for(var nitem of specsModel) {
+            if(!nitem._id) {
+                if(!newNameSet.has(nitem.name)) {
+                    this.specsModel.push(nitem)
+                    newNameSet.add(nitem.name)
+                }
+                continue
             }
-            else if(e._id == new_e._id) {
-                if(e.name != new_e.value) 
-                    e.values.forEach(value => value.products.forEach(_ => relate_set.add(_)))
-                name_tree[e.name] = new_e.name
-                e.name = new_e.name
-                value_tree[e.name] = {}
-                flag = true;
-                // @ts-ignore
-                for (let a = 0; a < e.values.length; a++) {
-                    var flag_value = false;
-                    var v = e.values[a]
-                    for (let j = 0; j < new_e.values.length; j++) {
-                        const new_v = new_e.values[j];
-                        if(!new_v._id) {
-                            e.values.push(new_v)
+            if(oitem._id != nitem._id) 
+                continue
+            
+            flag_item = true
+            name_tree[oitem.name] = nitem.name
+            oitem.name = nitem.name
+            value_tree[nitem.name] = {}
+            
+            newValueSet.clear()
+            for(let j = 0 ;j< oitem.values.length;j++) {
+                var ovalue = oitem.values[i]
+                var flag_value = false
+                for(var nvalue of nitem.values) {
+                    if(!nvalue._id) {
+                        if(!newValueSet.has(nvalue.name)) {
+                            oitem.values.push(nitem)
+                            newValueSet.add(nitem.name)
                         }
-                        else if(new_v._id == v._id) {
-                            if(v.value != new_v.value) {
-                                v.products.forEach(_ => relate_set.add(_))
-                            }
-                            value_tree[e.name][v.value] = new_v.value
-                            v.value = new_v.value
-                            flag_value = true;
-                            break;
-                        }
+                        continue
                     }
-                    if(!flag_value && v.products.length == 0) {
-                        flag_value = true
-                        e.values.slice(a, 1)
-                        a--
-                    }
+                    if(ovalue._id != nitem._id) 
+                        continue
+
+                    flag_value = true
+                    value_tree[nitem.name][ovalue.value] = nvalue.value
+                    ovalue.value = nvalue.value
+                }
+                if(!flag_value && ovalue.products.length == 0) {
+                    flag_value = true
+                    oitem.values.slice(j, 1)
+                    j--
+                    console.log("??")
+                }
+                if(!flag_value) {
+                    throw Error("Không thể xóa value đang có liên kết với product")
                 }
             }
         }
-        if(!flag && e.values.reduce((partialSum, a) => partialSum + a.products.length, 0) == 0) {
-            flag_value = true
+        if(!flag_item && oitem.values.reduce((p, i) => p + i.products.length, 0) == 0) {
+            flag_item = true
             this.specsModel.slice(i, 1)
             i--
+            console.log(this.specsModel.length)
         }
+        if(!flag_item) {
+            throw Error("Không thể xóa spec đang có liên kết với product")
+        } 
     }
+    
 
-    var categoryDoc = await Category.findByIdAndUpdate(this._id, {specsModel: newSpecsModel}, session_opts).exec()
+    var categoryDoc = await Category.findByIdAndUpdate(this._id, {specsModel: this.specsModel}, session_opts).exec()
     if(!categoryDoc)
-        throw Error()
+        throw Error("Lỗi lưu")
     var docs = await Product.find({_id: {$in: relate_set}}).select("specs").exec()
     if(!docs)
-        throw Error()
+        throw Error("Lỗi load")
     
     for(let  i = 0; i< docs.length; i++) {
         var new_specs: any = {}

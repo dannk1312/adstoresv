@@ -23,11 +23,16 @@ Content-Type: application/json
 
 {
     "_id": "62a701e0ad91633459e66d84",
-    "name": "Thể Loại Gì Đây",
     "specsModel": [
         {
             "_id": "62a701e0ad91633459e66da5",
-            "name": "Ramm"
+            "name": "Ramm",
+            "values": [
+                {
+                    "_id": "62a701e0ad91633459e66da6", 
+                    "value": "64gb"
+                }
+            ]
         }
     ]
 }

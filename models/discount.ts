@@ -33,7 +33,6 @@ export interface IDiscount {
 
 
 export const discountSchema = new Schema<IDiscount>({
-    _id: Types.ObjectId,
     code: {type: String, required: [true, "Discount code cannot be empty"], unique: true, trim: true, lowercase: true},
     enable: {type: Boolean, default: false},
     // Limit of discounts
