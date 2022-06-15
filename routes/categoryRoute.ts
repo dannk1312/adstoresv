@@ -78,24 +78,5 @@ route.post("/category/read", Category.Read)
 // rule: _id | name
 route.post("/category/delete", Default.Role("Admin"), Category.Delete)
 
-// field: name, specs, colors, min_price, max_price, skip, limit
-// type:
-//      name**: string
-//      specs**: object - {name: string, value: any[]} - undefine = all
-//      colors: string[] - undefine = all
-//      min_price: number - undefine = 0
-//      max_price: number - undefine = 1000000000
-//      skip: number - undefine = 0
-//      limit: number - undefine = 20
-//      sortName: string - in ["price", "sale", "sold", "total_rate"]
-//      sortType: number - 1 tăng dần, -1 giảm dần
-// example
-//      "name": "Laptop",
-//      "specs": {"Ram": ["8gb", "16gb"], "Display": ["1920x1080"]},
-//      "colors": ["Red"],
-//      "max_price": 65000000
-// if skip == undefine => trả về count để phân trang
-route.post("/category/query", Category.Query)
-
 
 export const categoryRoute = route
