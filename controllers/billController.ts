@@ -84,7 +84,7 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
                 var temp = discount.value
                 if (discount.is_percent) {
                     // @ts-ignore
-                    temp *= total
+                    temp *= total / 100
                 }
                 if (temp > discount.maxPrice)
                     temp = discount.maxPrice
@@ -180,7 +180,7 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
                 var temp = discount.value
                 if (discount.is_percent) {
                     // @ts-ignore
-                    temp *= total
+                    temp *= total / 100
                 }
                 if (temp > discount.maxPrice)
                     temp = discount.maxPrice
