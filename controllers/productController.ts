@@ -8,24 +8,6 @@ import { Product } from "../models/product";
 import { Import } from "../models/import";
 import { Account } from "../models/account";
 
-export const OldList = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const skip: number = req.body.skip ?? 0
-        const limit: number = req.body.limit ?? 20
-
-        // const count = (skip == 0) ? await Product.countDocuments() : undefined
-        // const result = await Product.find().skip(skip).limit(limit).populate("category").select("-colors -comments -desc -specs_link -category.image -categery.url -categor").exec()
-        // @ts-ignore
-        const query = await Product.list({}, skip, limit)
-        if (!query.data)
-            return res.status(500).send({ msg: config.err500 })
-
-        return res.send({ msg: config.success, data: query.data, count: query.count })
-    } catch (err) {
-        console.log(err)
-        return res.status(500).send({ msg: config.err500 })
-    }
-}
 
 export const List = async (req: Request, res: Response, next: NextFunction) => {
     try {

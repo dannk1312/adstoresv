@@ -77,12 +77,10 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
             try {
                 const opts = { session };
 
-                if((!!name && !!(await Category.findOne({ _id: { $ne: _id }, name }))))
+                if((!!name && !(await Category.findOne({ _id: { $ne: _id }, name }))))
                 {
                     category.name = name
-                    if(!(await category.save(opts)))
-                        throw Error()
-
+                    console.log(name)
                     for(let  i = 0; i < category.products.length; i++) {
                         if(!(await Product.findByIdAndUpdate(category.products[i], {"category": name}, opts).exec()))
                             throw Error()
@@ -92,6 +90,9 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
                 if(!!specsModel) {
                     // @ts-ignore
                     await category.saveSpecsModel(specsModel, opts)
+                } else {
+                    if(!(await category.save(opts)))
+                        throw Error()
                 }
                 await session.commitTransaction();
                 session.endSession();
@@ -164,64 +165,4 @@ export const Delete = async (req: Request, res: Response, next: NextFunction) =>
         return res.status(500).send({ msg: config.err500 })
     }
 }
-
-export const Query = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const name: string = req.body.name
-        const specs: any = req.body.specs // {name: value}
-        const min_price: number = req.body.min_price ?? 0
-        const max_price: number = req.body.max_price ?? 1000000000
-        const colors: string[] = req.body.colors
-        const skip: number = req.body.skip ?? 0
-        const limit: number = req.body.limit ?? 20
-
-        if (!name)
-            return res.status(400).send({ msg: config.err400 })
-        const category = await Category.findOne({ name });
-        if (!category)
-            return res.status(400).send({ msg: config.err400 })
-
-        var products = category.products;
-
-        if (!!specs) {
-            //query result 
-            for (let i = 0; i < category.specsModel.length && products.length > 0; i++) {
-                const e = category.specsModel[i];
-                var specsProduct: string[] = []
-
-                if (specs.hasOwnProperty(e.name)) {
-                    var values: string[] = specs[e.name]
-                    for (let j = 0; j < e.values.length; j++) {
-                        if (values.includes(e.values[j].value)) {
-                            e.values[j].products.forEach(id => specsProduct.push(id.toString()))
-                        }
-                    }
-                }
-                // Types.ObjectId cannot use with includes
-                products = products.filter(id => specsProduct.includes(id.toString()));
-            }
-        }
-
-        if (products.length == 0)
-            if (req.body.skip == undefined)
-                return res.send({ msg: config.success, data: [], count: 0 })
-            else
-                return res.send({ msg: config.success, data: [] })
-
-        var options: any = { '_id': { $in: products }, price: { $lte: max_price, $gte: min_price } }
-        if (!!colors)
-            options["colors.color"] = { $in: colors }
-
-        // @ts-ignore
-        var query = await Product.list(options, skip, limit)
-        if (!query.data)
-            return res.status(500).send({ msg: config.err500 })
-
-        return res.send({ msg: config.success, data: query.data, count: query.count })
-    } catch (err) {
-        console.log(err)
-        return res.status(500).send({ msg: config.err500 })
-    }
-}
-
 

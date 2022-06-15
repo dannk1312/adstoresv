@@ -83,28 +83,10 @@ export const productSchema = new Schema<IProduct>({
     }]
 }, { timestamps: true })
 
-productSchema.methods.catespecs = async function (): Promise<any> {
-    var category = await Category.findById(this.category)
-    if(!category)
-        throw Error("Cannot get Category")
-    
-    var specs: any = []
-    category.specsModel.forEach(e => {
-        const specs_id = e._id.toString()
-        if(this.specs_link.hasOwnProperty(specs_id)) {
-            for (let i = 0; i < e.values.length; i++) {
-                if(e.values[i]._id == this.specs_link[specs_id]) {
-                    specs.push({name: e.name, value:  e.values[i].value})
-                }
-            }
-        }
-    });
-    return {category: category.name, specs}
-}
 
 productSchema.statics.list = async function(queryOptions: any, sortOptions: any, skip: number, limit: number) {
     return {
-        data: await Product.find(queryOptions).sort(sortOptions).skip(skip).limit(limit).lean().populate("category", "name").select("name code quantity image_url price sale total_rate enable sold").exec(),
+        data: await Product.find(queryOptions).sort(sortOptions).skip(skip).limit(limit).lean().select("name code category image_url price sale total_rate enable sold").exec(),
         count: skip == 0 ? await Product.countDocuments(queryOptions): undefined
     }
 }

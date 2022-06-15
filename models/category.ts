@@ -146,13 +146,15 @@ categorySchema.methods.saveSpecsModel = async function(this: ICategory, specsMod
                 continue
             
             flag_item = true
+            if(oitem.name != nitem.name) 
+                oitem.values.forEach(v => v.products.forEach(c => relate_set.add(c)))
             name_tree[oitem.name] = nitem.name
             oitem.name = nitem.name
             value_tree[nitem.name] = {}
             
             newValueSet.clear()
             for(let j = 0 ;j< oitem.values.length;j++) {
-                var ovalue = oitem.values[i]
+                var ovalue = oitem.values[j]
                 var flag_value = false
                 for(var nvalue of nitem.values) {
                     if(!nvalue._id) {
@@ -162,29 +164,33 @@ categorySchema.methods.saveSpecsModel = async function(this: ICategory, specsMod
                         }
                         continue
                     }
-                    if(ovalue._id != nitem._id) 
+
+                    if(ovalue._id != nvalue._id) 
                         continue
 
                     flag_value = true
+                    if(ovalue.value != nvalue.name) 
+                        ovalue.products.forEach(c => relate_set.add(c))
                     value_tree[nitem.name][ovalue.value] = nvalue.value
                     ovalue.value = nvalue.value
                 }
                 if(!flag_value && ovalue.products.length == 0) {
                     flag_value = true
-                    oitem.values.slice(j, 1)
+                    // @ts-ignore
+                    oitem.values.splice(j, 1)
                     j--
-                    console.log("??")
                 }
                 if(!flag_value) {
+                    console.log(ovalue)
                     throw Error("Không thể xóa value đang có liên kết với product")
                 }
             }
         }
         if(!flag_item && oitem.values.reduce((p, i) => p + i.products.length, 0) == 0) {
             flag_item = true
-            this.specsModel.slice(i, 1)
+            // @ts-ignore
+            this.specsModel.splice(i, 1)
             i--
-            console.log(this.specsModel.length)
         }
         if(!flag_item) {
             throw Error("Không thể xóa spec đang có liên kết với product")
@@ -195,7 +201,8 @@ categorySchema.methods.saveSpecsModel = async function(this: ICategory, specsMod
     var categoryDoc = await Category.findByIdAndUpdate(this._id, {specsModel: this.specsModel}, session_opts).exec()
     if(!categoryDoc)
         throw Error("Lỗi lưu")
-    var docs = await Product.find({_id: {$in: relate_set}}).select("specs").exec()
+    var affects = [...relate_set]
+    var docs = await Product.find({'_id': {$in: affects}}).select("specs").exec()
     if(!docs)
         throw Error("Lỗi load")
     
@@ -207,7 +214,6 @@ categorySchema.methods.saveSpecsModel = async function(this: ICategory, specsMod
             var values: any = value_tree[name_tree[name]]
             new_specs[new_name] = values[value]
         }
-        console.log(new_specs)
         var productDoc = await Product.findByIdAndUpdate(docs[i]._id, {specs: new_specs}, session_opts).exec()
         if(!productDoc)
             throw Error()
