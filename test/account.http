@@ -4,7 +4,7 @@ POST http://localhost:5000/account/login HTTP/1.1
 Content-Type: application/json
 
 {
-    "email_or_phone": "customer@gmail.com",
+    "email_or_phone": "admin@gmail.com",
     "code": "000000"
 }
 
@@ -18,7 +18,9 @@ POST http://localhost:5000/account/pushBag HTTP/1.1
 Content-Type: application/json
 
 {
-    "_id": "62a70c8b3f787f22505beb14"
+    "_id": "62a95e2bd566f89d33c6621e",
+    "color": "Red",
+    "quantity": 20
 }
 
 ###
@@ -27,7 +29,7 @@ Content-Type: application/json
 
 {
     "bag": [
-        {"product": "62a70c8b3f787f22505beb14", "quantity": 2}
+        {"product": "62a95e2bd566f89d33c6621e", "color": "Red", "quantity": 2}
     ] 
 }
 

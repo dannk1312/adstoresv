@@ -22,8 +22,14 @@ POST http://localhost:5000/category/update HTTP/1.
 Content-Type: application/json
 
 {
-    "_id": "62a4e4f0a5d2ed2a2e760159",
-    "name": "Thể Loại Gì Đây"
+    "_id": "62a701e0ad91633459e66d84",
+    "name": "Thể Loại Gì Đây",
+    "specsModel": [
+        {
+            "_id": "62a701e0ad91633459e66da5",
+            "name": "Ramm"
+        }
+    ]
 }
 
 ###

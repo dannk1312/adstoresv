@@ -106,7 +106,7 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
     const code: string = req.body.code
     const desc: string = req.body.desc
     const category: string = req.body.category
-    const specs: any = req.body.specs
+    var specs: any = req.body.specs
     const price: number = req.body.price
     const sale: number = req.body.sale
     const image_base64: string = req.body.image_base64
@@ -126,9 +126,12 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
         return res.status(400).send({ msg: config.err400 })
 
     // @ts-ignore
-    const specs_link = categoryDoc.getSpecsLink(specs)
+    specs = categoryDoc.validSpecs(specs)
+    console.log(specs)
+    if(Object.keys(specs).length == 0)
+        return res.status(400).send({ msg: config.err400 })
 
-    var product = new Product({ name, code, desc, category: categoryDoc._id, specs_link: specs_link, price, sale, image_id: img_info.public_id, image_url: img_info.url })
+    var product = new Product({ name, code, desc, category, specs, price, sale, image_id: img_info.public_id, image_url: img_info.url })
 
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -160,11 +163,11 @@ export const Read = async (req: Request, res: Response, next: NextFunction) => {
     if (!_id && !code)
         return res.status(400).send({ msg: config.err400 })
 
-    Product.findOne({ $or: [{ _id: _id }, { code: code }] }, async (err: any, doc: any) => {
+    Product.findOne({ $or: [{ _id: _id }, { code: code }] }).select("-comments").exec((err: any, doc: any) => {
         if (err) return res.status(500).send({ msg: config.err500 })
         if (!doc) return res.status(400).send({ msg: config.err400 })
 
-        return res.send({ msg: config.success, data: await doc.info() })
+        return res.send({ msg: config.success, data: doc })
     });
 }
 
@@ -299,58 +302,59 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
         if (!product)
             return res.status(400).send({ msg: config.err400 })
 
-        if (enable !== undefined) {
-            product.markModified('enable')
-            product.enable = enable
-        }
 
-        if (!!name) {
-            product.markModified('name')
-            product.name = name
-        }
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        
+        try {
+            const opts = { session };
 
-        if (!!specs) {
-            product.markModified('specs_link')
-            const category = await Category.findById(product.category)
-            if (!category)
-                return res.status(500).send({ msg: config.err500 })
-            // @ts-ignore
-            product.specs_link = category.getSpecsLink(specs)
-        }
+            product.enable = enable ?? product.enable
+            product.name = name ?? product.name
+            product.desc = desc ?? product.desc
+            product.price = price ?? product.price
+            product.sale = sale ?? product.sale
 
-        if (!!desc) {
-            product.markModified('desc')
-            product.desc = desc
-        }
-
-        if (!!price) {
-            product.markModified('price')
-            product.price = price
-        }
-
-        if (!!sale) {
-            product.markModified('sale')
-            product.sale = sale
-        }
-
-        var img_info: any;
-        if (!!image_base64) {
-            img_info = await image.upload(image.base64(image_base64), "product_color");
-            if (!img_info) return res.status(500).send({ msg: config.errSaveImage })
-            image.destroy(product.image_id)
-            product.image_id = img_info.public_id
-            product.image_url = img_info.url
-        }
-
-        // Save
-        product.save((err: any) => {
-            if (err) {
-                if (!!img_info)
-                    image.destroy(img_info.public_id)
-                return res.status(500).send({ msg: config.err500 })
+            var category;
+            if (!!specs) {
+                category = await Category.findOne({ name: product.category })
+                if (!category)
+                    return res.status(500).send({ msg: config.err500 })
+                // @ts-ignore
+                category.delProduct(product)
+                // @ts-ignore
+                product.specs = category.validSpecs(specs)
+                // @ts-ignore
+                category.addProduct(product)
             }
-            return res.send({ msg: config.success })
-        })
+
+            var img_info: any
+            var old_image_id = product.image_id
+            if (!!image_base64) {
+                img_info = await image.upload(image.base64(image_base64), "product_color");
+                if (!img_info) return res.status(500).send({ msg: config.errSaveImage })
+                product.image_id = img_info.public_id
+                product.image_url = img_info.url
+            }
+
+            // Save
+            var productDoc = await product.save(opts)
+            var categeryDoc = !!category ? (await category.save(opts)): "temp"
+            if(!productDoc || !categeryDoc) {
+                if(!!img_info) image.destroy(img_info.public_id)
+                throw Error()
+            } else {
+                image.destroy(old_image_id)
+                await session.commitTransaction()
+                session.endSession();
+                return res.send({msg: config.success})
+            }
+        } catch (error) {
+            console.log(error)
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(500).send({ msg: "Lỗi không lưu đồng bộ với category" })
+        }
     } catch (err) {
         console.log(err)
         return res.status(500).send({ msg: config.err500 })
@@ -394,23 +398,32 @@ export const ValidBag = async (req: Request, res: Response, next: NextFunction) 
     var msg: string = ""
     for (let i = 0; i < bag.length; i++) {
         const e = bag[i];
-        const doc = await Product.findById(e.product).select("_id quantity code name price sale").exec()
+        const doc = await Product.findById(e.product).select("_id code name price sale colors").exec()
         if (!!doc) {
             if (doc.enable == false) {
                 msg += `Vật phẩm ${doc.name} - ${doc.code} không thể mua vào lúc này. `
             }
-            if (doc.quantity > e.quantity) {
-                new_bag.push(e)
-                bag_details.push({ product: doc, quantity: e.quantity })
+            let i = 0
+            for(; i < doc.colors.length; i++) {
+                if(doc.colors[i].color == e.color) {
+                    break
+                }
             }
-            else {
-                if (doc.quantity > 0) {
-                    e.quantity = doc.quantity
+            if(i < doc.colors.length)
+                if (doc.colors[i].quantity > e.quantity) {
                     new_bag.push(e)
                     bag_details.push({ product: doc, quantity: e.quantity })
                 }
-                msg += `Vật phẩm ${doc.name} - ${doc.code} không đủ số lượng, chỉ có ${doc.quantity}. `
-            }
+                else {
+                    if (doc.colors[i].quantity > 0) {
+                        e.quantity = doc.colors[i].quantity
+                        new_bag.push(e)
+                        bag_details.push({ product: doc, quantity: e.quantity })
+                    }
+                    msg += `Vật phẩm ${doc.name} - ${doc.code} không đủ số lượng, chỉ có ${doc.colors[i].quantity}. `
+                }
+            else 
+            msg += `Vật phẩm ${doc.name} - ${doc.code} không có màu ${e.color}. `
         } else {
             msg + `Vật phẩm ${e.product} không tồn tại. `
         }

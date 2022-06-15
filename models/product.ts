@@ -8,21 +8,22 @@ export interface IProduct {
     name: string,
     code: string,
     desc: string,
-    quantity: number,
     enable: boolean,
     colors: [{
         color: string,
         image_id: string,
         image_url: string,
+        quantity: number
     }],
     image_id: string,
     image_url: string,
 
     // Information
-    category: Types.ObjectId,
-    specs_link: any, // specs_id: value_id
-    price: number,
+    category: string,
+    specs: any, // specs: value\
+    price: number
     sale: number,
+
     catalogue: [
         {
             _id: Types.ObjectId,
@@ -47,18 +48,18 @@ export const productSchema = new Schema<IProduct>({
     name: {type: String, required: [true, 'Product name cannot be empty'], trim: true},
     code: {type: String, required: [true, 'Product code cannot be empty'], unique: true, trim: true},
     desc: {type: String, default: '', trim: true},
-    quantity: {type: Number, default: 0},
     enable: {type: Boolean, default: true},
     colors: [{
         color: {type: String, required: true, trim: true},
         image_id: String,
-        image_url: String
+        image_url: String,
+        quantity: {type: Number, default: 0}
     }],
     image_id: {type: String, require: true},
     image_url: {type: String, require: true},
 
-    category: {type: Schema.Types.ObjectId, ref: 'Category'},
-    specs_link: Schema.Types.Mixed,
+    category: String,
+    specs: Schema.Types.Mixed,
     price: {type: Number, required: [true, 'Product price cannot be empty']},
     sale: {
         type: Number, 
@@ -106,30 +107,6 @@ productSchema.statics.list = async function(queryOptions: any, sortOptions: any,
         data: await Product.find(queryOptions).sort(sortOptions).skip(skip).limit(limit).lean().populate("category", "name").select("name code quantity image_url price sale total_rate enable sold").exec(),
         count: skip == 0 ? await Product.countDocuments(queryOptions): undefined
     }
-}
-
-productSchema.methods.info = async function() {
-    var data = {
-        name: this.name ?? "",
-        code: this.code,
-        desc: this.desc ?? "",
-        quantity: this.quantity,
-        category: "",
-        specs: {},
-        image_url: this.image_url,
-        colors: this.colors,
-        price: this.price,
-        sale: this.sale,
-        total_rate: this.total_rate,
-        enable: this.enable, 
-        sold: this.sold
-    }
-    const catespecs = await this.catespecs() 
-    if(!!catespecs) {
-        data.category = catespecs.category,
-        data.specs = catespecs.specs
-    }
-    return data
 }
 
 export const Product = model<IProduct>('Product', productSchema)

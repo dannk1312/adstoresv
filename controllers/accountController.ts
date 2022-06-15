@@ -186,7 +186,7 @@ export const ReadBag = async (req: Request, res: Response, next: NextFunction) =
             populate: { 
                 path:  'product',
                 model: 'Product',
-                select: 'name code image_url price sale'
+                select: 'name code image_url price sale colors'
              }
           }).select("bag").exec((err, doc) => {
             if (err) return res.status(500).send({ msg: config.err500 })
@@ -218,9 +218,11 @@ export const UpdateBag = async (req: Request, res: Response, next: NextFunction)
 export const PushBag = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const _id: string = req.body._id
+        const color: string = req.body.color
+        const quantity: number = req.body.quantity
         const account = req.body.account
 
-        if(!_id)
+        if(!_id || !color || !quantity)
             return res.status(400).send({msg: config.err400})
         
         const accountDoc = await Account.findById(account._id).select("bag").exec()
@@ -236,7 +238,7 @@ export const PushBag = async (req: Request, res: Response, next: NextFunction) =
             }
         }
         if(!flag) {
-            accountDoc.bag.push({product: new Types.ObjectId(_id), quantity: 1})
+            accountDoc.bag.push({product: new Types.ObjectId(_id), color, quantity})
         }  
         accountDoc.save((err) => {
             if(err)

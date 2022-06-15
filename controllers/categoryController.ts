@@ -1,4 +1,4 @@
-import { Document, Types } from "mongoose";
+import mongoose, { Document, Types } from "mongoose";
 import jwt from "jsonwebtoken";
 import { config } from '../services/config';
 import express, { NextFunction, Request, Response } from 'express';
@@ -11,8 +11,10 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
         const name: string = req.body.name;
         const image_base64: string = req.body.image_base64;
         const specsModel: any = req.body.specsModel;   // [{name: "Ram", values: [{value: "2gb"}, {value: "4gb"}]}]
-        if (!name || !image_base64 || !specsModel)
+        // @ts-ignore
+        if (!name || !image_base64 || !specsModel || !Category.checkSpecsModel(specsModel))
             return res.status(400).send({ msg: config.err400 })
+
 
         var img_info = await image.upload(image.base64(image_base64), "category")
         if (!img_info) return res.status(500).send({ msg: config.errSaveImage })
@@ -42,40 +44,65 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
         const image_base64: string = req.body.image_base64;
         const specsModel: any = req.body.specsModel;
 
+
         if (!_id || (!name && !image_base64 && !specsModel))
             return res.status(400).send({ msg: config.err400 })
 
-        // Gte category with id
         var category = await Category.findById(_id);
-        // Check name exists
-        if (!category || (!!name && !!(await Category.findOne({ _id: { $ne: _id }, name }))))
+        if (!category)
             return res.status(400).send({ msg: config.err400 })
-        else
-            category.name = name
 
-        // Apply new specs model
-        if (!!specsModel) {
-            // @ts-ignore
-            if (category.checkSpecsModel(specsModel))
-                category.specsModel = specsModel
-            else
-                return res.status(400).send({ msg: config.err400 })
-        }
-
+        var msg = ""
+        var old_image_id = category.image_id
+        var img_info: any;
         if (!!image_base64) {
-            image.destroy(category.image_id)
-
-            var img_info = await image.upload(image.base64(image_base64), "category")
-            if (!img_info) return res.send({ msg: config.success + " without image." })
-            category.image_id = img_info.public_id
-            category.image_url = img_info.url
+            img_info = await image.upload(image.base64(image_base64), "category")
+            if (img_info) {
+                category.image_id = img_info.public_id
+                category.image_url = img_info.url
+                var categoryDoc = await category.save()
+                if (!categoryDoc) {
+                    image.destroy(img_info.public_id)
+                    msg += "Lưu ảnh thất bại. "
+                } else {
+                    image.destroy(old_image_id)
+                    msg += "Lưu ảnh thành công. "
+                }
+            }
         }
 
-        category.save((err, doc) => {
-            if (err) return res.status(500).send({ msg: config.err500 })
-            if (!doc) return res.status(400).send({ msg: config.err400 })
-            res.send({ msg: config.success })
-        })
+        if (!!specsModel || !!name) {
+            const session = await mongoose.startSession();
+            session.startTransaction();
+            try {
+                const opts = { session };
+
+                if((!!name && !!(await Category.findOne({ _id: { $ne: _id }, name }))))
+                {
+                    category.name = name
+                    if(!(await category.save(opts)))
+                        throw Error()
+
+                    for(let  i = 0; i < category.products.length; i++) {
+                        if(!(await Product.findByIdAndUpdate(category.products[i], {"category": name}, opts).exec()))
+                            throw Error()
+                    }
+                }
+
+                if(!!specsModel) {
+                    // @ts-ignore
+                    await category.saveSpecsModel(specsModel, opts)
+                }
+                await session.commitTransaction();
+                session.endSession();
+                res.send({msg: config.success})
+            } catch (error) {
+                console.log(error)
+                await session.abortTransaction();
+                session.endSession();
+                return res.status(500).send({ msg: "Lỗi không lưu đồng bộ với category" })
+            }
+        }
     } catch (err) {
         console.log(err)
         return res.status(500).send({ msg: config.err500 })

@@ -26,6 +26,7 @@ export interface IAccount {
     chats: [Types.ObjectId],
     bag: [{
         product: Types.ObjectId,
+        color: string,
         quantity: number
     }],
     bills: IBill[],
@@ -100,6 +101,7 @@ export const accountSchema = new Schema<IAccount>({
     chats: [{ type: Schema.Types.ObjectId, required: true, ref: 'Chat' }],
     bag: [{
         product: { type: Schema.Types.ObjectId, required: true, ref: 'Product' },
+        color: String,
         quantity: Number
     }],
     rate_waits: [{ type: Schema.Types.ObjectId, required: true, ref: 'Product' }],

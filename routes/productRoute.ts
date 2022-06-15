@@ -42,10 +42,10 @@ route.post("/product/read", Product.Read)
 //      code**: string
 //      desc: string,
 //      category**: string - category name
-//      specs: object - {specs: value}
+//      specs**: object - {specs: value}
 //      price**: number
 //      sale: number,
-//      image_base64: string
+//      image_base64**: string
 route.post("/product/create", Default.Role("Admin"), Product.Create)
 
 // field: _id, code
