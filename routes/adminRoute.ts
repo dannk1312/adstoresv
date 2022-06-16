@@ -9,14 +9,14 @@ const route = express.Router();
 // type:
 //     dateStart**: Date
 //     dateEnd: Date - undefine = now
-//     step: string - "bill", "day", "month", "year"
+//     step: string - "second", "day", "month", "year"
 //route.post("/statistical/bills", Default.Role("Admin"), Admin.BillStatistical)
 
 // header: accessToken - role: "Admin" - field: dateStart, dateEnd
 // type:
 //      dateStart**: Date
 //      dateEnd: Date - undefine = now
-//      step: string - "bill", "day", "month", "year" - undefine = month
+//      step: string - "second", "day", "month", "year" - undefine = month
 route.post("/statistical/imports", Default.Role("Admin"), Admin.ImportStatistical)
 
 // header: accessToken - role: "Admin" - field: dateStart, dateEnd

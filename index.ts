@@ -11,6 +11,7 @@ import { categoryRoute } from './routes/categoryRoute';
 import { chatRoute } from './routes/chatRoute';
 import { discountRoute } from './routes/discountRoute';
 import { productRoute } from './routes/productRoute';
+import { adminRoute } from './routes/adminRoute';
 
 
 dotenv.config();
@@ -32,6 +33,7 @@ app.use(categoryRoute)
 app.use(chatRoute)
 app.use(discountRoute)
 app.use(productRoute)
+app.use(adminRoute)
 app.use("/", (req: Request, res: Response) => {
   res.send(`ADStore Server`);
 })

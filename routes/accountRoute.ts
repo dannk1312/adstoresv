@@ -95,13 +95,13 @@ route.get("/account/readBag", Default.Role("Customer"), Account.ReadBag)
 // header: accessToken - role: Customer - field: bag
 // type: 
 //      bag: object[] - [{product: string, color: string, quantity: number}] - product = product._id
-route.post("/account/updateBag", Default.Role("Customer"), Product.ValidBag, Account.UpdateBag, Account.ReadBag)
+//route.post("/account/updateBag", Default.Role("Customer"), Product.ValidBag, Account.UpdateBag, Account.ReadBag)
 
 
 // header: accessToken - role: Customer - field: _id
 // type: 
 //      _id**: string
-route.post("/account/pushBag", Default.Role("Customer"), Account.PushBag)
+route.post("/account/pushBag", Default.Role("Customer"), Account.PushBag, Product.ValidBag, Account.UpdateBag)
 
 
 // header: accessToken - role: Customer

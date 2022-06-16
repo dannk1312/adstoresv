@@ -9,7 +9,8 @@ export interface IImport {
         color: string,
         price: number
     }],
-    admin: Types.ObjectId
+    admin: Types.ObjectId,
+    createdAt: Date
 }
 
 export const importSchema = new Schema<IImport>({

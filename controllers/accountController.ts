@@ -242,7 +242,7 @@ export const UpdateBag = async (req: Request, res: Response, next: NextFunction)
         const account = req.body.account
         account.updateOne({ bag }).exec((err: any) => {
             if (err) return res.status(500).send({ msg: config.err500 })
-            next()
+            return res.send({msg: req.body.valid_bag_msg ?? config.success})
         })
     } catch (err) {
         console.log(err)
@@ -275,11 +275,7 @@ export const PushBag = async (req: Request, res: Response, next: NextFunction) =
         if(!flag) {
             accountDoc.bag.push({product: new Types.ObjectId(_id), color, quantity})
         }  
-        accountDoc.save((err) => {
-            if(err)
-                return  res.status(500).send({msg: config.err500})
-            return res.send({msg: config.success})
-        })
+        next()
     } catch (err) {
         console.log(err)
         return res.status(500).send({ msg: config.err500 })
