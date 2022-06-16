@@ -6,6 +6,7 @@ export interface IImport {
     data: [{
         product: Types.ObjectId, 
         quantity: number,
+        color: string,
         price: number
     }],
     admin: Types.ObjectId
@@ -15,7 +16,8 @@ export const importSchema = new Schema<IImport>({
     data: [{
         product: {type: Schema.Types.ObjectId, ref: "Product"}, 
         quantity: Number,
-        price: Number
+        price: Number,
+        color: String
     }],
     admin: {type: Schema.Types.ObjectId, ref: "Account"} 
 }, { timestamps: true })

@@ -326,7 +326,7 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
                 if(!!img_info) image.destroy(img_info.public_id)
                 throw Error()
             } else {
-                image.destroy(old_image_id)
+                if(!!img_info) image.destroy(old_image_id)
                 await session.commitTransaction()
                 session.endSession();
                 return res.send({msg: config.success})
@@ -345,19 +345,31 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
 }
 
 export const Imports = async (req: Request, res: Response, next: NextFunction) => {
-    const data = req.body.data // [{code, quantity, price}]
+    const data = req.body.data // [{code, quantity, color, price}]
     if (!data)
         return res.status(400).send({ msg: config.err400 })
 
     const success: any[] = []
     const failure: any[] = []
     for (let i = 0; i < data.length; i++) {
-        const { code, quantity, price } = data[i]
-        const doc = await Product.findOneAndUpdate({ code }, { $inc: { "quantity": quantity } }).select("_id").exec();
-        if (!doc)
+        const { code, color, quantity, price } = data[i]
+        const doc = await Product.findOne({ code }).select("colors").exec();
+        if (!doc) 
             failure.push({ code, quantity, price })
-        else
-            success.push({ product: doc._id, quantity, price })
+        else {
+            var flag = false
+            for(let colordoc of doc.colors) {
+                if(colordoc.color == color) {
+                    colordoc.quantity += quantity
+                    flag = true
+                    break
+                }
+            }
+            if(flag && !!(await doc.save()))
+                success.push({ product: doc._id, quantity, price, color })
+            else 
+                failure.push(data[i])
+        }
     }
 
     // save add bill

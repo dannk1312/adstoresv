@@ -192,8 +192,16 @@ export const ReadBag = async (req: Request, res: Response, next: NextFunction) =
             if (err) return res.status(500).send({ msg: config.err500 })
             if (!doc) return res.status(400).send({ msg: config.err400 })
             var count = 0
-            doc.bag.forEach(e => count += e.quantity)
-            return res.send({ msg: config.success, data: doc.bag, count })
+            var total_price = 0
+            var total_sale = 0
+            doc.bag.forEach(e => {
+                count += e.quantity
+                // @ts-ignore
+                total_price += e.product.price * e.quantity
+                // @ts-ignore
+                total_sale += e.product.sale * e.quantity * e.product.price
+            })
+            return res.send({ msg: config.success, data: doc.bag, count, total_price, total_sale })
         })
     } catch (err) {
         console.log(err)

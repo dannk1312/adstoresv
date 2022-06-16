@@ -86,7 +86,7 @@ export const productSchema = new Schema<IProduct>({
 
 productSchema.statics.list = async function(queryOptions: any, sortOptions: any, skip: number, limit: number) {
     return {
-        data: await Product.find(queryOptions).sort(sortOptions).skip(skip).limit(limit).lean().select("name code category image_url price sale total_rate enable sold").exec(),
+        data: await Product.find(queryOptions).sort(sortOptions).skip(skip).limit(limit).lean().select("name code category image_url price sale total_rate enable sold colors").exec(),
         count: skip == 0 ? await Product.countDocuments(queryOptions): undefined
     }
 }
