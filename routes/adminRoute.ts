@@ -9,7 +9,7 @@ const route = express.Router();
 // type:
 //       dateStart**: Date
 //       dateEnd: Date - undefine = now
-route.post("/statistical/bills", Default.Role("Admin"), Bill.Statistical)
+//route.post("/statistical/bills", Default.Role("Admin"), Bill.Statistical)
 
 
 export const adminRoute = route
