@@ -6,6 +6,7 @@ import { Discount } from '../models/discount';
 import { Bill } from '../models/bill';
 import { Account, IAccount } from '../models/account';
 import mongoose from 'mongoose';
+import { fromObject } from '../services/support';
 
 
 export const Calculate = async (req: Request, res: Response, next: NextFunction) => {
@@ -38,26 +39,20 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
             "province": address.province,
             "district": address.district,
             "address": address.address,
-            "weight": weight,
-            "value": total,
+            "weight": 3000,
+            "value": 10000,
             "transport": "road",
             "deliver_option": "xteam",
-            "tags": 1 // 1 là dễ vỡ
+            "tags": ["1"] // 1 là dễ vỡ
         }
-        // @ts-ignore
-        await axios.get('https://services.giaohangtietkiem.vn/services/shipment/fee?',
-            {
-                headers: { "Token": `${process.env.GHTK_API_TOKEN}` },
-                params: data
-            }).then((result: any) => {
-                if (result.delivery == true)
-                    ship += result.fee.fee + result.fee.insurance_fee
-                else
-                    msg += "Đơn hàng không thể vận chuyển tới địa chỉ này. "
-            }).catch(() => msg += `Xảy ra lỗi khi tính toán giá ship. `);
-    } else {
-        msg += "Chưa có địa chỉ. "
-    }
+        const result = await axios.get(config.ghtk_url + fromObject(data), {headers: { "Token": `${process.env.GHTK_API_TOKEN}` }})
+        if(result.status == 200) {
+            const fee = result.data.fee
+                if (fee.delivery == true)
+                    ship = fee.fee + fee.insurance_fee + fee.include_vat
+                else msg += "Đơn hàng không thể vận chuyển tới địa chỉ này. "
+        } else msg += `Xảy ra lỗi khi tính toán giá ship. `
+    } else msg += "Chưa có địa chỉ. "
 
     if (!!discountCode) {
         const discount = await Discount.findOne({ code: discountCode })
@@ -134,23 +129,19 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
             "province": address.province,
             "district": address.district,
             "address": address.address,
-            "weight": weight,
-            "value": total,
+            "weight": 3000,
+            "value": 10000,
             "transport": "road",
             "deliver_option": "xteam",
-            "tags": 1 // 1 là dễ vỡ
+            "tags": ["1"] // 1 là dễ vỡ
         }
-        // @ts-ignore
-        await axios.get('https://services.giaohangtietkiem.vn/services/shipment/fee?',
-            {
-                headers: { "Token": `${process.env.GHTK_API_TOKEN}` },
-                params: data
-            }).then((result: any) => {
-                if (result.delivery == true)
-                    ship = result.fee.fee + result.fee.insurance_fee
-                else
-                    msg += "Đơn hàng không thể vận chuyển tới địa chỉ này. "
-            }).catch(() => msg += "Xảy ra lỗi khi tính toán giá ship");
+        const result = await axios.get(config.ghtk_url + fromObject(data), {headers: { "Token": `${process.env.GHTK_API_TOKEN}` }})
+        if(result.status == 200) {
+            const fee = result.data.fee
+                if (fee.delivery == true)
+                    ship = fee.fee + fee.insurance_fee + fee.include_vat
+                else msg += "Đơn hàng không thể vận chuyển tới địa chỉ này. "
+        } else msg += `Xảy ra lỗi khi tính toán giá ship. `
     }
     if (ship == -1)
         return res.status(400).send({ msg: config.err400 })
@@ -303,12 +294,12 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
         const sortType: number = req.body.sortType
 
         var sortOptions: any = {}
-        var queryOptions: any = {status}
+        var queryOptions: any = { status }
 
         if (!!sortName && ["ship", "total", "discount"].includes(sortName) && (sortType == 1 || sortType == -1)) {
             sortOptions[sortName] = sortType
         }
-        if(!!search) {
+        if (!!search) {
             const pattern = { $regex: '.*' + search + '.*', $options: "i" }
             queryOptions['$or'] = [
                 { phone: pattern },
@@ -335,22 +326,22 @@ export const Read = async (req: Request, res: Response, next: NextFunction) => {
         const _id = req.body._id
         const account: IAccount = req.body.account
 
-        if(account.role == "Customer" && !account.bills.includes(_id)) {
-            return res.status(400).send({msg: config.errPermission})
+        if (account.role == "Customer" && !account.bills.includes(_id)) {
+            return res.status(400).send({ msg: config.errPermission })
         }
 
         Bill.findById(_id).populate({
-            path:     'products',			
-            populate: { 
-                path:  'product',
+            path: 'products',
+            populate: {
+                path: 'product',
                 model: 'Product',
                 select: 'name code image_url colors'
-             }
-            }).exec((err, doc) => {
-                if(err) return res.status(500).send({msg: config.err500})
-                if(!doc) return res.status(400).send({msg: config.err400})
-                return res.send({msg: config.success, data: doc})
-            })
+            }
+        }).exec((err, doc) => {
+            if (err) return res.status(500).send({ msg: config.err500 })
+            if (!doc) return res.status(400).send({ msg: config.err400 })
+            return res.send({ msg: config.success, data: doc })
+        })
     } catch (err) {
         console.log(err)
         res.status(500).send({ msg: config.err500 })

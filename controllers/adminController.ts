@@ -1,6 +1,7 @@
 import mongoose, { Document, Types } from "mongoose";
 import jwt from "jsonwebtoken";
 import { config } from '../services/config';
+import axios from 'axios';
 import express, { NextFunction, Request, Response } from 'express';
 import * as image from "../services/image";
 import { Category } from "../models/category";
@@ -9,6 +10,9 @@ import { Import } from "../models/import";
 import { Account } from "../models/account";
 import { Bill } from "../models/bill";
 import { create } from "domain";
+import qs from "qs";
+import { fromObject } from "../services/support";
+import { Console } from "console";
 
 export const ImportStatistical = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -168,4 +172,31 @@ export const BillStatistical = async (req: Request, res: Response, next: NextFun
         return res.status(500).send({ msg: config.err500 })
     }
 
+}
+
+export const CheckShip = async (req: Request, res: Response, next: NextFunction) => {
+    const address = req.body.address
+    if (!!address) {
+        const data = {
+            "pick_province": process.env.PICK_PROVINCE,
+            "pick_district": process.env.PICK_DISTRICT,
+            "pick_address": process.env.PICK_ADDRESS,
+            "province": address.province,
+            "district": address.district,
+            "address": address.address,
+            "weight": 3000,
+            "value": 10000,
+            "transport": "road",
+            "deliver_option": "xteam",
+            "tags": ["1"] // 1 là dễ vỡ
+        }
+        const result = await axios.get(config.ghtk_url + fromObject(data), {headers: { "Token": `${process.env.GHTK_API_TOKEN}` }})
+        if(result.status == 200) {
+            console.log(result.data.fee)
+        } else {
+            console.log("Anw lz")
+        }
+    } else {
+        res.send({ msg: "Address Req" })
+    }
 }

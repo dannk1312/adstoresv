@@ -31,4 +31,8 @@ route.post("/statistical/imports", Default.Role("Admin"), Admin.ImportStatistica
 //      dateEnd: Date - undefine = now
 //route.post("/model/delete", Default.Role("Admin"), Admin.DeleteModel)
 
+
+route.post("/check_ship", Default.Role("Admin"), Admin.CheckShip)
+
+
 export const adminRoute = route
