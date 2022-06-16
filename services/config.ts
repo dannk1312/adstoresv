@@ -20,5 +20,8 @@ export const config = {
     success: "Thành công. ",
     failure: "Thất bại. ",
 
-    product_str: "name code category image_url price sale total_rate enable sold colors"
+    product_str: "name code category image_url price sale total_rate enable sold colors",
+    daylong: 86400000, //1000*60*60*24, 
+    monthlong: 2592000000, //1000*60*60*24*30, 
+    yearlong: 31104000000, //1000*60*60*24*30*12, 
 }

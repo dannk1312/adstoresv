@@ -349,47 +349,37 @@ export const Imports = async (req: Request, res: Response, next: NextFunction) =
     if (!data)
         return res.status(400).send({ msg: config.err400 })
 
-    const session = await mongoose.startSession();
-    session.startTransaction();
-    try {
-        const opts = { session };
-        
-        const success: any[] = []
-        const failure: any[] = []
-        for (let i = 0; i < data.length; i++) {
-            const { code, color, quantity, price } = data[i]
-            const doc = await Product.findOne({ code }).select("colors").exec();
-            if (!doc) 
-                failure.push({ code, quantity, price })
-            else {
-                var flag = false
-                for(let colordoc of doc.colors) {
-                    if(colordoc.color == color) {
-                        colordoc.quantity += quantity
-                        flag = true
-                        break
-                    }
+    const success: any[] = []
+    const failure: any[] = []
+    for (let i = 0; i < data.length; i++) {
+        const { code, color, quantity, price } = data[i]
+        const doc = await Product.findOne({ code }).select("colors").exec();
+        if (!doc) 
+            failure.push({ code, quantity, price })
+        else {
+            var flag = false
+            for(let colordoc of doc.colors) {
+                if(colordoc.color == color) {
+                    colordoc.quantity += quantity
+                    flag = true
+                    break
                 }
-                if(flag && !!(await doc.save(opts)))
-                    success.push({ product: doc._id, quantity, price, color })
-                else 
-                    failure.push(data[i])
             }
+            if(flag && !!(await doc.save()))
+                success.push({ product: doc._id, quantity, price, color })
+            else 
+                failure.push(data[i])
         }
-
-        const importBill = new Import({ data: success, admin: req.body.account._id })
-        if(!(await importBill.save()))
-            throw Error("Không thể lưu import bill")
-
-        await session.commitTransaction();
-        session.endSession();
-        return res.send({ msg: config.success, failure })
-    } catch (error) {
-        console.log(error)
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(500).send({ msg: "Lỗi không thể lưu import bill" })
     }
+
+    // save add bill
+    console.log("Import by Admin: " + req.body.account._id)
+    const importBill = new Import({ data: success, admin: req.body.account._id })
+    importBill.save((err, doc) => {
+        if (err || !doc)
+            return res.status(400).send({ msg: config.success + ". Nhưng không thể save import bill, hãy lưu bill xuống file txt và gọi IT để fix lỗi", success, failure })
+        return res.send({ msg: config.success, import_bill: doc, failure })
+    })
 }
 
 export const ValidBag = async (req: Request, res: Response, next: NextFunction) => {

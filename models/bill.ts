@@ -78,5 +78,8 @@ export const billSchema = new Schema<IBill>({
     discount: {type: Number, required: true}, 
 }, { timestamps: true })
 
+billSchema.virtual('cash').get(function () {
+    return this.total - this.discount;
+});
 
 export const Bill = model<IBill>('Bill', billSchema)

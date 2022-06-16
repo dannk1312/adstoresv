@@ -8,7 +8,7 @@ const route = express.Router();
 // header: accessToken - role: Customer - field: bag, discountCode, address
 // type:
 //      bag: object[] - [{product: string, quantity: number}] - product = product._id
-//      address: string,
+//      address: object - {province: string, district: string, address: string}
 //      discountCode: string
 
 route.post("/bill/billCalc", Default.Role("Customer"), Product.ValidBag, Bill.Calculate)
@@ -16,7 +16,7 @@ route.post("/bill/billCalc", Default.Role("Customer"), Product.ValidBag, Bill.Ca
 // header: accessToken - role: Customer - field: bag, discountCode, address
 // type:
 //      bag: object[] - [{product: string, quantity: number}] - product = product._id
-//      address: string,
+//      address: object - {province: string, district: string, address: string}
 //      discountCode: string
 
 route.post("/bill/create", Default.Role("Customer"), Product.ValidBag, Bill.Create)
