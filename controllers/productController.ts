@@ -435,6 +435,7 @@ export const ValidBag = async (req: Request, res: Response, next: NextFunction) 
     const new_bag: any[] = []
     const bag_details: any[] = []
     var msg: string = ""
+    var count: number = 0
     for (let i = 0; i < bag.length; i++) {
         const e = bag[i];
         const doc = await Product.findById(e.product).select("_id code name price sale colors").exec()
@@ -452,12 +453,14 @@ export const ValidBag = async (req: Request, res: Response, next: NextFunction) 
                 if (doc.colors[i].quantity > e.quantity) {
                     new_bag.push(e)
                     bag_details.push({ product: doc, quantity: e.quantity })
+                    count += e.quantity
                 }
                 else {
                     if (doc.colors[i].quantity > 0) {
                         e.quantity = doc.colors[i].quantity
                         new_bag.push(e)
                         bag_details.push({ product: doc, quantity: e.quantity })
+                        count += e.quantity
                     }
                     msg += `Vật phẩm ${doc.name} - ${doc.code} không đủ số lượng, chỉ có ${doc.colors[i].quantity}. `
                 }
@@ -471,6 +474,7 @@ export const ValidBag = async (req: Request, res: Response, next: NextFunction) 
     req.body.bag = new_bag
     req.body.bag_details = bag_details
     req.body.valid_bag_msg = msg
+    req.body.bag_count = count
     next()
 }
 

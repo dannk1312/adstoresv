@@ -242,7 +242,7 @@ export const UpdateBag = async (req: Request, res: Response, next: NextFunction)
         const account = req.body.account
         account.updateOne({ bag }).exec((err: any) => {
             if (err) return res.status(500).send({ msg: config.err500 })
-            return res.send({msg: req.body.valid_bag_msg ?? config.success})
+            return res.send({msg: req.body.valid_bag_msg ?? config.success, count: req.body.bag_count})
         })
     } catch (err) {
         console.log(err)
