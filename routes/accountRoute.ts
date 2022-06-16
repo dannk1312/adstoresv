@@ -8,8 +8,13 @@ const route = express.Router();
 
 // field: skip, limit
 // type: 
-//      skip: number - undefine = 0
-//      limit: number - undefine = 20
+//       skip: number - undefine = 0
+//       limit: number - undefine = 20
+//       search: string - name, email, phone, address - undefine = all
+//       role: string - ["Admin", "Sale", "Customer"] - undefine = all
+//       enable: boolean - undefine = all
+//       sortName: string - ["self_cancel", "createAt", "bills"] - số lần hủy đơn, ngày tạo, số lượng bill
+//       sortType: number - 1 là tăng dần, -1 giảm dần
 // nếu skip = 0 thì có trả số lượng
 route.post("/account/list", Default.Role("Admin"), Account.List)
 
@@ -97,6 +102,10 @@ route.post("/account/updateBag", Default.Role("Customer"), Product.ValidBag, Acc
 // type: 
 //      _id**: string
 route.post("/account/pushBag", Default.Role("Customer"), Account.PushBag)
+
+
+// header: accessToken - role: Customer
+route.post("/account/readBills", Default.Role("Customer"), Account.ReadBills)
 
 
 export const accountRoute = route

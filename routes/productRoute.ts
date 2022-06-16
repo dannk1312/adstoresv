@@ -5,12 +5,25 @@ import * as Product from '../controllers/productController';
 
 const route = express.Router();
 
+const specs_splitter = (req: Request, res: Response, next: NextFunction) => {
+    const specs = req.body.specs
+    if(!!specs && Array.isArray(specs)){
+        const temp: any = {}
+        specs.forEach(s => {
+            // @ts-ignore
+            temp[s.name] = s.values.split(',').map(e => e.trim())
+        })
+        req.body.specs = temp
+    }
+    next()
+}
+
 
 
 // field: category, specs, colors, min_price, max_price, skip, limit, sortName, sortType
 // type:
 //      category: string
-//      specs: object - {name: string, value: any[]} - undefine = all
+//      specs: object - {name: string, value: any[]} - undefine = all | or | [{name: string, values: string}]
 //      colors: string[] - undefine = all
 //      min_price: number - undefine = 0
 //      max_price: number - undefine = 1000000000
@@ -27,7 +40,7 @@ const route = express.Router();
 //      "colors": ["Red"],
 //      "max_price": 65000000
 // if skip == undefine => trả về count để phân trang
-route.post("/product/list", Product.List)
+route.post("/product/list",specs_splitter, Product.List)
 
 // field: _id, code
 // type: 
@@ -114,5 +127,14 @@ route.post("/product/imports", Default.Role("Admin"), Product.Imports)
 //      rate**: number
 //      message: string
 route.post("/product/rate", Default.Role("Customer"), Product.Rate)
+
+// field: products, category, quantity
+// type: 
+//       products: string[]  // list _id product, dùng để gợi ý các món hàng liên quan
+//       category: string  // name - gợi ý các sản phẩm top của category
+//       quantity: number // undefine => 10
+// nếu trống thì trả về các sản phẩm top
+// products | category
+route.post("/product/hint", Product.Rate)
 
 export const productRoute = route

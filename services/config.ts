@@ -18,5 +18,7 @@ export const config = {
     errSaveImage: "Lỗi, không thể save ảnh. ",
     
     success: "Thành công. ",
-    failure: "Thất bại. "
+    failure: "Thất bại. ",
+
+    product_str: "name code category image_url price sale total_rate enable sold colors"
 }

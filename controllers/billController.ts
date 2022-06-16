@@ -4,7 +4,7 @@ import { Product } from '../models/product';
 import { config } from '../services/config';
 import { Discount } from '../models/discount';
 import { Bill } from '../models/bill';
-import { Account } from '../models/account';
+import { Account, IAccount } from '../models/account';
 import mongoose from 'mongoose';
 
 
@@ -14,8 +14,8 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
     const address: any = req.body.address
     const account = req.body.account
 
-    if(!bag_details || bag_details.length == 0)
-        return res.status(400).send({msg: "Giỏ hàng rỗng"})
+    if (!bag_details || bag_details.length == 0)
+        return res.status(400).send({ msg: "Giỏ hàng rỗng" })
 
     var ship: number = -1
     var total: number = 0
@@ -107,8 +107,8 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
     if (!account.phone)
         return res.status(400).send({ msg: "Thiếu số điện thoại. " })
 
-    if(!bag_details || bag_details.length == 0)
-        return res.status(400).send({msg: "Giỏ hàng rỗng"})
+    if (!bag_details || bag_details.length == 0)
+        return res.status(400).send({ msg: "Giỏ hàng rỗng" })
 
     var ship: number = -1
     var total: number = 0
@@ -229,8 +229,8 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
         const account: any = req.body.account
         const desc: string = req.body.desc
 
-        if(!_id || !status)
-            return res.status(400).send({msg: config.err400 })
+        if (!_id || !status)
+            return res.status(400).send({ msg: config.err400 })
 
         const bill = await Bill.findById(_id)
         if (!bill)
@@ -262,20 +262,20 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
             if (!billDoc)
                 throw Error("Fail")
 
-            if(status == "Cancel")
+            if (status == "Cancel")
                 // Refill product
                 for (let i = 0; i < bill.products.length; i++) {
                     const e = bill.products[i]
                     if (!!(await Product.findByIdAndUpdate(e.product, { $inc: { quantity: e.quantity, sold: -1 } }, opts).exec()))
                         throw Error("Fail")
                 }
-            else if(status == "Done") {
+            else if (status == "Done") {
                 // Add product to rates of account
                 const products: any = {}
                 for (let i = 0; i < bill.products.length; i++) {
-                    products.push({product: bill.products[i].product})
+                    products.push({ product: bill.products[i].product })
                 }
-                if (!!(await Account.findByIdAndUpdate(account._id, { $push: { rate_waits: {$each: products} } }, opts).exec()))
+                if (!!(await Account.findByIdAndUpdate(account._id, { $push: { rate_waits: { $each: products } } }, opts).exec()))
                     throw Error("Fail")
             }
 
@@ -295,33 +295,62 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
 
 export const List = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const all_status = ['Preparing', 'Delivering', 'Done', 'Cancel']
-
         const skip: number = req.body.skip ?? 0
         const limit: number = req.body.limit ?? 20
-        const status: any = all_status.includes(req.body.status) ? req.body.status : undefined
-        const sort: number = req.body.sort
-        const account = req.body.account
+        const search: string = req.body.search
+        const status: string = req.body.status
+        const sortName: string = req.body.sortName
+        const sortType: number = req.body.sortType
 
-        if(account.role == "Admin") {
-            var bills: any
-            if(sort == 1 || sort == -1) 
-                bills = await Bill.find({status}).sort({ total : sort}).skip(skip).limit(limit).exec();
-            else 
-                bills = await Bill.find({status}).skip(skip).limit(limit).exec();
-            if(!bills)
-                throw Error("Fail")
-            return res.send({msg: config.success, data: bills})
-        } else {
-            var bills: any
-            if(sort == 1 || sort == -1) 
-                bills = await Bill.find({account: account._id, status}).sort({ total : sort}).skip(skip).limit(limit).exec();
-            else 
-                bills = await Bill.find({account: account._id, status}).skip(skip).limit(limit).exec();
-            if(!bills)
-                throw Error("Fail")
-            return res.send({msg: config.success, data: bills})
+        var sortOptions: any = {}
+        var queryOptions: any = {status}
+
+        if (!!sortName && ["ship", "total", "discount"].includes(sortName) && (sortType == 1 || sortType == -1)) {
+            sortOptions[sortName] = sortType
         }
+        if(!!search) {
+            const pattern = { $regex: '.*' + search + '.*', $options: "i" }
+            queryOptions['$or'] = [
+                { phone: pattern },
+                { 'address.provine': pattern },
+                { 'address.district': pattern },
+                { 'address.address': pattern },
+            ]
+        }
+
+        const count = (req.body.skip == undefined) ? await Bill.countDocuments(queryOptions) : undefined
+        const result = await Bill.find(queryOptions).sort(sortOptions).skip(skip).limit(limit).select("-products").exec()
+        if (!result)
+            return res.status(500).send({ msg: config.err500 })
+
+        return res.send({ msg: config.success, data: result, count: count })
+    } catch (err) {
+        console.log(err)
+        res.status(500).send({ msg: config.err500 })
+    }
+}
+
+export const Read = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const _id = req.body._id
+        const account: IAccount = req.body.account
+
+        if(account.role == "Customer" && !account.bills.includes(_id)) {
+            return res.status(400).send({msg: config.errPermission})
+        }
+
+        Bill.findById(_id).populate({
+            path:     'products',			
+            populate: { 
+                path:  'product',
+                model: 'Product',
+                select: 'name code image_url colors'
+             }
+            }).exec((err, doc) => {
+                if(err) return res.status(500).send({msg: config.err500})
+                if(!doc) return res.status(400).send({msg: config.err400})
+                return res.send({msg: config.success, data: doc})
+            })
     } catch (err) {
         console.log(err)
         res.status(500).send({ msg: config.err500 })

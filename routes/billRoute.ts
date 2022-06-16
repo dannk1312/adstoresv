@@ -28,14 +28,21 @@ route.post("/bill/create", Default.Role("Customer"), Product.ValidBag, Bill.Crea
 //      desc: string
 route.post("/bill/update", Default.Role(["Customer", "Admin"]), Bill.Update)
 
-// header: accessToken - role: ["Customer", "Admin"] - field: skip, limit, status, sort
+// header: accessToken - role: "Admin" - field: skip, limit, status, search, sortName, sortType
 // type:
 //       skip: number = req.body.skip ?? 0
 //       limit: number = req.body.limit ?? 20
 //       status: string - in ['Preparing', 'Delivering', 'Done', 'Cancel'] 
-//       sort: number - 1: tăng dần, -1 giảm dần
-// Customer sẽ chỉ lấy bill của Customer
-// Admin lấy tất cả
-route.post("/bill/list", Default.Role(["Customer", "Admin"]), Bill.List)
+//       search: string - phone, address
+//       sortName: string - ["ship", "total", "discount"] - phí ship, phí tổng, - phí giảm giá
+//       sortType: number - 1 tăng dần, -1 giảm dần
+route.post("/bill/list", Default.Role("Admin"), Bill.List)
+
+// header: accessToken - role: ["Customer", "Admin"] - field: _id
+// type:
+//       _id: string
+// Customer chỉ có thể đọc bill của bản thân
+route.post("/bill/read", Default.Role(["Customer", "Admin"]), Bill.Read)
+
 
 export const billRoute = route

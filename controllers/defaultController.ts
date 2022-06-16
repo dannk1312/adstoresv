@@ -31,7 +31,7 @@ export const Role = (role: string[] | string) => {
             }
             // @ts-ignore
             const id: string = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!).id;
-            const account = await Account.findById(id).select("-bag -rates -bill -notifications").exec()
+            const account = await Account.findById(id).select("-bag -rate_waits -notifications").exec()
             if(!account)
                 return res.status(400).send({msg: config.err400})
             if ((typeof(role) == "string" && (role == "All" || role == account.role)) || role.includes(account.role)) {

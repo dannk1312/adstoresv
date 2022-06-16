@@ -5,15 +5,42 @@ import jwt from "jsonwebtoken";
 import argon2 from "argon2";
 import { codeCache } from "../services/cache";
 import { config } from "../services/config";
+import { Bill } from "../models/bill";
+import { Product } from "../models/product";
+import { Category } from "../models/category";
+import { send } from "process";
 
 
 export const List = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const skip: number = req.body.skip ?? 0
         const limit: number = req.body.limit ?? 20
+        const search: string = req.body.string 
+        const role: string = req.body.role
+        const enable: string = req.body.enable
+        const sortName: string = req.body.sortName
+        const sortType: number = req.body.sortType
 
-        const count = (req.body.skip == undefined) ? await Account.countDocuments() : undefined
-        const result = await Account.find().skip(skip).limit(limit).select("-chats -bag -bills -notifications -rates").exec()
+        var sortOptions: any = {}
+        var queryOptions: any = {role, enable}
+
+        if (!!sortName && ["self_cancel", "createAt", "bills"].includes(sortName) && (sortType == 1 || sortType == -1)) {
+            sortOptions[sortName] = sortType
+        }
+        if(!!search) {
+            const pattern = { $regex: '.*' + search + '.*', $options: "i" }
+            queryOptions['$or'] = [
+                { name: pattern },
+                { email: pattern },
+                { phone: pattern },
+                { 'address.provine': pattern },
+                { 'address.district': pattern },
+                { 'address.address': pattern },
+            ]
+        }
+
+        const count = (req.body.skip == undefined) ? await Account.countDocuments(queryOptions) : undefined
+        const result = await Account.find(queryOptions).sort(sortOptions).skip(skip).limit(limit).select("-chats -bag -bills -notifications -rates").exec()
         if (!result)
             return res.status(500).send({ msg: config.err500 })
 
@@ -309,4 +336,20 @@ export const SendNotification = async (req: Request, res: Response) => {
         console.log(err)
         return res.status(500).send({ msg: config.err500 })
     }
+}
+
+export const ReadBills = async (req: Request, res: Response) => {
+    const account: IAccount = req.body.account
+    Bill.find({_id: {$in: account.bills}}).select("-products -account").exec((err, docs) => {
+        if(err) return res.status(500).send({msg: config.err500})
+        var result = {
+            'Preparing': [], 
+            'Delivering': [],
+            'Done': [], 
+            'Cancel': []
+        }
+        // @ts-ignore
+        docs.forEach((e) => result[e.status].push(e))
+        return res.send({msg: config.success, data: result})
+    })
 }

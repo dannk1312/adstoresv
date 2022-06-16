@@ -7,6 +7,7 @@ import { Category } from "../models/category";
 import { Product } from "../models/product";
 import { Import } from "../models/import";
 import { Account } from "../models/account";
+import { Bill } from "../models/bill";
 
 
 export const List = async (req: Request, res: Response, next: NextFunction) => {
@@ -417,7 +418,7 @@ export const ValidBag = async (req: Request, res: Response, next: NextFunction) 
                     msg += `Vật phẩm ${doc.name} - ${doc.code} không đủ số lượng, chỉ có ${doc.colors[i].quantity}. `
                 }
             else 
-            msg += `Vật phẩm ${doc.name} - ${doc.code} không có màu ${e.color}. `
+                msg += `Vật phẩm ${doc.name} - ${doc.code} không có màu ${e.color}. `
         } else {
             msg + `Vật phẩm ${e.product} không tồn tại. `
         }
@@ -472,5 +473,55 @@ export const Rate = async (req: Request, res: Response, next: NextFunction) => {
     } catch (err) {
         console.log(err)
         return res.status(500).send({ msg: config.err500 })
+    }
+}
+
+
+export const Hint = async (req: Request, res: Response) => {
+    const products: string[] = req.body.product // _id list
+    const category: string = req.body.category // name
+    const quantity: number = req.body.quantity ?? 10
+
+    if(!!category) {
+        Product.find({category}).sort({sold: -1}).select(config.product_str).exec((err, docs) => {
+            if(err) return res.status(500).send({msg: config.err500})
+            return res.send({msg: config.success, data: docs})
+        })
+    } else if(products) {
+        var results: string[] = []
+        var have_model = true
+        if(have_model) {
+            
+        } else {
+            const docs = await Bill.find({products: {$elemMatch: { product: {$in: products}}}}).select("products").exec();
+            if(!docs) return res.status(500).send({msg: config.err500})
+
+            if(docs.length > 0) {
+                const counter: any = {} 
+                docs.forEach(b => b.products.forEach(p => {
+                    var key: string = p.product.toString()
+                    if(counter.hasOwnProperty(key)) {
+                        counter[key] += 1
+                    } else {
+                        counter[key] = 1
+                    }
+                }))
+                const keys = Object.keys(counter).sort((a,b) => -counter[a]+counter[b]).slice(0, quantity)     
+                Product.find({_id: {$in: keys}}).select(config.product_str).exec((err, docs) => {
+                    if(err) return res.status(500).send({msg: config.err500})
+                    return res.send({msg: config.success, data: docs})
+                })
+            } else {
+                Product.find({category}).sort({sold: -1}).select(config.product_str).exec((err, docs) => {
+                    if(err) return res.status(500).send({msg: config.err500})
+                    return res.send({msg: config.success, data: docs})
+                })
+            }
+        }
+    } else {
+        Product.find({}).sort({sold: -1}).select(config.product_str).exec((err, docs) => {
+            if(err) return res.status(500).send({msg: config.err500})
+            return res.send({msg: config.success, data: docs})
+        })
     }
 }

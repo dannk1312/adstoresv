@@ -4,14 +4,19 @@ export interface IBill {
     _id: Types.ObjectId,
     // Buyer Info
     account: Types.ObjectId,
-    phone: String,
-    address: String,
+    phone: string,
+    address: {
+        province: string,
+        district: string, 
+        address: string
+    },
 
     // Bill Info
     products: [{
         product: Types.ObjectId,
+        color: string
         quantity: number,
-        price: Number,
+        price: number,
         sale?: number
     }],
     discountCode?: string,
@@ -31,13 +36,20 @@ export const billSchema = new Schema<IBill>({
     // Buyer Info
     account: {type: Schema.Types.ObjectId, required: true, ref: "Account"},
     phone: {type: String, required: [true, "Bill phone cannot be empty"]},
-    address: {type: String, required: [true, "Bill address cannot be empty"]},
-
+    address:  {
+        province: String,
+        district: String, 
+        address: String
+    },
     // Bill Info
     products: [{
         product: {
             type: Schema.Types.ObjectId, required: [true, 'Product id in bill cannot be empty.'],
             ref: 'Product'
+        },
+        color: {
+            type: String,
+            required: [true, 'Product color in bill cannot be empty.'],
         },
         quantity: {
             type: Number,

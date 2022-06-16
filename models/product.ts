@@ -1,5 +1,6 @@
 import { Schema, model, Types } from 'mongoose';
 import { type } from 'os';
+import { config } from '../services/config';
 import { Category } from './category';
 
 export interface IProduct {
@@ -86,7 +87,7 @@ export const productSchema = new Schema<IProduct>({
 
 productSchema.statics.list = async function(queryOptions: any, sortOptions: any, skip: number, limit: number) {
     return {
-        data: await Product.find(queryOptions).sort(sortOptions).skip(skip).limit(limit).lean().select("name code category image_url price sale total_rate enable sold colors").exec(),
+        data: await Product.find(queryOptions).sort(sortOptions).skip(skip).limit(limit).lean().select(config.product_str).exec(),
         count: skip == 0 ? await Product.countDocuments(queryOptions): undefined
     }
 }
