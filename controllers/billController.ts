@@ -54,7 +54,7 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
                     ship += result.fee.fee + result.fee.insurance_fee
                 else
                     msg += "Đơn hàng không thể vận chuyển tới địa chỉ này. "
-            }).catch(() => msg += "Xảy ra lỗi khi tính toán giá ship. ");
+            }).catch((err) => msg += `Xảy ra lỗi khi tính toán giá ship Err: ${err}. `);
     } else {
         msg += "Chưa có địa chỉ. "
     }
