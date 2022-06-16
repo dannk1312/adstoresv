@@ -412,7 +412,7 @@ export const Imports = async (req: Request, res: Response, next: NextFunction) =
             }
         }
 
-        const importBill = new Import({ data: success, admin: req.body.account._id })
+        const importBill = new Import({ products: success, admin: req.body.account._id })
         if (!(await importBill.save()))
             throw Error("Không thể lưu import bill")
 

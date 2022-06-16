@@ -3,7 +3,7 @@ import { Schema, model, Types } from 'mongoose';
 export interface IImport {
     _id: Types.ObjectId,
     // Buyer Info
-    data: [{
+    products: [{
         product: Types.ObjectId, 
         quantity: number,
         color: string,
@@ -14,7 +14,7 @@ export interface IImport {
 }
 
 export const importSchema = new Schema<IImport>({
-    data: [{
+    products: [{
         product: {type: Schema.Types.ObjectId, ref: "Product"}, 
         quantity: Number,
         price: Number,

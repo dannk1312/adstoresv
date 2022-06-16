@@ -77,8 +77,14 @@ Content-Type: application/json
         {
             "code": "ASUS2017",
             "color": "Blue",
-            "quantity": 10,
-            "price": 20000000
+            "quantity": 5,
+            "price": 1000000
+        },
+        {
+            "code": "KEO-502",
+            "color": "Blue",
+            "quantity": 5,
+            "price": 1000000
         }
     ]
 }

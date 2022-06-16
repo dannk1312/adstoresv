@@ -15,7 +15,7 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
     const account = req.body.account
 
     if (!bag_details || bag_details.length == 0)
-        return res.status(400).send({ msg: "Giỏ hàng rỗng" })
+        return res.status(400).send({ msg: "Giỏ hàng rỗng. " + req.body.valid_bag_msg })
 
     var ship: number = -1
     var total: number = 0
@@ -108,7 +108,7 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
         return res.status(400).send({ msg: "Thiếu số điện thoại. " })
 
     if (!bag_details || bag_details.length == 0)
-        return res.status(400).send({ msg: "Giỏ hàng rỗng" })
+        return res.status(400).send({ msg: "Giỏ hàng rỗng. " + req.body.valid_bag_msg })
 
     var ship: number = -1
     var total: number = 0
@@ -117,7 +117,7 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
     var msg: string = ""
 
     if (!!req.body.valid_bag_msg)
-        return res.status(400).send({ msg: "Số lượng hàng không đủ, hoặc có vật phẩm không khả dụng." })
+        return res.status(400).send({ msg: req.body.valid_bag_msg })
 
     bag_details.forEach(e => {
         total += e.product.price * e.quantity

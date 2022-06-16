@@ -45,15 +45,15 @@ export const ImportStatistical = async (req: Request, res: Response, next: NextF
                     point = { "bills": [], "total": 0, time }
                 }
                 var total = 0
-                b.data.forEach(d => {
+                b.products.forEach(d => {
                     var key = d.product.toString()
                     var price = d.quantity * d.price
                     if (counter.hasOwnProperty(d.product)) {
-                        counter[key].count += 1
+                        counter[key].count += d.quantity
                         counter[key].total += price
                     }
                     else {
-                        counter[key] = {"count": 1, "total": price}
+                        counter[key] = { "count": d.quantity, "total": price }
                     }
                     total += price
                 })
@@ -61,20 +61,105 @@ export const ImportStatistical = async (req: Request, res: Response, next: NextF
                 point.total += total
             })
 
+            if (point.total > 0)
+                graph.push(point)
+
             var ids = Array.from(Object.keys(counter))
-            Product.find({"_id": {$in: ids}}).select("name code colors").exec((err, docs) => {
-                if(err) return res.send({msg: config.success, data: { graph }})
+            Product.find({ "_id": { $in: ids } }).select("name code colors").exec((err, docs) => {
+                if (err) return res.send({ msg: config.success, data: { graph } })
                 // @ts-ignore
-                var products = docs.filter(d => { 
+                var products: any = []
+                docs.forEach(d => {
                     var key = d._id.toString()
-                    return {
-                        "name": d.name, 
-                        "code": d.code, 
-                        "colors": d.colors, 
+                    products.push({
+                        "name": d.name,
+                        "code": d.code,
+                        "colors": d.colors,
                         "count": counter[key].count,
                         "total": counter[key].total,
-                };})
-                return res.send({msg: config.success, data: { graph, products }})
+                    })
+                })
+                return res.send({ msg: config.success, data: { graph, products } })
+            })
+
+        })
+    } catch (err) {
+        console.log(err)
+        return res.status(500).send({ msg: config.err500 })
+    }
+
+}
+
+export const BillStatistical = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        var dateStart: Date = req.body.dateStart;
+        var dateEnd: Date = req.body.dateEnd;
+        var step: string = req.body.step;
+
+        if (!dateEnd) dateEnd = new Date(Date.now())
+        if (!step || !["second", "day", "month", "year"].includes(step)) step = "month"
+
+        var step_time = (step == "year" ? config.yearlong : step == "month" ? config.monthlong : step == "day" ? config.daylong : 1)
+        var smallest: number = dateEnd.getTime() - step_time;
+        if (!dateStart || dateStart.getTime() > smallest) dateStart = new Date(smallest)
+
+        Bill.find({
+            createAt: {
+                $gte: dateStart,
+                $lte: dateEnd,
+            }
+        }).exec((err, bills) => {
+            if (err) return res.status(500).send({ msg: config.err500 })
+            // Gom nhom du lieu
+            var counter: any = {}
+            var graph: any = []
+
+            var time = dateStart
+            var threshold = time.getTime() + step_time
+            var point: any = { "bills": [], "total": 0, time }
+            bills.forEach(b => {
+                if (b.createdAt.getTime() > threshold) {
+                    graph.push(point)
+                    time = new Date(threshold)
+                    threshold = time.getTime() + step_time
+                    point = { "bills": [], "total": 0, time }
+                }
+                var total = 0
+                b.products.forEach(d => {
+                    var key = d.product.toString()
+                    var price = d.quantity * d.price
+                    if (counter.hasOwnProperty(d.product)) {
+                        counter[key].count += d.quantity
+                        counter[key].total += price
+                    }
+                    else {
+                        counter[key] = { "count": d.quantity, "total": price }
+                    }
+                    total += price
+                })
+                point.bills.push({ "_id": b._id, "price": total })
+                point.total += total
+            })
+
+            if (point.total > 0)
+                graph.push(point)
+
+            var ids = Array.from(Object.keys(counter))
+            Product.find({ "_id": { $in: ids } }).select("name code colors").exec((err, docs) => {
+                if (err) return res.send({ msg: config.success, data: { graph } })
+                // @ts-ignore
+                var products: any = []
+                docs.forEach(d => {
+                    var key = d._id.toString()
+                    products.push({
+                        "name": d.name,
+                        "code": d.code,
+                        "colors": d.colors,
+                        "count": counter[key].count,
+                        "total": counter[key].total,
+                    })
+                })
+                return res.send({ msg: config.success, data: { graph, products } })
             })
 
         })
