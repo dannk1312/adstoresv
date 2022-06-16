@@ -45,9 +45,8 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
                                 e.values[j].products.forEach(id => specsProduct.push(id.toString()))
                             }
                         }
+                        products = products.filter(id => specsProduct.includes(id.toString()));
                     }
-                    // Types.ObjectId cannot use with includes
-                    products = products.filter(id => specsProduct.includes(id.toString()));
                 }
             }
 
