@@ -18,7 +18,12 @@ const specs_splitter = (req: Request, res: Response, next: NextFunction) => {
     next()
 }
 
-
+// field: category, skip, limit
+// type:
+//      category: string
+//      skip: number - undefine = 0
+//      limit: number - undefine = 20
+route.post("/product/commingSoon", Product.CommingSoon)
 
 // field: category, specs, colors, min_price, max_price, skip, limit, sortName, sortType
 // type:
@@ -136,5 +141,6 @@ route.post("/product/rate", Default.Role("Customer"), Product.Rate)
 // nếu trống thì trả về các sản phẩm top
 // products | category
 route.post("/product/hint", Product.Rate)
+
 
 export const productRoute = route

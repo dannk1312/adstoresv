@@ -10,6 +10,41 @@ import { Account } from "../models/account";
 import { Bill } from "../models/bill";
 
 
+export const CommingSoon =async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const category: string = req.body.category;
+        const skip: number = req.body.skip ?? 0
+        const limit: number = req.body.limit ?? 20
+        var pipeline = [
+            { 
+                "$project": {
+                    "category": "$category",
+                    "colors_length": { "$size": "$colors" }
+                }
+            },
+            {
+                "$match": {
+                    "category": category,
+                    "colors_length": 0
+                }
+            },
+            {$skip: skip},
+            {$limit: limit}
+        ]
+        var ids = await Product.aggregate(pipeline).exec()
+        if(!ids)
+            throw Error()
+        var products = ids.filter(i => i._id)
+        Product.find({"_id" : {$in: products}}).select(config.product_str).exec((err, docs) => {
+            if(!!err) return res.status(500).send({msg: config.err500})  
+            return res.send({msg: config.success, data: docs})
+        })
+    } catch(err) {
+        console.log(err)
+        return res.status(500).send({msg: config.err500})
+    }
+}
+
 export const List = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const category: string = req.body.category
@@ -110,7 +145,7 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
     // @ts-ignore
     specs = categoryDoc.validSpecs(specs)
     console.log(specs)
-    if(Object.keys(specs).length == 0)
+    if (Object.keys(specs).length == 0)
         return res.status(400).send({ msg: config.err400 })
 
     var product = new Product({ name, code, desc, category, specs, price, sale, image_id: img_info.public_id, image_url: img_info.url })
@@ -287,7 +322,7 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
 
         const session = await mongoose.startSession();
         session.startTransaction();
-        
+
         try {
             const opts = { session };
 
@@ -321,15 +356,15 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
 
             // Save
             var productDoc = await product.save(opts)
-            var categeryDoc = !!category ? (await category.save(opts)): "temp"
-            if(!productDoc || !categeryDoc) {
-                if(!!img_info) image.destroy(img_info.public_id)
+            var categeryDoc = !!category ? (await category.save(opts)) : "temp"
+            if (!productDoc || !categeryDoc) {
+                if (!!img_info) image.destroy(img_info.public_id)
                 throw Error()
             } else {
-                if(!!img_info) image.destroy(old_image_id)
+                if (!!img_info) image.destroy(old_image_id)
                 await session.commitTransaction()
                 session.endSession();
-                return res.send({msg: config.success})
+                return res.send({ msg: config.success })
             }
         } catch (error) {
             console.log(error)
@@ -353,32 +388,32 @@ export const Imports = async (req: Request, res: Response, next: NextFunction) =
     session.startTransaction();
     try {
         const opts = { session };
-        
+
         const success: any[] = []
         const failure: any[] = []
         for (let i = 0; i < data.length; i++) {
             const { code, color, quantity, price } = data[i]
             const doc = await Product.findOne({ code }).select("colors").exec();
-            if (!doc) 
+            if (!doc)
                 failure.push({ code, quantity, price })
             else {
                 var flag = false
-                for(let colordoc of doc.colors) {
-                    if(colordoc.color == color) {
+                for (let colordoc of doc.colors) {
+                    if (colordoc.color == color) {
                         colordoc.quantity += quantity
                         flag = true
                         break
                     }
                 }
-                if(flag && !!(await doc.save(opts)))
+                if (flag && !!(await doc.save(opts)))
                     success.push({ product: doc._id, quantity, price, color })
-                else 
+                else
                     failure.push(data[i])
             }
         }
 
         const importBill = new Import({ data: success, admin: req.body.account._id })
-        if(!(await importBill.save()))
+        if (!(await importBill.save()))
             throw Error("Không thể lưu import bill")
 
         await session.commitTransaction();
@@ -408,12 +443,12 @@ export const ValidBag = async (req: Request, res: Response, next: NextFunction) 
                 msg += `Vật phẩm ${doc.name} - ${doc.code} không thể mua vào lúc này. `
             }
             let i = 0
-            for(; i < doc.colors.length; i++) {
-                if(doc.colors[i].color == e.color) {
+            for (; i < doc.colors.length; i++) {
+                if (doc.colors[i].color == e.color) {
                     break
                 }
             }
-            if(i < doc.colors.length)
+            if (i < doc.colors.length)
                 if (doc.colors[i].quantity > e.quantity) {
                     new_bag.push(e)
                     bag_details.push({ product: doc, quantity: e.quantity })
@@ -426,7 +461,7 @@ export const ValidBag = async (req: Request, res: Response, next: NextFunction) 
                     }
                     msg += `Vật phẩm ${doc.name} - ${doc.code} không đủ số lượng, chỉ có ${doc.colors[i].quantity}. `
                 }
-            else 
+            else
                 msg += `Vật phẩm ${doc.name} - ${doc.code} không có màu ${e.color}. `
         } else {
             msg + `Vật phẩm ${e.product} không tồn tại. `
@@ -491,46 +526,42 @@ export const Hint = async (req: Request, res: Response) => {
     const category: string = req.body.category // name
     const quantity: number = req.body.quantity ?? 10
 
-    if(!!category) {
-        Product.find({category}).sort({sold: -1}).select(config.product_str).exec((err, docs) => {
-            if(err) return res.status(500).send({msg: config.err500})
-            return res.send({msg: config.success, data: docs})
-        })
-    } else if(products) {
+    if (products) {
         var results: string[] = []
         var have_model = true
-        if(have_model) {
             
-        } else {
-            const docs = await Bill.find({products: {$elemMatch: { product: {$in: products}}}}).select("products").exec();
-            if(!docs) return res.status(500).send({msg: config.err500})
+        if (have_model) {
 
-            if(docs.length > 0) {
-                const counter: any = {} 
+        } else {
+            const docs = await Bill.find({ products: { $elemMatch: { product: { $in: products } } } }).select("products").exec();
+            if (!docs) return res.status(500).send({ msg: config.err500 })
+
+            if (docs.length > 0) {
+                const counter: any = {}
                 docs.forEach(b => b.products.forEach(p => {
                     var key: string = p.product.toString()
-                    if(counter.hasOwnProperty(key)) {
+                    if (counter.hasOwnProperty(key)) {
                         counter[key] += 1
                     } else {
                         counter[key] = 1
                     }
                 }))
-                const keys = Object.keys(counter).sort((a,b) => -counter[a]+counter[b]).slice(0, quantity)     
-                Product.find({_id: {$in: keys}}).select(config.product_str).exec((err, docs) => {
-                    if(err) return res.status(500).send({msg: config.err500})
-                    return res.send({msg: config.success, data: docs})
+                const keys = Object.keys(counter).sort((a, b) => -counter[a] + counter[b]).slice(0, quantity)
+                Product.find({ _id: { $in: keys } }).select(config.product_str).exec((err, docs) => {
+                    if (err) return res.status(500).send({ msg: config.err500 })
+                    return res.send({ msg: config.success, data: docs })
                 })
             } else {
-                Product.find({category}).sort({sold: -1}).select(config.product_str).exec((err, docs) => {
-                    if(err) return res.status(500).send({msg: config.err500})
-                    return res.send({msg: config.success, data: docs})
+                Product.find({ category }).sort({ sold: -1 }).select(config.product_str).exec((err, docs) => {
+                    if (err) return res.status(500).send({ msg: config.err500 })
+                    return res.send({ msg: config.success, data: docs })
                 })
             }
         }
     } else {
-        Product.find({}).sort({sold: -1}).select(config.product_str).exec((err, docs) => {
-            if(err) return res.status(500).send({msg: config.err500})
-            return res.send({msg: config.success, data: docs})
+        Product.find({ category }).sort({ sold: -1 }).select(config.product_str).exec((err, docs) => {
+            if (err) return res.status(500).send({ msg: config.err500 })
+            return res.send({ msg: config.success, data: docs })
         })
     }
 }
