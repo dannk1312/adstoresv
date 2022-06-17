@@ -1,12 +1,17 @@
 
 ###
-POST http://localhost:5000/account/login HTTP/1.1
+POST http://adstoresv.herokuapp.com/account/login HTTP/1.1
 Content-Type: application/json
 
 {
     "email_or_phone": "admin@gmail.com",
     "code": "000000"
 }
+
+
+###
+POST http://localhost:5000/account/list HTTP/1.1
+Content-Type: application/json
 
 
 ###

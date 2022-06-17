@@ -94,6 +94,25 @@ export const SignUp = async (req: Request, res: Response, next: NextFunction) =>
     }
 };
 
+export const Enable = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const _id = req.body._id
+        const enable = req.body.enable
+
+
+        if(!_id && enable == undefined)
+            return res.status(400).send({msg: config.err400})
+
+        Account.findByIdAndUpdate({_id, role: "Customer"}, {enable}).exec((err) => {
+            if(err) return res.status(500).send({msg: config.err500})
+            return res.send({msg: config.success})
+        })
+    } catch (err) {
+        console.log(err)
+        return res.status(500).send({ msg: config.err500 })
+    }
+};
+
 export const SignIn = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { email_or_phone, password, googleToken, code } = req.body

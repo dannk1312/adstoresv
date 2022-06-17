@@ -6,7 +6,8 @@ import * as Product from '../controllers/productController';
 const route = express.Router();
 
 
-// field: skip, limit
+
+// header: accessToken - role: Admin - field: skip, limit, search, role, enable, sortName, sortType
 // type: 
 //       skip: number - undefine = 0
 //       limit: number - undefine = 10000
@@ -17,6 +18,12 @@ const route = express.Router();
 //       sortType: number - 1 là tăng dần, -1 giảm dần
 // nếu skip = 0 thì có trả số lượng
 route.post("/account/list", Default.Role("Admin"), Account.List)
+
+// header: accessToken - role: Admin - field: _id, enable
+// type: 
+//      _id**: string
+//      enable**: boolean
+route.post("/account/enable", Default.Role("Admin"), Account.Enable)
 
 // field: code, email_or_phone, password, name, birth, gender, address
 // type: 
