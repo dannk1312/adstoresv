@@ -15,7 +15,6 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
         if (!name || !image_base64 || !specsModel || !Category.checkSpecsModel(specsModel))
             return res.status(400).send({ msg: config.err400 })
 
-
         var img_info = await image.upload(image.base64(image_base64), "category")
         if (!img_info) return res.status(500).send({ msg: config.errSaveImage })
 

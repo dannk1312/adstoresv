@@ -105,7 +105,7 @@ categorySchema.statics.checkSpecsModel = function(specsModel: any[]): boolean {
     for(let i = 0; i< specsModel.length; i++) {
         if(!specsModel[i].values)
             continue
-        let valuesSet = new Set(specsModel[i].values.map((v: any) => v.name));
+        let valuesSet = new Set(specsModel[i].values.map((v: any) => v.value));
         if(valuesSet.size < specsModel[i].values.length)
             return false;
     }

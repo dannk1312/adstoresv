@@ -10,13 +10,13 @@ import { Account } from "../models/account";
 import { Bill } from "../models/bill";
 
 
-export const CommingSoon =async (req: Request, res: Response, next: NextFunction) => {
+export const CommingSoon = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const category: string = req.body.category;
         const skip: number = req.body.skip ?? 0
         const limit: number = req.body.limit ?? 10000
         var pipeline = [
-            { 
+            {
                 "$project": {
                     "category": "$category",
                     "colors_length": { "$size": "$colors" }
@@ -28,20 +28,20 @@ export const CommingSoon =async (req: Request, res: Response, next: NextFunction
                     "colors_length": 0
                 }
             },
-            {$skip: skip},
-            {$limit: limit}
+            { $skip: skip },
+            { $limit: limit }
         ]
         var ids = await Product.aggregate(pipeline).exec()
-        if(!ids)
+        if (!ids)
             throw Error()
         var products = ids.filter(i => i._id)
-        Product.find({"_id" : {$in: products}}).select(config.product_str).exec((err, docs) => {
-            if(!!err) return res.status(500).send({msg: config.err500})  
-            return res.send({msg: config.success, data: docs})
+        Product.find({ "_id": { $in: products } }).select(config.product_str).exec((err, docs) => {
+            if (!!err) return res.status(500).send({ msg: config.err500 })
+            return res.send({ msg: config.success, data: docs })
         })
-    } catch(err) {
+    } catch (err) {
         console.log(err)
-        return res.status(500).send({msg: config.err500})
+        return res.status(500).send({ msg: config.err500 })
     }
 }
 
@@ -428,54 +428,60 @@ export const Imports = async (req: Request, res: Response, next: NextFunction) =
 }
 
 export const ValidBag = async (req: Request, res: Response, next: NextFunction) => {
-    const bag: any[] = req.body.bag
-    if (!bag)
-        return res.status(400).send({ msg: config.err400 })
+    try {
 
-    const new_bag: any[] = []
-    const bag_details: any[] = []
-    var msg: string = ""
-    var count: number = 0
-    for (let i = 0; i < bag.length; i++) {
-        const e = bag[i];
-        const doc = await Product.findById(e.product).select("_id code name price sale colors").exec()
-        if (!!doc) {
-            if (doc.enable == false) {
-                msg += `Vật phẩm ${doc.name} - ${doc.code} không thể mua vào lúc này. `
-            }
-            let i = 0
-            for (; i < doc.colors.length; i++) {
-                if (doc.colors[i].color == e.color) {
-                    break
+        const bag: any[] = req.body.bag
+        if (!bag)
+            return res.status(400).send({ msg: config.err400 })
+
+        const new_bag: any[] = []
+        const bag_details: any[] = []
+        var msg: string = ""
+        var count: number = 0
+        for (let i = 0; i < bag.length; i++) {
+            const e = bag[i];
+            const doc = await Product.findById(e.product).select("code name price sale colors").exec()
+            if (!!doc) {
+                if (doc.enable == false) {
+                    msg += `Vật phẩm ${doc.name} - ${doc.code} không thể mua vào lúc này. `
                 }
-            }
-            if (i < doc.colors.length)
-                if (doc.colors[i].quantity > e.quantity) {
-                    new_bag.push(e)
-                    bag_details.push({ product: doc, quantity: e.quantity })
-                    count += e.quantity
+                let i = 0
+                for (; i < doc.colors.length; i++) {
+                    if (doc.colors[i].color == e.color) {
+                        break
+                    }
                 }
-                else {
-                    if (doc.colors[i].quantity > 0) {
-                        e.quantity = doc.colors[i].quantity
+                if (i < doc.colors.length)
+                    if (doc.colors[i].quantity > e.quantity) {
                         new_bag.push(e)
                         bag_details.push({ product: doc, quantity: e.quantity })
                         count += e.quantity
                     }
-                    msg += `Vật phẩm ${doc.name} - ${doc.code} không đủ số lượng, chỉ có ${doc.colors[i].quantity}. `
-                }
-            else
-                msg += `Vật phẩm ${doc.name} - ${doc.code} không có màu ${e.color}. `
-        } else {
-            msg + `Vật phẩm ${e.product} không tồn tại. `
+                    else {
+                        if (doc.colors[i].quantity > 0) {
+                            e.quantity = doc.colors[i].quantity
+                            new_bag.push(e)
+                            bag_details.push({ product: doc, quantity: e.quantity })
+                            count += e.quantity
+                        }
+                        msg += `Vật phẩm ${doc.name} - ${doc.code} không đủ số lượng, chỉ có ${doc.colors[i].quantity}. `
+                    }
+                else
+                    msg += `Vật phẩm ${doc.name} - ${doc.code} không có màu ${e.color}. `
+            } else {
+                msg + `Vật phẩm ${e.product} không tồn tại. `
+            }
         }
-    }
 
-    req.body.bag = new_bag
-    req.body.bag_details = bag_details
-    req.body.valid_bag_msg = msg
-    req.body.bag_count = count
-    next()
+        req.body.bag = new_bag
+        req.body.bag_details = bag_details
+        req.body.valid_bag_msg = msg
+        req.body.bag_count = count
+        next()
+    } catch (err) {
+        console.log(err)
+        return res.status(400).send({msg: config.err400})
+    }
 }
 
 export const Rate = async (req: Request, res: Response, next: NextFunction) => {
@@ -533,7 +539,7 @@ export const Hint = async (req: Request, res: Response) => {
     if (products) {
         var results: string[] = []
         var have_model = true
-            
+
         if (have_model) {
 
         } else {

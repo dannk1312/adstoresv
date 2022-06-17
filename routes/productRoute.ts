@@ -5,18 +5,6 @@ import * as Product from '../controllers/productController';
 
 const route = express.Router();
 
-const specs_splitter = (req: Request, res: Response, next: NextFunction) => {
-    const specs = req.body.specs
-    if(!!specs && Array.isArray(specs)){
-        const temp: any = {}
-        specs.forEach(s => {
-            // @ts-ignore
-            temp[s.name] = s.values.split(',').map(e => e.trim())
-        })
-        req.body.specs = temp
-    }
-    next()
-}
 
 // field: category, skip, limit
 // type:
@@ -45,7 +33,7 @@ route.post("/product/commingSoon", Product.CommingSoon)
 //      "colors": ["Red"],
 //      "max_price": 65000000
 // if skip == undefine => trả về count để phân trang
-route.post("/product/list",specs_splitter, Product.List)
+route.post("/product/list", Default.SpecsSplitter, Product.List)
 
 // field: _id, code
 // type: 

@@ -17,6 +17,19 @@ const randomCode = (): string => {
     return result;
 }
 
+export const SpecsSplitter = (req: Request, res: Response, next: NextFunction) => {
+    const specs = req.body.specs
+    if(!!specs && Array.isArray(specs)){
+        const temp: any = {}
+        specs.forEach(s => {
+            // @ts-ignore
+            temp[s.name] = s.values.split(',').map(e => e.trim())
+        })
+        req.body.specs = temp
+    }
+    next()
+}
+
 export const Role = (role: string[] | string) => {
     return async (req: Request, res: Response, next: NextFunction) => {
         try {
