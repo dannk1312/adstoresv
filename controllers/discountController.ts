@@ -106,7 +106,7 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
     const accounts_add: any[] = req.body.caccounts_add
     const quantity: number = req.body.quanity
 
-    if (!_id || !code)
+    if (!_id && !code)
         return res.status(400).send({ msg: config.err400 })
 
     const discount = await Discount.findOne({ $or: [{ _id: _id }, { code: code }] }).select("-used")

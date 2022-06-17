@@ -9,7 +9,7 @@ const route = express.Router();
 // field: skip, limit
 // type: 
 //       skip: number - undefine = 0
-//       limit: number - undefine = 20
+//       limit: number - undefine = 10000
 //       search: string - name, email, phone, address - undefine = all
 //       role: string - ["Admin", "Sale", "Customer"] - undefine = all
 //       enable: boolean - undefine = all

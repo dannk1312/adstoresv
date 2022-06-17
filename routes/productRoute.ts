@@ -22,7 +22,7 @@ const specs_splitter = (req: Request, res: Response, next: NextFunction) => {
 // type:
 //      category: string
 //      skip: number - undefine = 0
-//      limit: number - undefine = 20
+//      limit: number - undefine = 10000
 route.post("/product/commingSoon", Product.CommingSoon)
 
 // field: category, specs, colors, min_price, max_price, skip, limit, sortName, sortType
@@ -70,8 +70,8 @@ route.post("/product/create", Default.Role("Admin"), Product.Create)
 // type:
 //      _id: string - để query product
 //      code: string - để query product
-//      skip: number - undefined <=> 0
-//      limit: number - undefined <=> 20
+//      skip: number - undefined = 0
+//      limit: number - undefined = 10000
 // rule: _id | code
 route.post("/product/readComments", Product.ReadComment)
 

@@ -31,7 +31,7 @@ route.post("/bill/update", Default.Role(["Customer", "Admin"]), Bill.Update)
 // header: accessToken - role: "Admin" - field: skip, limit, status, search, sortName, sortType
 // type:
 //       skip: number = req.body.skip ?? 0
-//       limit: number = req.body.limit ?? 20
+//       limit: number = req.body.limit ?? 10000
 //       status: string - in ['Preparing', 'Delivering', 'Done', 'Cancel'] 
 //       search: string - phone, address
 //       sortName: string - ["ship", "total", "discount"] - phí ship, phí tổng, - phí giảm giá

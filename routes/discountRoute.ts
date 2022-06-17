@@ -41,7 +41,7 @@ route.post("/discount/update", Default.Role("Admin"), Discount.Update)
 // type:
 //      search: string
 //      skip: number - undefine - 0
-//      iimit: number - undefine - 20
+//      limit: number - undefine - 10000
 //      sortName: string
 //      sortType: number - 1 là tăng dần, -1 giảm dần
 //      is_percent: boolean 
