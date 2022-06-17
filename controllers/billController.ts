@@ -45,18 +45,18 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
             "deliver_option": "xteam",
             "tags": ["1"] // 1 là dễ vỡ
         }
-        const result = await axios.get(config.ghtk_url + fromObject(data), {headers: { "Token": `${process.env.GHTK_API_TOKEN}` }})
-        if(result.status == 200) {
+        const result = await axios.get(config.ghtk_url + fromObject(data), { headers: { "Token": `${process.env.GHTK_API_TOKEN}` } })
+        if (result.status == 200) {
             const fee = result.data.fee
-                if (fee.delivery == true)
-                    ship = fee.fee + fee.insurance_fee + fee.include_vat
-                else msg += "Đơn hàng không thể vận chuyển tới địa chỉ này. "
+            if (fee.delivery == true)
+                ship = fee.fee + fee.insurance_fee + fee.include_vat
+            else msg += "Đơn hàng không thể vận chuyển tới địa chỉ này. "
         } else msg += `Xảy ra lỗi khi tính toán giá ship. `
     } else msg += "Chưa có địa chỉ. "
 
     if (!!discountCode) {
         const discount = await Discount.findOne({ code: discountCode })
-        if (!!discount) {
+        if (!!discount && discount.quantity > 0) {
             if (discount.is_oic && discount.used.hasOwnProperty(account._id)) {
                 msg += "Mã discount không thể sử dụng nhiều lần. "
             } else if (discount.is_oid && discount.used.hasOwnProperty(account._id) && (Date.now() - discount.used[account._id]) < 86400000) {
@@ -102,6 +102,9 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
     if (!account.phone)
         return res.status(400).send({ msg: "Thiếu số điện thoại. " })
 
+    if (!account.enable)
+        return res.status(400).send({ msg: "Người dùng bị đóng băng khỏi việc mua bán. " })
+
     if (!bag_details || bag_details.length == 0)
         return res.status(400).send({ msg: "Giỏ hàng rỗng. " + req.body.valid_bag_msg })
 
@@ -135,20 +138,21 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
             "deliver_option": "xteam",
             "tags": ["1"] // 1 là dễ vỡ
         }
-        const result = await axios.get(config.ghtk_url + fromObject(data), {headers: { "Token": `${process.env.GHTK_API_TOKEN}` }})
-        if(result.status == 200) {
+        const result = await axios.get(config.ghtk_url + fromObject(data), { headers: { "Token": `${process.env.GHTK_API_TOKEN}` } })
+        if (result.status == 200) {
             const fee = result.data.fee
-                if (fee.delivery == true)
-                    ship = fee.fee + fee.insurance_fee + fee.include_vat
-                else msg += "Đơn hàng không thể vận chuyển tới địa chỉ này. "
+            if (fee.delivery == true)
+                ship = fee.fee + fee.insurance_fee + fee.include_vat
+            else msg += "Đơn hàng không thể vận chuyển tới địa chỉ này. "
         } else msg += `Xảy ra lỗi khi tính toán giá ship. `
     }
     if (ship == -1)
         return res.status(400).send({ msg: config.err400 })
 
+    var discount;
     if (!!discountCode) {
-        const discount = await Discount.findOne({ code: discountCode })
-        if (!!discount) {
+        discount = await Discount.findOne({ code: discountCode })
+        if (!!discount && discount.quantity > 0) {
             if (discount.is_oic && discount.used.hasOwnProperty(account._id)) {
                 msg += "Mã discount không thể sử dụng nhiều lần. "
             } else if (discount.is_oid && discount.used.hasOwnProperty(account._id) && (Date.now() - discount.used[account._id]) < 86400000) {
@@ -194,19 +198,21 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
         const billDoc = await bill.save(opts)
         const accountDoc = await account.updateOne({ $push: { bills: billDoc._id } }, opts).exec()
 
-        if (!billDoc || !accountDoc)
-            throw Error("Fail")
+        if (!billDoc || !accountDoc ||
+            (!!discount && !!(await Discount.findOneAndUpdate({ code: discountCode, quantity: { $gt: 1 } }, { $inc: { quantity: -1 } }).exec())))
+            throw Error("Mã discount đã hết số lượng.")
 
         for (let i = 0; i < products.length; i++) {
             const e = products[i]
-            if (!!(await Product.findByIdAndUpdate(e.product, { $inc: { quantity: -e.quantity, sold: 1 } }, opts).exec()))
-                throw Error("Fail")
+            if (!!(await Product.findOneAndUpdate({ _id: e.product, quantity: { $gt: e.quantity } }, { $inc: { quantity: -e.quantity, sold: 1 } }, opts).exec()))
+                throw Error(`Sản phẩm số lượng không đủ. ${e.product}`)
         }
 
         await session.commitTransaction();
         session.endSession();
         return res.send({ msg: config.success })
     } catch (error) {
+        console.log(error)
         await session.abortTransaction();
         session.endSession();
         return res.status(400).send({ msg: "Lỗi không lưu bill" })
