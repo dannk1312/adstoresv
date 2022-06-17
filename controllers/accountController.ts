@@ -14,7 +14,7 @@ import { send } from "process";
 export const List = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const skip: number = req.body.skip ?? 0
-        const limit: number = req.body.limit ?? 20
+        const limit: number = req.body.limit ?? 10000
         const search: string = req.body.string 
         const role: string = req.body.role
         const enable: string = req.body.enable
