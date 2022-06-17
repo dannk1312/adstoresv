@@ -17,12 +17,19 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
         const limit: number = req.body.limit ?? 10000
         const search: string = req.body.string 
         const role: string = req.body.role
-        const enable: string = req.body.enable
+        const enable: boolean = req.body.enable
         const sortName: string = req.body.sortName
         const sortType: number = req.body.sortType
 
         var sortOptions: any = {}
-        var queryOptions: any = {role, enable}
+        var queryOptions: any = {}
+
+        if(role!=undefined)
+            queryOptions['role'] = role
+        
+            
+        if(enable != undefined)
+            queryOptions['enable'] = enable
 
         if (!!sortName && ["self_cancel", "createAt", "bills"].includes(sortName) && (sortType == 1 || sortType == -1)) {
             sortOptions[sortName] = sortType
@@ -39,8 +46,9 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
             ]
         }
 
+
         const count = (req.body.skip == undefined) ? await Account.countDocuments(queryOptions) : undefined
-        const result = await Account.find(queryOptions).sort(sortOptions).skip(skip).limit(limit).select("-chats -bag -bills -notifications -rates").exec()
+        const result = await Account.find(queryOptions).sort(sortOptions).skip(skip).limit(limit).select("-chats -bag -bills -notifications -rates -password").exec()
         if (!result)
             return res.status(500).send({ msg: config.err500 })
 

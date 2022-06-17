@@ -124,7 +124,8 @@ accountSchema
             birth: this.birth ?? "",
             gender: this.gender ?? "",
             address: this.address ?? "",
-            role: this.role
+            role: this.role,
+            enable: this.enable
         };
     });
 
