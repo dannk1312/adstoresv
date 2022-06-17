@@ -140,7 +140,7 @@ route.post("/product/rate", Default.Role("Customer"), Product.Rate)
 //       quantity: number // undefine => 10
 // nếu trống thì trả về các sản phẩm top
 // products | category
-route.post("/product/hint", Product.Rate)
+route.post("/product/hint", Product.Hint)
 
 
 export const productRoute = route
