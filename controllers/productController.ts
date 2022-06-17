@@ -14,7 +14,7 @@ export const CommingSoon =async (req: Request, res: Response, next: NextFunction
     try {
         const category: string = req.body.category;
         const skip: number = req.body.skip ?? 0
-        const limit: number = req.body.limit ?? 20
+        const limit: number = req.body.limit ?? 10000
         var pipeline = [
             { 
                 "$project": {
@@ -192,7 +192,7 @@ export const ReadComment = async (req: Request, res: Response, next: NextFunctio
     const _id: string = req.body._id
     const code: string = req.body.code
     const skip: number = req.body.skip ?? 0
-    const limit: number = req.body.skip ?? 20
+    const limit: number = req.body.skip ?? 10000
 
     Product.findOne({ $or: [{ _id: _id }, { code: code }] }).select("comments").slice("comments", [skip, limit]).populate("comments.account").exec((err, doc) => {
         if (err) return res.status(500).send({ msg: config.err500 })

@@ -36,4 +36,22 @@ route.post("/discount/create", Default.Role("Admin"), Discount.Create)
 
 route.post("/discount/update", Default.Role("Admin"), Discount.Update)
 
+
+// header: accessToken - role: Admin - field: skip, limit
+// type:
+//      search: string
+//      skip: number - undefine - 0
+//      iimit: number - undefine - 20
+//      sortName: string
+//      sortType: number - 1 là tăng dần, -1 giảm dần
+//      is_percent: boolean 
+//      is_ship: boolean 
+//      is_oid: boolean 
+//      is_oic: boolean
+//      sortValue: number
+//      fromDate: Date
+//      toDate: Date
+
+route.post("/discount/list", Default.Role("Admin"), Discount.List)
+
 export const discountRoute = route

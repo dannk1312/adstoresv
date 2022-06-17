@@ -5,6 +5,50 @@ import { Product } from '../models/product';
 import { config } from '../services/config';
 import { SendNotificationsFunc } from './accountController';
 
+
+export const List = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const skip: number = req.body.skip ?? 0
+        const limit: number = req.body.limit ?? 10000
+        const search: string = req.body.string 
+        const is_percent: boolean= req.body.is_percent
+        const is_ship: boolean= req.body.is_ship
+        const is_oid: boolean= req.body.is_oid
+        const is_oic: boolean= req.body.is_oic
+        const sortValue: number = req.body.sortValue
+        const fromDate: Date = req.body.fromDate
+        const toDate: Date = req.body.toDate
+
+        var sortOptions: any = {}
+        var queryOptions: any = {is_percent, is_ship, is_oid, is_oic}
+
+        if(!!fromDate)
+            queryOptions["dateStart"] = { $gte: fromDate}
+        
+        if(!!toDate)
+            queryOptions["dateEnd"] = { $lte: toDate}
+
+        if (sortValue == 1 || sortValue == -1) {
+            sortOptions["value"] = sortValue
+        }
+
+        if(!!search) {
+            const pattern = { $regex: '.*' + search + '.*', $options: "i" }
+            queryOptions['code'] = pattern
+        }
+
+        const count = (req.body.skip == undefined) ? await Discount.countDocuments(queryOptions) : undefined
+        const result = await Discount.find(queryOptions).sort(sortOptions).skip(skip).limit(limit).select("-products -categories -accounts -used").exec()
+        if (!result)
+            return res.status(500).send({ msg: config.err500 })
+
+        return res.send({ msg: config.success, data: result, count: count })
+    } catch (err) {
+        console.log(err)
+        return res.status(500).send({ msg: config.err500 })
+    }
+}
+
 export const Create = async (req:Request, res:Response, next: NextFunction) => {
     const code: string = req.body.code
     const enable: boolean = req.body.enable
