@@ -46,9 +46,8 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
             ]
         }
 
-
         const count = (req.body.skip == undefined) ? await Account.countDocuments(queryOptions) : undefined
-        const result = await Account.find(queryOptions).sort(sortOptions).skip(skip).limit(limit).select("-chats -bag -bills -notifications -rates -password").exec()
+        const result = await Account.find(queryOptions).sort(sortOptions).skip(skip).limit(limit).select("-chats -bag -bills -notifications -rate_waits -password").exec()
         if (!result)
             return res.status(500).send({ msg: config.err500 })
 
