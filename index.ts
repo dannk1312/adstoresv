@@ -34,6 +34,8 @@ app.use(chatRoute)
 app.use(discountRoute)
 app.use(productRoute)
 app.use(adminRoute)
+
+
 app.use("/", (req: Request, res: Response) => {
   res.send(`ADStore Server`);
 })

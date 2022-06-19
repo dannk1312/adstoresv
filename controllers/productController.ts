@@ -454,14 +454,14 @@ export const ValidBag = async (req: Request, res: Response, next: NextFunction) 
                 if (i < doc.colors.length)
                     if (doc.colors[i].quantity > e.quantity) {
                         new_bag.push(e)
-                        bag_details.push({ product: doc, quantity: e.quantity })
+                        bag_details.push({ product: doc, quantity: e.quantity, color: e.color })
                         count += e.quantity
                     }
                     else {
                         if (doc.colors[i].quantity > 0) {
                             e.quantity = doc.colors[i].quantity
                             new_bag.push(e)
-                            bag_details.push({ product: doc, quantity: e.quantity })
+                            bag_details.push({ product: doc, quantity: e.quantity, color: e.color })
                             count += e.quantity
                         }
                         msg += `Vật phẩm ${doc.name} - ${doc.code} không đủ số lượng, chỉ có ${doc.colors[i].quantity}. `

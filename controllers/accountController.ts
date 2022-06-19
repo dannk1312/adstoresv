@@ -301,6 +301,7 @@ export const PushBag = async (req: Request, res: Response, next: NextFunction) =
         if(!flag) {
             accountDoc.bag.push({product: new Types.ObjectId(_id), color, quantity})
         }  
+        req.body.bag = accountDoc.bag
         next()
     } catch (err) {
         console.log(err)

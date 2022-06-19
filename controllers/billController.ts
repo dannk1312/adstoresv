@@ -6,7 +6,9 @@ import { Discount } from '../models/discount';
 import { Bill } from '../models/bill';
 import { Account, IAccount } from '../models/account';
 import mongoose from 'mongoose';
-import { fromObject } from '../services/support';
+import { formatDate, fromObject, sortObject } from '../services/support';
+import querystring from 'qs';
+import crypto from "crypto";
 
 
 export const Calculate = async (req: Request, res: Response, next: NextFunction) => {
@@ -99,6 +101,11 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
     const bag_details: any[] = req.body.bag_details
     const address: any = req.body.address
     const account = req.body.account
+    const cod: boolean = req.body.cod
+
+    if (cod == undefined)
+        return res.status(400).send({ msg: "Chọn phương thức thanh toán" });
+
     if (!account.phone)
         return res.status(400).send({ msg: "Thiếu số điện thoại. " })
 
@@ -112,7 +119,6 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
     var total: number = 0
     var weight: number = 0
     var reduce: number = 0
-    var msg: string = ""
 
     if (!!req.body.valid_bag_msg)
         return res.status(400).send({ msg: req.body.valid_bag_msg })
@@ -143,8 +149,8 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
             const fee = result.data.fee
             if (fee.delivery == true)
                 ship = fee.fee + fee.insurance_fee + fee.include_vat
-            else msg += "Đơn hàng không thể vận chuyển tới địa chỉ này. "
-        } else msg += `Xảy ra lỗi khi tính toán giá ship. `
+            else return res.status(400).send({ msg: "Đơn hàng không thể vận chuyển tới vị trí này." })
+        } else res.status(400).send({ msg: "Xảy ra lỗi khi tính toán phí ship" })
     }
     if (ship == -1)
         return res.status(400).send({ msg: config.err400 })
@@ -154,11 +160,11 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
         discount = await Discount.findOne({ code: discountCode })
         if (!!discount && discount.quantity > 0) {
             if (discount.is_oic && discount.used.hasOwnProperty(account._id)) {
-                msg += "Mã discount không thể sử dụng nhiều lần. "
+                return res.status(400).send({ msg: "Mã discount không thể sử dụng nhiều lần. " })
             } else if (discount.is_oid && discount.used.hasOwnProperty(account._id) && (Date.now() - discount.used[account._id]) < 86400000) {
-                msg += "Mã discount không thể sử dụng nhiều lần trong 24h. "
+                return res.status(400).send({ msg: "Mã discount không thể sử dụng nhiều lần trong 24h. " })
             } else if (total < discount.minPrice) {
-                msg += `Mã discount chỉ áp dụng cho đơn hàng > ${discount.minPrice}`
+                return res.status(400).send({ msg: `Mã discount chỉ áp dụng cho đơn hàng > ${discount.minPrice}` })
             } else if (discount.is_ship) {
                 var temp = discount.value
                 if (discount.is_percent) {
@@ -183,14 +189,14 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
                 reduce += temp
             }
         } else {
-            msg += "Mã discount không tồn tại. "
+            return res.status(400).send({ msg: `Mã discount không tồn tại` })
         }
     }
 
     const products: any[] = []
     bag_details.forEach(i => products.push({ product: i.product._id, quantity: i.quanity, price: i.product.price, sale: i.product.sale }))
 
-    const bill = new Bill({ account: account._id, phone: account.phone, address, products, discountCode, ship, total, discount: reduce })
+    const bill = new Bill({ account: account._id, phone: account.phone, address, products, discountCode, ship, total, discount: reduce, cod })
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
@@ -210,7 +216,45 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
 
         await session.commitTransaction();
         session.endSession();
-        return res.send({ msg: config.success })
+        if (cod == true)
+            return res.send({ msg: config.success })
+        else {
+            var ipAddr = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip;
+
+            var tmnCode = process.env.VNP_TMN_CODE;
+            var secretKey = process.env.VNP_SECRET_KEY;
+            var vnpUrl = process.env.VNP_URL
+            var returnUrl = process.env.VNP_RTN_URL
+
+            var createDate = formatDate(billDoc.createdAt);
+            var amount = total - reduce + ship;
+
+            var vnp_Params: any = {};
+            vnp_Params['vnp_Version'] = '2.1.0';
+            vnp_Params['vnp_Command'] = 'pay';
+            vnp_Params['vnp_TmnCode'] = tmnCode;
+            // vnp_Params['vnp_Merchant'] = ''
+            vnp_Params['vnp_Locale'] = 'vn';
+            vnp_Params['vnp_CurrCode'] = 'VND';
+            vnp_Params['vnp_TxnRef'] = billDoc._id;
+            vnp_Params['vnp_OrderInfo'] = "Thanh toan bill " + bill._id;
+            vnp_Params['vnp_OrderType'] = 110000;
+            vnp_Params['vnp_Amount'] = amount * 100;
+            vnp_Params['vnp_ReturnUrl'] = returnUrl;
+            vnp_Params['vnp_IpAddr'] = ipAddr;
+            vnp_Params['vnp_CreateDate'] = createDate;
+
+            vnp_Params = sortObject(vnp_Params);
+
+            var signData = querystring.stringify(vnp_Params, { encode: false });
+            var hmac = crypto.createHmac("sha512", secretKey!);
+            var signed = hmac.update(Buffer.from(signData, 'utf-8')).digest("hex");
+            vnp_Params['vnp_SecureHash'] = signed;
+            vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: false });
+
+            res.redirect(vnpUrl!)
+        }
+
     } catch (error) {
         console.log(error)
         await session.abortTransaction();
@@ -255,7 +299,13 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
             bill.desc = desc
             bill.markModified("status")
             bill.markModified("desc")
-            const billDoc = await bill.save()
+
+            if(status == "Cancel" && bill.cod == false) {
+                bill.refund = false
+                bill.markModified("refund")
+            }
+
+            const billDoc = await bill.save(opts)
             if (!billDoc)
                 throw Error("Fail")
 
@@ -351,5 +401,66 @@ export const Read = async (req: Request, res: Response, next: NextFunction) => {
     } catch (err) {
         console.log(err)
         res.status(500).send({ msg: config.err500 })
+    }
+}
+
+export const Check = async (req: Request, res: Response, next: NextFunction) => {
+    var vnp_Params = req.query;
+    var secureHash = vnp_Params['vnp_SecureHash'];
+
+    delete vnp_Params['vnp_SecureHash'];
+    delete vnp_Params['vnp_SecureHashType'];
+
+    vnp_Params = sortObject(vnp_Params);
+
+    var secretKey = process.env.VNP_SECRET_KEY;
+    var signData = querystring.stringify(vnp_Params, { encode: false });
+    var hmac = crypto.createHmac("sha512", secretKey!);
+    var signed = hmac.update(Buffer.from(signData, 'utf-8')).digest("hex");
+
+    if (secureHash === signed) {
+        var orderId = vnp_Params['vnp_TxnRef'];
+        var rspCode = vnp_Params['vnp_ResponseCode'];
+
+        //Kiem tra du lieu co hop le khong, cap nhat trang thai don hang va gui ket qua cho VNPAY theo dinh dang duoi
+        const bill = await Bill.findById(orderId)
+        if(!!bill) {
+            if(rspCode == '00')
+                res.status(200).json({ RspCode: '00', Message: 'success' })
+            else {
+                const session = await mongoose.startSession();
+                session.startTransaction();
+                try {
+                    const opts = { session };
+                    bill.status = "Cancel"
+                    bill.desc = "Thanh toán thất bại"
+                    bill.markModified("status")
+                    bill.markModified("desc")
+                    const billDoc = await bill.save(opts)
+                    if (!billDoc)
+                        throw Error("Fail")
+
+                    // Refill product
+                    for (let i = 0; i < bill.products.length; i++) {
+                        const e = bill.products[i]
+                        if (!!(await Product.findByIdAndUpdate(e.product, { $inc: { quantity: e.quantity, sold: -1 } }, opts).exec()))
+                            throw Error("Fail")
+                    }
+
+                    await session.commitTransaction();
+                    session.endSession();
+                } catch (error) {
+                    await session.abortTransaction();
+                    session.endSession();
+                    console.log(error)
+                    console.log("Bill " + bill._id + " không thanh toán hoàn tất nhưng hủy bill thất bại. ")
+                }
+                res.status(200).json({ RspCode: rspCode, Message: 'Thanh toán không hoàn tất. ' })
+            }
+        } else 
+            res.status(200).json({ RspCode: rspCode, Message: 'Bill không tồn tại. ' })
+    }
+    else {
+        res.status(200).json({ RspCode: '97', Message: 'Fail checksum' })
     }
 }

@@ -2,6 +2,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import * as Default from '../controllers/defaultController';
 import * as Bill from '../controllers/billController';
 import * as Product from '../controllers/productController';
+import { sortObject } from '../services/support';
 
 const route = express.Router();
 
@@ -20,6 +21,8 @@ route.post("/bill/billCalc", Default.Role("Customer"), Product.ValidBag, Bill.Ca
 //      discountCode: string
 
 route.post("/bill/create", Default.Role("Customer"), Product.ValidBag, Bill.Create)
+
+route.get('/vnpay_ipn', Bill.Check);
 
 // header: accessToken - role: ["Customer", "Admin"] - field: _id, status, desc
 // type:

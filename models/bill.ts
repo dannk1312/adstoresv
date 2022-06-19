@@ -26,6 +26,8 @@ export interface IBill {
     ship: number, 
     total: number,
     discount: number,
+    cod: boolean,
+    refund: boolean,
 
     // Timestamps
     createdAt: Date,
@@ -73,6 +75,8 @@ export const billSchema = new Schema<IBill>({
         },
         default: 'Preparing'
     },
+    cod: {type: Boolean, require: true},
+    refund: Boolean,
     ship: {type: Number, required: true}, 
     total: {type: Number, required: true}, 
     discount: {type: Number, required: true}, 

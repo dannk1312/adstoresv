@@ -35,3 +35,30 @@ export const fromObject = function (params: any, skipobjects: boolean | undefine
     }
     return result;
 };
+
+export function sortObject(obj: any) {
+	var sorted: any = {};
+	var str = [];
+	var key;
+	for (key in obj){
+		if (obj.hasOwnProperty(key)) {
+		str.push(encodeURIComponent(key));
+		}
+	}
+	str.sort();
+    for (key = 0; key < str.length; key++) {
+        sorted[str[key]] = encodeURIComponent(obj[str[key]]).replace(/%20/g, "+");
+    }
+    return sorted;
+}
+
+export function formatDate(date = new Date()) {
+    return [
+      date.getFullYear(),
+      (date.getMonth() + 1).toString().padStart(2, '0'),
+      (date.getDate()).toString().padStart(2, '0'),
+      (date.getHours()).toString().padStart(2, '0'),
+      (date.getMinutes()).toString().padStart(2, '0'),
+      (date.getMinutes()).toString().padStart(2, '0'),
+    ].join('');
+}
