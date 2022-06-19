@@ -529,7 +529,6 @@ export const Rate = async (req: Request, res: Response, next: NextFunction) => {
     }
 }
 
-
 export const Hint = async (req: Request, res: Response) => {
     const products: string[] = req.body.product // _id list
     const category: string = req.body.category // name
