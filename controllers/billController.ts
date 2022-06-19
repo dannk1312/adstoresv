@@ -194,7 +194,7 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
     }
 
     const products: any[] = []
-    bag_details.forEach(i => products.push({ product: i.product._id, quantity: i.quanity, price: i.product.price, sale: i.product.sale }))
+    bag_details.forEach(i => products.push({ product: i.product._id, color: i.color, quantity: i.quanity, price: i.product.price, sale: i.product.sale }))
 
     const bill = new Bill({ account: account._id, phone: account.phone, address, products, discountCode, ship, total, discount: reduce, cod })
     const session = await mongoose.startSession();
@@ -210,8 +210,13 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
 
         for (let i = 0; i < products.length; i++) {
             const e = products[i]
-            if (!!(await Product.findOneAndUpdate({ _id: e.product, quantity: { $gt: e.quantity } }, { $inc: { quantity: -e.quantity, sold: 1 } }, opts).exec()))
-                throw Error(`Sản phẩm số lượng không đủ. ${e.product}`)
+            const product = await Product.findById(e.product)
+            if(!product) throw Error("Product không tồn tại")
+            if(product.colors[bag_details[i].colorIndex].quantity < e.quanity) throw Error(`Sản phẩm số lượng không đủ. ${e.product}`)
+            product.colors[bag_details[i].colorIndex].quantity -= e.quanity
+            product.sold += e.quantity
+            if(!(await product.save(opts)))
+                throw Error("Không thể lưu sản phẩm")
         }
 
         await session.commitTransaction();
@@ -313,8 +318,20 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
                 // Refill product
                 for (let i = 0; i < bill.products.length; i++) {
                     const e = bill.products[i]
-                    if (!!(await Product.findByIdAndUpdate(e.product, { $inc: { quantity: e.quantity, sold: -1 } }, opts).exec()))
-                        throw Error("Fail")
+                    const product = await Product.findById(e.product)
+                    if(!product) throw Error("Product không tồn tại")
+                    var colorIndex = -1
+                    for(let i = 0; i< product.colors.length; i++) {
+                        if(product.colors[i].color == e.color) {
+                            colorIndex = i
+                            break
+                        }
+                    }
+                    if(colorIndex == -1) throw Error("Màu Product không tồn tại")
+                    product.colors[colorIndex].quantity += e.quantity
+                    product.sold -= e.quantity
+                    if(!(await product.save(opts)))
+                        throw Error("Không thể lưu sản phẩm")
                 }
             else if (status == "Done") {
                 // Add product to rates of account
