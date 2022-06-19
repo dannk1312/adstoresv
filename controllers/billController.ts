@@ -33,7 +33,7 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
     })
 
 
-    if (!!address) {
+    if (!!address || Object.keys(address).length === 0) {
         const data = {
             "pick_province": process.env.PICK_PROVINCE,
             "pick_district": process.env.PICK_DISTRICT,

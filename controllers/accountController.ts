@@ -292,7 +292,7 @@ export const PushBag = async (req: Request, res: Response, next: NextFunction) =
         
         var flag = false
         for(let i = 0; i < accountDoc.bag.length ; i++) {
-            if(accountDoc.bag[i].product.toString() == _id) {
+            if(accountDoc.bag[i].product.toString() == _id && accountDoc.bag[i].color == color) {
                 flag = true;
                 accountDoc.bag[i].quantity+=quantity;
                 break;
