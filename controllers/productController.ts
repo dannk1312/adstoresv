@@ -4,7 +4,7 @@ import { config } from '../services/config';
 import express, { NextFunction, Request, Response } from 'express';
 import * as image from "../services/image";
 import { Category } from "../models/category";
-import { Product } from "../models/product";
+import { BagItem, IProduct, Product } from "../models/product";
 import { Import } from "../models/import";
 import { Account } from "../models/account";
 import { Bill } from "../models/bill";
@@ -429,53 +429,52 @@ export const Imports = async (req: Request, res: Response, next: NextFunction) =
 
 export const ValidBag = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const bag: any[] = req.body.bag
+        const bag: {product: string, color: string, quantity: number}[] = req.body.bag
         if (!bag)
             return res.status(400).send({ msg: config.err400 })
 
-        const new_bag: any[] = []
-        const bag_details: any[] = []
-        var msg: string = ""
+        console.log("ValidBag 1")
+
+        const newBag: any[] = []
+        const bagItems: BagItem[] = []
+        var warning: string = ""
         var count: number = 0
         for (let i = 0; i < bag.length; i++) {
-            const e = bag[i];
-            const doc = await Product.findById(e.product).select("code name price sale colors").exec()
-            if (!!doc) {
-                if (doc.enable == false) {
-                    msg += `Vật phẩm ${doc.name} - ${doc.code} không thể mua vào lúc này. `
-                }
-                let i = 0
-                for (; i < doc.colors.length; i++) {
-                    if (doc.colors[i].color == e.color) {
-                        break
-                    }
-                }
-                if (i < doc.colors.length)
-                    if (doc.colors[i].quantity > e.quantity) {
-                        new_bag.push(e)
-                        bag_details.push({ product: doc, quantity: e.quantity, color: e.color, colorIndex: i })
-                        count += e.quantity
-                    }
-                    else {
-                        if (doc.colors[i].quantity > 0) {
-                            e.quantity = doc.colors[i].quantity
-                            new_bag.push(e)
-                            bag_details.push({ product: doc, quantity: e.quantity, color: e.color, colorIndex: i })
-                            count += e.quantity
-                        }
-                        msg += `Vật phẩm ${doc.name} - ${doc.code} không đủ số lượng, chỉ có ${doc.colors[i].quantity}. `
-                    }
-                else
-                    msg += `Vật phẩm ${doc.name} - ${doc.code} không có màu ${e.color}. `
-            } else {
-                msg + `Vật phẩm ${e.product} không tồn tại. `
+            const unit = bag[i];
+            if(unit.quantity == 0) continue
+            const doc = await Product.findById(unit.product).select("code name price sale colors category enable").exec()
+
+            if (!doc) 
+                { warning += `Sản phẩm ${unit.product} không tồn tại. `; continue;}
+            if (!doc.enable) 
+                { warning += `Sản phẩm ${doc.name} ${unit.color} không thể mua vào lúc này. `; continue;}
+
+            let colorIndex = doc.colors.findIndex(e => e.color == unit.color)
+            if (colorIndex == -1) 
+                { warning += `Sản phẩm ${doc.name} không có màu ${unit.color}. `; continue;}
+
+            var doc_color = doc.colors[colorIndex]
+            if (doc_color.quantity < unit.quantity) { 
+                warning += `Sản phẩm ${doc.name} ${unit.color} không đủ số lượng, chỉ có ${doc_color.quantity}. `
+                // refresh quantity
+                unit.quantity = doc_color.quantity
             }
+            if (doc_color.quantity == 0) continue;
+
+            newBag.push(unit)
+            bagItems.push({
+                product: doc._id, name: doc.name, code: doc.code, category: doc.category, price: doc.price, sale: doc.sale,
+                color: unit.color, colorIndex, image_url: doc_color.image_url, quantity: unit.quantity
+            })
+            count += unit.quantity
         }
 
-        req.body.bag = new_bag
-        req.body.bag_details = bag_details
-        req.body.valid_bag_msg = msg
-        req.body.bag_count = count
+        console.log("ValidBag 2")
+
+        req.body.bag = newBag
+        req.body.bagItems = bagItems
+        req.body.warning = warning
+        req.body.count = count
         next()
     } catch (err) {
         console.log(err)

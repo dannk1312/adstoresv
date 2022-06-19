@@ -1,6 +1,6 @@
 import e, { Request, Response, NextFunction } from 'express';
 import axios from 'axios';
-import { Product } from '../models/product';
+import { BagItem, Product } from '../models/product';
 import { config } from '../services/config';
 import { Discount } from '../models/discount';
 import { Bill } from '../models/bill';
@@ -10,90 +10,90 @@ import { formatDate, fromObject, sortObject } from '../services/support';
 import querystring from 'qs';
 import crypto from "crypto";
 
+const shipCalculate = async (address: { province: string, district: string, address: string }, weight: number, value: number) => {
+    var result: { error: string, value: number } = { error: "", value: 0 }
+    if (!address.province || !address.district || !address.address) { result.error += "Địa chỉ thiếu. "; return result }
+    const data = {
+        "pick_province": process.env.PICK_PROVINCE,
+        "pick_district": process.env.PICK_DISTRICT,
+        "pick_address": process.env.PICK_ADDRESS,
+        "province": address.province,
+        "district": address.district,
+        "address": address.address,
+        "weight": weight,
+        "value": value,
+        "transport": "road",
+        "deliver_option": "xteam",
+        "tags": ["1"] // 1 là dễ vỡ
+    }
+    const ghtk = await axios.get(config.ghtk_url + fromObject(data), { headers: { "Token": `${process.env.GHTK_API_TOKEN}` } })
+    if (ghtk.status != 200 || ghtk.data.success == false) { result.error += `Xảy ra lỗi khi tính toán giá ship. `; return result }
+    const fee = ghtk.data.fee.fee
+    result.value = fee
+    return result
+}
+
+const discountCalculate = async (code: string, bagItems: BagItem[], total: number, ship: number, account_id: string = "") => {
+    var result: { error: string, value: number } = { error: "", value: 0 }
+    if (!code) return result
+    const discount = await Discount.findOne({ code })
+    if (!discount) { result.error += "Mã discount không tồn tại. "; return result }
+    if (discount.quantity == 0) { result.error += "Mã discount hết số lượng. "; return result }
+    if (discount.is_oic && discount.used.hasOwnProperty(account_id)) { result.error += "Mã discount không thể sử dụng nhiều lần. "; return result }
+    if (discount.is_oid && discount.used.hasOwnProperty(account_id) && (Date.now() - discount.used[account_id]) < 86400000) { result.error += "Mã discount không thể sử dụng nhiều lần trong 24h. "; return result }
+    if (total < discount.minPrice) { result.error += `Mã discount chỉ áp dụng cho đơn hàng > ${discount.minPrice}. `; return result }
+
+    // @ts-ignore
+    if (discount.accounts.length > 0 && !discount.accounts.includes(account_id)) { result.error += `Mã discount chỉ áp dụng cho một vài tài khoản. `; return result }
+    if (discount.products.length > 0) {
+        const item = bagItems.find(e => !discount.products.includes(e.product))
+        if (!!item) { result.error += `Mã discount không thể áp dụng cho ${item.name}. `; return result }
+    }
+    if (discount.categories.length > 0) {
+        const item = bagItems.find(e => !discount.categories.includes(e.category))
+        if (!!item) { result.error += `Mã discount không thể áp dụng cho ${item.category}. `; return result }
+    }
+
+    var temp = discount.value
+    if (discount.is_ship) result.value = Math.min(discount.is_percent ? temp * ship : temp, discount.maxPrice, ship)
+    else result.value = Math.min(discount.is_percent ? temp * total / 100 : temp, discount.maxPrice, total)
+
+    return result
+}
 
 export const Calculate = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const discountCode: string = req.body.discountCode
-        const bag_details: any[] = req.body.bag_details
-        const address: any = req.body.address
-        const account = req.body.account
+        const bagItems: BagItem[] = req.body.bagItems
+        const address: { province: string, district: string, address: string } = req.body.address
+        var account: mongoose.Document<unknown, any, IAccount> & IAccount | null = req.body.account
+        const phone: string = req.body.phone
+        var warning: string = req.body.warning
 
-        if (!bag_details || bag_details.length == 0)
-            return res.status(400).send({ msg: "Giỏ hàng rỗng. " + req.body.valid_bag_msg })
+        if (!bagItems || bagItems.length == 0)
+            return res.status(400).send({ msg: "Giỏ hàng rỗng. " + warning })
+        if (!account && !!phone)
+            account = await Account.findOne({ phone })
 
-        var ship: number = 0
         var total: number = 0
         var weight: number = 0
-        var reduce: number = 0
-        var msg: string = ""
-
-        bag_details.forEach(e => {
-            total += e.product.price * e.quantity
-            reduce += e.product.price * e.quantity * e.product.sale
+        bagItems.forEach(e => {
+            total += e.price * e.quantity
+            reduce += e.price * e.quantity * e.sale
             weight += e.quantity * 500 // 500gr for each obj
         })
 
-        if (!!address && !!address.province && !!address.district && !!address.address) {
-            const data = {
-                "pick_province": process.env.PICK_PROVINCE,
-                "pick_district": process.env.PICK_DISTRICT,
-                "pick_address": process.env.PICK_ADDRESS,
-                "province": address.province,
-                "district": address.district,
-                "address": address.address,
-                "weight": 3000,
-                "value": 10000,
-                "transport": "road",
-                "deliver_option": "xteam",
-                "tags": ["1"] // 1 là dễ vỡ
-            }
-            const result = await axios.get(config.ghtk_url + fromObject(data), { headers: { "Token": `${process.env.GHTK_API_TOKEN}` } })
-            if (result.status == 200 && result.data.success == true) {
-                const fee = result.data.fee
-                if (fee.delivery == true)
-                    ship = fee.fee + fee.insurance_fee + fee.include_vat
-                else msg += "Đơn hàng không thể vận chuyển tới địa chỉ này. "
-            } else msg += `Xảy ra lỗi khi tính toán giá ship. `
-        } else msg += "Chưa có địa chỉ. "
+        console.log("Calculate")
 
-        if (!!discountCode) {
-            const discount = await Discount.findOne({ code: discountCode })
-            if (!!discount && discount.quantity > 0) {
-                if (discount.is_oic && discount.used.hasOwnProperty(account._id)) {
-                    msg += "Mã discount không thể sử dụng nhiều lần. "
-                } else if (discount.is_oid && discount.used.hasOwnProperty(account._id) && (Date.now() - discount.used[account._id]) < 86400000) {
-                    msg += "Mã discount không thể sử dụng nhiều lần trong 24h. "
-                } else if (total < discount.minPrice) {
-                    msg += `Mã discount chỉ áp dụng cho đơn hàng > ${discount.minPrice}. `
-                } else if (discount.is_ship) {
-                    var temp = discount.value
-                    if (discount.is_percent) {
-                        // @ts-ignore
-                        temp *= ship
-                    }
-                    if (temp > discount.maxPrice)
-                        temp = discount.maxPrice
-                    if (temp > ship)
-                        temp = ship
-                    // @ts-ignore
-                    reduce += temp
-                } else {
-                    var temp = discount.value
-                    if (discount.is_percent) {
-                        // @ts-ignore
-                        temp *= total / 100
-                    }
-                    if (temp > discount.maxPrice)
-                        temp = discount.maxPrice
-                    // @ts-ignore
-                    reduce += temp
-                }
-            } else {
-                msg += "Mã discount không tồn tại. "
-            }
-        }
+        var result_ship = await shipCalculate(address, weight, total)
+        var ship: number = result_ship.value
+        warning += result_ship.error
 
-        res.send({ msg: config.success, warning: req.body.valid_bag_msg + msg, data: { bag_details, ship, total, discount: reduce } })
+        var result_discount = await discountCalculate(discountCode, bagItems, total, ship, account!._id.toString() ?? "")
+        var reduce: number = result_discount.value
+        warning += result_discount.error
+
+        res.send({ msg: config.success, warning, data: { bag_details: bagItems, ship, total, discount: reduce } })
     } catch (err) {
         console.log(err)
         return res.status(500).send({ config: config.err500 })
@@ -103,103 +103,62 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
 export const Create = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const discountCode: string = req.body.discountCode
-        const bag_details: any[] = req.body.bag_details
-        const address: any = req.body.address
-        const account = req.body.account
+        const bagItems: BagItem[] = req.body.bagItems
+        const address: { province: string, district: string, address: string } = req.body.address
+        var account: mongoose.Document<unknown, any, IAccount> & IAccount | null = req.body.account
+        const phone: string = req.body.phone
+        const name: string = req.body.name
         const cod: boolean = req.body.cod
+        var warning: string = req.body.warning
+        var verify: boolean = false
 
+        if (!bagItems || bagItems.length == 0)
+            return res.status(400).send({ msg: "Giỏ hàng rỗng. " + warning })
         if (cod == undefined)
-            return res.status(400).send({ msg: "Chọn phương thức thanh toán" });
-
-        if (!account.phone)
+            return res.status(400).send({ msg: "Mời chọn phương thức thanh toán" })
+        if (!phone || !config.phoneRegEx.test(phone))
             return res.status(400).send({ msg: "Thiếu số điện thoại. " })
+        if (!!account) {
+            if (phone != account.phone) {
+                if (!!(await Account.findOne({ phone, _id: { $ne: account._id } })))
+                    return res.status(400).send({ msg: "Số điện thoại này đã liên kết với Tài khoản khác" })
+            } else verify = true
+        } else {
+            account = await Account.findOne({ phone })
+            if (!account) {
+                account = await (new Account({ phone, name })).save()
+                if (!account)
+                    return res.status(500).send({ msg: config.err500 })
+            }
+        }
 
         if (!account.enable)
             return res.status(400).send({ msg: "Người dùng bị đóng băng khỏi việc mua bán. " })
 
-        if (!bag_details || bag_details.length == 0)
-            return res.status(400).send({ msg: "Giỏ hàng rỗng. " + req.body.valid_bag_msg })
+        if (!bagItems || bagItems.length == 0)
+            return res.status(400).send({ msg: "Giỏ hàng rỗng. " + warning })
 
-        var ship: number = 0
         var total: number = 0
         var weight: number = 0
-        var reduce: number = 0
-
-        if (!!req.body.valid_bag_msg)
-            return res.status(400).send({ msg: req.body.valid_bag_msg })
-
-        bag_details.forEach(e => {
-            total += e.product.price * e.quantity
-            reduce += e.product.price * e.quantity * e.product.sale
+        bagItems.forEach(e => {
+            total += e.price * e.quantity
+            reduce += e.price * e.quantity * e.sale
             weight += e.quantity * 500 // 500gr for each obj
         })
 
+        var result_ship = await shipCalculate(address, weight, total)
+        var ship: number = result_ship.value
+        warning += result_ship.error
 
-        if (!!address && !!address.province && !!address.district && !!address.address) {
-            const data = {
-                "pick_province": process.env.PICK_PROVINCE,
-                "pick_district": process.env.PICK_DISTRICT,
-                "pick_address": process.env.PICK_ADDRESS,
-                "province": address.province,
-                "district": address.district,
-                "address": address.address,
-                "weight": 3000,
-                "value": 10000,
-                "transport": "road",
-                "deliver_option": "xteam",
-                "tags": ["1"] // 1 là dễ vỡ
-            }
-            const result = await axios.get(config.ghtk_url + fromObject(data), { headers: { "Token": `${process.env.GHTK_API_TOKEN}` } })
-            if (result.status == 200 && result.data.success == true) {
-                const fee = result.data.fee
-                if (fee.delivery == true)
-                    ship = fee.fee + fee.insurance_fee + fee.include_vat
-                else return res.status(400).send({ msg: "Đơn hàng không thể vận chuyển tới vị trí này." })
-            } else res.status(400).send({ msg: "Xảy ra lỗi khi tính toán phí ship" })
-        } else return res.status(400).send({ msg: config.err400 })
-
-        var discount;
-        if (!!discountCode) {
-            discount = await Discount.findOne({ code: discountCode })
-            if (!!discount && discount.quantity > 0) {
-                if (discount.is_oic && discount.used.hasOwnProperty(account._id)) {
-                    return res.status(400).send({ msg: "Mã discount không thể sử dụng nhiều lần. " })
-                } else if (discount.is_oid && discount.used.hasOwnProperty(account._id) && (Date.now() - discount.used[account._id]) < 86400000) {
-                    return res.status(400).send({ msg: "Mã discount không thể sử dụng nhiều lần trong 24h. " })
-                } else if (total < discount.minPrice) {
-                    return res.status(400).send({ msg: `Mã discount chỉ áp dụng cho đơn hàng > ${discount.minPrice}` })
-                } else if (discount.is_ship) {
-                    var temp = discount.value
-                    if (discount.is_percent) {
-                        // @ts-ignore
-                        temp *= ship
-                    }
-                    if (temp > discount.maxPrice)
-                        temp = discount.maxPrice
-                    if (temp > ship)
-                        temp = ship
-                    // @ts-ignore
-                    reduce += temp
-                } else {
-                    var temp = discount.value
-                    if (discount.is_percent) {
-                        // @ts-ignore
-                        temp *= total / 100
-                    }
-                    if (temp > discount.maxPrice)
-                        temp = discount.maxPrice
-                    // @ts-ignore
-                    reduce += temp
-                }
-            } else {
-                return res.status(400).send({ msg: `Mã discount không tồn tại` })
-            }
-        }
+        var result_discount = await discountCalculate(discountCode, bagItems, total, ship, account!._id.toString() ?? "")
+        var reduce: number = result_discount.value
+        warning += result_discount.error
 
         const products: any[] = []
-        bag_details.forEach(i => products.push({ product: i.product._id, color: i.color, quantity: i.quanity, price: i.product.price, sale: i.product.sale }))
+        bagItems.forEach(i => products.push({ product: i.product, color: i.color, quantity: i.quantity, price: i.price, sale: i.sale }))
+        console.log(products)
 
-        const bill = new Bill({ account: account._id, phone: account.phone, address, products, discountCode, ship, total, discount: reduce, cod })
+        const bill = new Bill({ account: account._id, phone: account.phone, address, products, discountCode, ship, total, discount: reduce, verify })
         const session = await mongoose.startSession();
         session.startTransaction();
         try {
@@ -207,18 +166,15 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
             const billDoc = await bill.save(opts)
             const accountDoc = await account.updateOne({ $push: { bills: billDoc._id } }, opts).exec()
 
-            if (!billDoc || !accountDoc ||
-                (!!discount && !!(await Discount.findOneAndUpdate({ code: discountCode, quantity: { $gt: 1 } }, { $inc: { quantity: -1 } }).exec())))
-                throw Error("Mã discount đã hết số lượng.")
+            if (!billDoc || !accountDoc)
+                throw Error("Liên kết bill và account lỗi")
 
             for (let i = 0; i < products.length; i++) {
                 const e = products[i]
                 const product = await Product.findById(e.product)
-                if (!product) throw Error("Product không tồn tại")
-                if (product.colors[bag_details[i].colorIndex].quantity < e.quanity) throw Error(`Sản phẩm số lượng không đủ. ${e.product}`)
-                product.colors[bag_details[i].colorIndex].quantity -= e.quanity
-                product.sold += e.quantity
-                if (!(await product.save(opts)))
+                product!.colors[bagItems[i].colorIndex].quantity -= e.quantity
+                product!.sold += e.quantity
+                if (!(await product!.save(opts)))
                     throw Error("Không thể lưu sản phẩm")
             }
 
@@ -227,42 +183,11 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
             if (cod == true)
                 return res.send({ msg: config.success })
             else {
-                var ipAddr = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip;
-
-                var tmnCode = process.env.VNP_TMN_CODE;
-                var secretKey = process.env.VNP_SECRET_KEY;
-                var vnpUrl = process.env.VNP_URL
-                var returnUrl = process.env.VNP_RTN_URL
-
-                var createDate = formatDate(billDoc.createdAt);
-                var amount = total - reduce + ship;
-
-                var vnp_Params: any = {};
-                vnp_Params['vnp_Version'] = '2.1.0';
-                vnp_Params['vnp_Command'] = 'pay';
-                vnp_Params['vnp_TmnCode'] = tmnCode;
-                // vnp_Params['vnp_Merchant'] = ''
-                vnp_Params['vnp_Locale'] = 'vn';
-                vnp_Params['vnp_CurrCode'] = 'VND';
-                vnp_Params['vnp_TxnRef'] = billDoc._id;
-                vnp_Params['vnp_OrderInfo'] = "Thanh toan bill " + bill._id;
-                vnp_Params['vnp_OrderType'] = 110000;
-                vnp_Params['vnp_Amount'] = amount * 100;
-                vnp_Params['vnp_ReturnUrl'] = returnUrl;
-                vnp_Params['vnp_IpAddr'] = ipAddr;
-                vnp_Params['vnp_CreateDate'] = createDate;
-
-                vnp_Params = sortObject(vnp_Params);
-
-                var signData = querystring.stringify(vnp_Params, { encode: false });
-                var hmac = crypto.createHmac("sha512", secretKey!);
-                var signed = hmac.update(Buffer.from(signData, 'utf-8')).digest("hex");
-                vnp_Params['vnp_SecureHash'] = signed;
-                vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: false });
-
-                res.redirect(vnpUrl!)
+                req.body.createDate = formatDate(billDoc.createdAt)
+                req.body.amount = total - reduce + ship
+                req.body.bill_id = bill._id
+                next()
             }
-
         } catch (error) {
             console.log(error)
             await session.abortTransaction();
@@ -312,8 +237,8 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
             bill.markModified("status")
             bill.markModified("desc")
 
-            if (status == "Cancel" && bill.cod == false) {
-                bill.refund = false
+            if (status == "Cancel" && bill.paid == false) {
+                bill.refund = true
                 bill.markModified("refund")
             }
 
@@ -428,7 +353,48 @@ export const Read = async (req: Request, res: Response, next: NextFunction) => {
     }
 }
 
-export const Check = async (req: Request, res: Response, next: NextFunction) => {
+export const RequestVNPay = async (req: Request, res: Response, next: NextFunction) => {
+    const amount = req.body.amount
+    const createDate = req.body.createDate
+    const bill_id = req.body.bill_id
+    
+    var ipAddr = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip;
+
+    var tmnCode = process.env.VNP_TMN_CODE;
+    var secretKey = process.env.VNP_SECRET_KEY;
+    var vnpUrl = process.env.VNP_URL
+    var returnUrl = process.env.VNP_RTN_URL
+
+    //var createDate = formatDate(billDoc.createdAt);
+    //var amount = total - reduce + ship;
+
+    var vnp_Params: any = {};
+    vnp_Params['vnp_Version'] = '2.1.0';
+    vnp_Params['vnp_Command'] = 'pay';
+    vnp_Params['vnp_TmnCode'] = tmnCode;
+    // vnp_Params['vnp_Merchant'] = ''
+    vnp_Params['vnp_Locale'] = 'vn';
+    vnp_Params['vnp_CurrCode'] = 'VND';
+    vnp_Params['vnp_TxnRef'] = bill_id;
+    vnp_Params['vnp_OrderInfo'] = "Thanh toan bill " + bill_id;
+    vnp_Params['vnp_OrderType'] = 110000;
+    vnp_Params['vnp_Amount'] = amount * 100;
+    vnp_Params['vnp_ReturnUrl'] = returnUrl;
+    vnp_Params['vnp_IpAddr'] = ipAddr;
+    vnp_Params['vnp_CreateDate'] = createDate;
+
+    vnp_Params = sortObject(vnp_Params);
+
+    var signData = querystring.stringify(vnp_Params, { encode: false });
+    var hmac = crypto.createHmac("sha512", secretKey!);
+    var signed = hmac.update(Buffer.from(signData, 'utf-8')).digest("hex");
+    vnp_Params['vnp_SecureHash'] = signed;
+    vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: false });
+
+    res.redirect(vnpUrl!)
+}
+
+export const CheckVNPay = async (req: Request, res: Response, next: NextFunction) => {
     var vnp_Params = req.query;
     var secureHash = vnp_Params['vnp_SecureHash'];
 
@@ -449,42 +415,24 @@ export const Check = async (req: Request, res: Response, next: NextFunction) => 
         //Kiem tra du lieu co hop le khong, cap nhat trang thai don hang va gui ket qua cho VNPAY theo dinh dang duoi
         const bill = await Bill.findById(orderId)
         if (!!bill) {
-            if (rspCode == '00')
+            if (rspCode == '00') {
+                bill.verify = true
+                bill.paid = true
+                bill.desc = "Thanh toán online thành công. "
+                if(!(await bill.save()))
+                    console.log("Bill " + bill._id + " thanh toán hoàn tất nhưng cập nhật thất bại. ")
                 res.status(200).json({ RspCode: '00', Message: 'success' })
+            }
             else {
-                const session = await mongoose.startSession();
-                session.startTransaction();
-                try {
-                    const opts = { session };
-                    bill.status = "Cancel"
-                    bill.desc = "Thanh toán thất bại"
-                    bill.markModified("status")
-                    bill.markModified("desc")
-                    const billDoc = await bill.save(opts)
-                    if (!billDoc)
-                        throw Error("Fail")
-
-                    // Refill product
-                    for (let i = 0; i < bill.products.length; i++) {
-                        const e = bill.products[i]
-                        if (!!(await Product.findByIdAndUpdate(e.product, { $inc: { quantity: e.quantity, sold: -1 } }, opts).exec()))
-                            throw Error("Fail")
-                    }
-
-                    await session.commitTransaction();
-                    session.endSession();
-                } catch (error) {
-                    await session.abortTransaction();
-                    session.endSession();
-                    console.log(error)
+                bill.desc = "Thanh toán online thất bại. Việc thanh toán sẽ chuyển sang trực tiếp. "
+                if(!(await bill.save()))
                     console.log("Bill " + bill._id + " không thanh toán hoàn tất nhưng hủy bill thất bại. ")
-                }
                 res.status(200).json({ RspCode: rspCode, Message: 'Thanh toán không hoàn tất. ' })
             }
         } else
             res.status(200).json({ RspCode: rspCode, Message: 'Bill không tồn tại. ' })
     }
     else {
-        res.status(200).json({ RspCode: '97', Message: 'Fail checksum' })
+        res.status(200).json({ RspCode: '97', Message: 'Fail checksum', Check: "haha" })
     }
 }

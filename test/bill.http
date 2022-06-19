@@ -1,10 +1,12 @@
-POST http://localhost:5000/bill/billCalc HTTP/1.1
+POST http://localhost:5000/bill/create HTTP/1.1
 Content-Type: application/json
 
 {
     "bag":[{"product":"62ad8ab404b1746fa8596362","quantity":2,"color":"red"},{"product":"62ad8ab404b1746fa8596362","quantity":1,"color":"white"}],
     "discountCode":"",
-    "address":{"province":"","district":"","address":""}
+    "address":{"province":"TP HCM","district":"TP THU DUC","address":"1 VO VAN NGAN"},
+    "phone": "0923202850",
+    "cod": true
 }
 
 ###

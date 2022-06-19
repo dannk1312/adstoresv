@@ -44,6 +44,19 @@ export interface IProduct {
     }]
 }
 
+export interface BagItem { 
+    product: Types.ObjectId,
+    code: string, 
+    name: string, 
+    quantity: number, 
+    color: string, 
+    colorIndex: number, 
+    image_url: string, 
+    category: string,
+    price: number,
+    sale: number
+}
+
 export const productSchema = new Schema<IProduct>({
     // Information
     name: {type: String, required: [true, 'Product name cannot be empty'], trim: true},

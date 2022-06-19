@@ -12,17 +12,18 @@ const route = express.Router();
 //      address: object - {province: string, district: string, address: string}
 //      discountCode: string
 
-route.post("/bill/billCalc", Default.Role("Customer"), Product.ValidBag, Bill.Calculate)
+route.post("/bill/billCalc", Default.GetAccount, Product.ValidBag, Bill.Calculate)
 
-// header: accessToken - role: Customer - field: bag, discountCode, address
+// header: accessToken - role: Customer - field: bag, discountCode, address, cod
 // type:
 //      bag: object[] - [{product: string, color: string, quantity: number}] - product = product._id
 //      address: object - {province: string, district: string, address: string}
 //      discountCode: string
+//      cod: boolean 
 
-route.post("/bill/create", Default.Role("Customer"), Product.ValidBag, Bill.Create)
+route.post("/bill/create", Default.GetAccount, Product.ValidBag, Bill.Create, Bill.RequestVNPay)
 
-route.get('/vnpay_ipn', Bill.Check);
+route.get('/vnpay_ipn', Bill.CheckVNPay);
 
 // header: accessToken - role: ["Customer", "Admin"] - field: _id, status, desc
 // type:

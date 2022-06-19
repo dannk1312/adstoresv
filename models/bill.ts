@@ -4,6 +4,7 @@ export interface IBill {
     _id: Types.ObjectId,
     // Buyer Info
     account: Types.ObjectId,
+    name: string,
     phone: string,
     address: {
         province: string,
@@ -26,8 +27,10 @@ export interface IBill {
     ship: number, 
     total: number,
     discount: number,
-    cod: boolean,
+
     refund: boolean,
+    verify: boolean,
+    paid: boolean,
 
     // Timestamps
     createdAt: Date,
@@ -36,8 +39,9 @@ export interface IBill {
 
 export const billSchema = new Schema<IBill>({
     // Buyer Info
-    account: {type: Schema.Types.ObjectId, required: true, ref: "Account"},
+    account: {type: Schema.Types.ObjectId, ref: "Account"},
     phone: {type: String, required: [true, "Bill phone cannot be empty"]},
+    name: String,
     address:  {
         province: String,
         district: String, 
@@ -55,11 +59,11 @@ export const billSchema = new Schema<IBill>({
         },
         quantity: {
             type: Number,
-            required: [true, 'Product id in bill cannot be empty.'],
+            required: [true, 'Product quantity in bill cannot be empty.'],
         },
         price: {
             type: Number,
-            required: [true, 'Product id in bill cannot be empty.'],
+            required: [true, 'Product price in bill cannot be empty.'],
         },
         sale: {
             type: Number,
@@ -75,11 +79,13 @@ export const billSchema = new Schema<IBill>({
         },
         default: 'Preparing'
     },
-    cod: {type: Boolean, require: true},
+    
     refund: Boolean,
+    paid: Boolean,
     ship: {type: Number, required: true}, 
     total: {type: Number, required: true}, 
     discount: {type: Number, required: true}, 
+    verify: {type: Boolean, required: true}
 }, { timestamps: true })
 
 billSchema.virtual('cash').get(function () {

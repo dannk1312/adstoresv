@@ -19,7 +19,7 @@ const randomCode = (): string => {
 
 export const SpecsSplitter = (req: Request, res: Response, next: NextFunction) => {
     const specs = req.body.specs
-    if(!!specs && Array.isArray(specs)){
+    if (!!specs && Array.isArray(specs)) {
         const temp: any = {}
         specs.forEach(s => {
             // @ts-ignore
@@ -45,9 +45,9 @@ export const Role = (role: string[] | string) => {
             // @ts-ignore
             const id: string = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!).id;
             const account = await Account.findById(id).select("-bag -rate_waits -notifications").exec()
-            if(!account)
-                return res.status(400).send({msg: config.err400})
-            if ((typeof(role) == "string" && (role == "All" || role == account.role)) || role.includes(account.role)) {
+            if (!account)
+                return res.status(400).send({ msg: config.err400 })
+            if ((typeof (role) == "string" && (role == "All" || role == account.role)) || role.includes(account.role)) {
                 req.body.account = account;
                 next();
             } else throw new Error(`${account.email + " " + account.role}`)
@@ -57,6 +57,30 @@ export const Role = (role: string[] | string) => {
         }
     }
 }
+
+export const GetAccount = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        var token: string;
+        if (req.headers.authorization &&
+            req.headers.authorization.split(" ")[0] === "Bearer") {
+            // Get from Header
+            token = req.headers.authorization.split(" ")[1]
+        } else {
+            // Try to get from signedtoken
+            token = req.signedCookies['accessToken']
+        }
+        if (!!token) {
+            // @ts-ignore
+            const id: string = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!).id;
+            const account = await Account.findById(id).select("-bag -rate_waits -notifications").exec()
+            req.body.account = account;
+        }
+        next();
+    } catch (err) {
+        return res.status(400).send({ msg: config.errPermission })
+    }
+}
+
 
 export const phoneOTPRequest = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -126,14 +150,14 @@ export const emailOTPCheck = async (req: Request, res: Response, next: NextFunct
 export const OTPRequest = async (req: Request, res: Response, next: NextFunction) => {
     try {
         var { email_or_phone, email, phone } = req.body
-        if(!!email)
+        if (!!email)
             email_or_phone = email
-        else if(!!phone)
+        else if (!!phone)
             email_or_phone = phone
-        if(!email_or_phone)
-            return res.status(400).send({msg: config.err400 })
-        else if(codeCache.has(email_or_phone))
-            return res.status(400).send({msg: `This email/phone is waiting to confirm. ${codeCache.get(email_or_phone)}s left` })
+        if (!email_or_phone)
+            return res.status(400).send({ msg: config.err400 })
+        else if (codeCache.has(email_or_phone))
+            return res.status(400).send({ msg: `This email/phone is waiting to confirm. ${codeCache.get(email_or_phone)}s left` })
         if (config.emailRegEx.test(email_or_phone)) {
             const code: string = randomCode()
             if (await sender.SendMail(email_or_phone, 'Email Verify', `Confirm your email, code: ${code}`)) {
@@ -163,9 +187,9 @@ export const OTPRequest = async (req: Request, res: Response, next: NextFunction
 export const OTPCheck = async (req: Request, res: Response, next: NextFunction) => {
     try {
         var { email_or_phone, code, email, phone } = req.body
-        if(!!email)
+        if (!!email)
             email_or_phone = email
-        else if(!!phone)
+        else if (!!phone)
             email_or_phone = phone
         if (codeCache.get(email_or_phone) === code || code == "000000") {
             console.log(`${email_or_phone} pass otp check`)

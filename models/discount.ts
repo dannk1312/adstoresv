@@ -24,7 +24,7 @@ export interface IDiscount {
 
     // depend on
     products: Types.ObjectId[], // empty mean all can use 
-    categories: Types.ObjectId[], // empty mean all can use 
+    categories: string[], // empty mean all can use 
     accounts: Types.ObjectId[], // empty mean all can use 
 
     // history
@@ -53,7 +53,7 @@ export const discountSchema = new Schema<IDiscount>({
 
     // depend on
     products: [{ type: Schema.Types.ObjectId, required: true, ref: 'Product' }], 
-    categories: [{ type: Schema.Types.ObjectId, required: true, ref: 'Category' }], 
+    categories: [String], 
     accounts: [{ type: Schema.Types.ObjectId, required: true, ref: 'Account' }],
 
     used: Schema.Types.Mixed
