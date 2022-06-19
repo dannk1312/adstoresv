@@ -21,7 +21,7 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
         if (!bag_details || bag_details.length == 0)
             return res.status(400).send({ msg: "Giỏ hàng rỗng. " + req.body.valid_bag_msg })
 
-        var ship: number = -1
+        var ship: number = 0
         var total: number = 0
         var weight: number = 0
         var reduce: number = 0
@@ -33,7 +33,7 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
             weight += e.quantity * 500 // 500gr for each obj
         })
 
-        if (!!address || address!.province == "" || address!.district == "" || address!.address == "") {
+        if (!!address && !!address.province && !!address.district && !!address.address) {
             const data = {
                 "pick_province": process.env.PICK_PROVINCE,
                 "pick_district": process.env.PICK_DISTRICT,
@@ -48,7 +48,7 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
                 "tags": ["1"] // 1 là dễ vỡ
             }
             const result = await axios.get(config.ghtk_url + fromObject(data), { headers: { "Token": `${process.env.GHTK_API_TOKEN}` } })
-            if (result.status == 200) {
+            if (result.status == 200 && result.data.success == true) {
                 const fee = result.data.fee
                 if (fee.delivery == true)
                     ship = fee.fee + fee.insurance_fee + fee.include_vat
@@ -120,7 +120,7 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
         if (!bag_details || bag_details.length == 0)
             return res.status(400).send({ msg: "Giỏ hàng rỗng. " + req.body.valid_bag_msg })
 
-        var ship: number = -1
+        var ship: number = 0
         var total: number = 0
         var weight: number = 0
         var reduce: number = 0
@@ -135,7 +135,7 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
         })
 
 
-        if (!!address || address!.province == "" || address!.district == "" || address!.address == "") {
+        if (!!address && !!address.province && !!address.district && !!address.address) {
             const data = {
                 "pick_province": process.env.PICK_PROVINCE,
                 "pick_district": process.env.PICK_DISTRICT,
@@ -150,15 +150,13 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
                 "tags": ["1"] // 1 là dễ vỡ
             }
             const result = await axios.get(config.ghtk_url + fromObject(data), { headers: { "Token": `${process.env.GHTK_API_TOKEN}` } })
-            if (result.status == 200) {
+            if (result.status == 200 && result.data.success == true) {
                 const fee = result.data.fee
                 if (fee.delivery == true)
                     ship = fee.fee + fee.insurance_fee + fee.include_vat
                 else return res.status(400).send({ msg: "Đơn hàng không thể vận chuyển tới vị trí này." })
             } else res.status(400).send({ msg: "Xảy ra lỗi khi tính toán phí ship" })
-        }
-        if (ship == -1)
-            return res.status(400).send({ msg: config.err400 })
+        } else return res.status(400).send({ msg: config.err400 })
 
         var discount;
         if (!!discountCode) {
