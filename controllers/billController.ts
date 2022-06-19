@@ -433,6 +433,6 @@ export const CheckVNPay = async (req: Request, res: Response, next: NextFunction
             res.status(200).json({ RspCode: rspCode, Message: 'Bill không tồn tại. ' })
     }
     else {
-        res.status(200).json({ RspCode: '97', Message: 'Fail checksum', Check: "haha" })
+        res.status(200).json({ RspCode: '97', Message: 'Fail checksum' })
     }
 }
