@@ -10,15 +10,15 @@ export interface ICategory {
     image_id: string,
     image_url: string,
     products: Types.ObjectId[],
-    specsModel: [{
+    specsModel: {
         _id: Types.ObjectId,
         name: string, 
-        values: [{
+        values: {
             _id: Types.ObjectId,
             value: string,
             products: Types.ObjectId[]
-        }]
-    }]
+        }[]
+    }[]
 }
 
 
@@ -81,10 +81,10 @@ categorySchema.statics.surfaces = async function (email: string): Promise<any> {
     return result
 }
 
-categorySchema.methods.validSpecs = function(this: ICategory, specs: any): object {
+export const ValidSpecs = function(category: ICategory, specs: any): object {
     var new_specs: any = {}
-    for (let i = 0; i < this.specsModel.length; i++) {
-        var e = this.specsModel[i]
+    for (let i = 0; i < category.specsModel.length; i++) {
+        var e = category.specsModel[i]
         if(specs.hasOwnProperty(e.name)) {
             for (let j = 0; j < e.values.length; j++) {
                 if(specs[e.name] == e.values[j].value) {

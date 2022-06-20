@@ -61,7 +61,7 @@ route.post("/product/create", Default.Role("Admin"), Product.Create)
 //      skip: number - undefined = 0
 //      limit: number - undefined = 10000
 // rule: _id | code
-route.post("/product/readComments", Product.ReadComment)
+route.post("/product/readComments", Product.ReadComments)
 
 // header: accessToken - role: Admin - field: _id, code, name, desc, price, enable, specs, sale
 // type: 

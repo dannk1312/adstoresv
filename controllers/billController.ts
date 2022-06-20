@@ -1,10 +1,10 @@
 import e, { Request, Response, NextFunction } from 'express';
 import axios from 'axios';
-import { BagItem, Product } from '../models/product';
+import { Product } from '../models/product';
 import { config } from '../services/config';
 import { Discount } from '../models/discount';
 import { Bill } from '../models/bill';
-import { Account, IAccount } from '../models/account';
+import { Account, IAccount, IBagItem } from '../models/account';
 import mongoose from 'mongoose';
 import { formatDate, fromObject, sortObject } from '../services/support';
 import querystring from 'qs';
@@ -33,7 +33,7 @@ const shipCalculate = async (address: { province: string, district: string, addr
     return result
 }
 
-const discountCalculate = async (code: string, bagItems: BagItem[], total: number, ship: number, account_id: string = "") => {
+const discountCalculate = async (code: string, bagItems: IBagItem[], total: number, ship: number, account_id: string = "") => {
     var result: { error: string, value: number } = { error: "", value: 0 }
     if (!code) return result
     const discount = await Discount.findOne({ code })
@@ -64,7 +64,7 @@ const discountCalculate = async (code: string, bagItems: BagItem[], total: numbe
 export const Calculate = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const discountCode: string = req.body.discountCode
-        const bagItems: BagItem[] = req.body.bagItems
+        const bagItems: IBagItem[] = req.body.bagItems
         const address: { province: string, district: string, address: string } = req.body.address
         var account: mongoose.Document<unknown, any, IAccount> & IAccount | null = req.body.account
         const phone: string = req.body.phone
@@ -82,8 +82,6 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
             reduce += e.price * e.quantity * e.sale
             weight += e.quantity * 500 // 500gr for each obj
         })
-
-        console.log("Calculate")
 
         var result_ship = await shipCalculate(address, weight, total)
         var ship: number = result_ship.value
@@ -103,7 +101,7 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
 export const Create = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const discountCode: string = req.body.discountCode
-        const bagItems: BagItem[] = req.body.bagItems
+        const bagItems: IBagItem[] = req.body.bagItems
         const address: { province: string, district: string, address: string } = req.body.address
         var account: mongoose.Document<unknown, any, IAccount> & IAccount | null = req.body.account
         const phone: string = req.body.phone
@@ -221,7 +219,7 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
             const bills = (await Account.findById(account._id).select("bills")).bills
             // @ts-ignore
             if (bills.includes(_id)) {
-                const doc = await Account.findByIdAndUpdate(account._id, { $inc: { self_cancel: 1 } })
+                const doc = await Account.findByIdAndUpdate(account._id, { $inc: { warning: 1 } })
                 if (!doc) throw Error("Account cannot save")
             } else
                 return res.status(400).send({ msg: config.errPermission })

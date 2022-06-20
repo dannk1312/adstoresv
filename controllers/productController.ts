@@ -1,24 +1,34 @@
 import mongoose, { Document, Types } from "mongoose";
 import jwt from "jsonwebtoken";
-import { config } from '../services/config';
+import { config, mess } from '../services/config';
 import express, { NextFunction, Request, Response } from 'express';
 import * as image from "../services/image";
-import { Category } from "../models/category";
-import { BagItem, IProduct, Product } from "../models/product";
+import { Category, ValidSpecs } from "../models/category";
+import { IProduct, Product } from "../models/product";
 import { Import } from "../models/import";
-import { Account } from "../models/account";
+import { Account, IBag, IBagItem } from "../models/account";
 import { Bill } from "../models/bill";
 
 
 export const CommingSoon = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const category: string = req.body.category;
+        const category: string = req.body.category
         const skip: number = req.body.skip ?? 0
         const limit: number = req.body.limit ?? 10000
+        
         var pipeline = [
             {
                 "$project": {
-                    "category": "$category",
+                    "name": "$name",
+                    "code": "$code",
+                    "image_url": "%image_url",
+                    "price": "%price",
+                    "sale": "%sale",
+                    "total_rate": "%total_rate",
+                    "enable": "$enable",
+                    "sold": "$sold",
+                    "colors": "$colors",
+                    "category": category,
                     "colors_length": { "$size": "$colors" }
                 }
             },
@@ -31,13 +41,9 @@ export const CommingSoon = async (req: Request, res: Response, next: NextFunctio
             { $skip: skip },
             { $limit: limit }
         ]
-        var ids = await Product.aggregate(pipeline).exec()
-        if (!ids)
-            throw Error()
-        var products = ids.filter(i => i._id)
-        Product.find({ "_id": { $in: products } }).select(config.product_str).exec((err, docs) => {
-            if (!!err) return res.status(500).send({ msg: config.err500 })
-            return res.send({ msg: config.success, data: docs })
+        Product.aggregate(pipeline).exec((err, docs) =>{
+            if(!!err) return res.status(500).send({msg: mess.errInternal})
+            return res.send({msg: mess.success, data: docs})
         })
     } catch (err) {
         console.log(err)
@@ -62,8 +68,7 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
 
         if (!!category) {
             const categoryDoc = await Category.findOne({ name: category });
-            if (!categoryDoc)
-                return res.status(400).send({ msg: config.err400 })
+            if (!categoryDoc) return res.status(5000).send({ msg: mess.errInternal })
 
             products = categoryDoc.products;
 
@@ -87,9 +92,9 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
 
             if (products.length == 0)
                 if (req.body.skip == undefined)
-                    return res.send({ msg: config.success, data: [], count: 0 })
+                    return res.send({ msg: mess.success, data: [], count: 0 })
                 else
-                    return res.send({ msg: config.success, data: [] })
+                    return res.send({ msg: mess.success, data: [] })
         }
 
         var queryOptions: any = { price: { $lte: max_price, $gte: min_price } }
@@ -106,12 +111,11 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
             sortOptions[sortName] = sortType
         }
 
-        // @ts-ignore
-        var query = await Product.list(queryOptions, sortOptions, skip, limit)
-        if (!query.data)
-            return res.status(500).send({ msg: config.err500 })
-
-        return res.send({ msg: config.success, data: query.data, count: query.count })
+        const count = skip == 0 ? await Product.countDocuments(queryOptions) : undefined
+        Product.find(queryOptions).sort(sortOptions).skip(skip).limit(limit).lean().select(config.product_str).exec((err, docs) => {
+            if(err) return res.status(500).send({msg: mess.errInternal})
+            return res.send({msg: mess.success, data: docs, count})
+        })
     } catch (err) {
         console.log(err)
         return res.status(500).send({ msg: config.err500 })
@@ -129,12 +133,17 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
     const image_base64: string = req.body.image_base64
 
     // Handle Required Data
-    if (!name || !code || !category || !specs || !price || !image_base64) {
-        return res.status(400).send({ msg: config.err400 })
-    }
+    var error = ""
+    if(!name) error += mess.errMissField + "[name]. "
+    if(!code) error += mess.errMissField + "[code]. "
+    if(!category) error += mess.errMissField + "[category]. "
+    if(!specs) error += mess.errMissField + "[specs]. "
+    if(!price) error += mess.errMissField + "[price]. "
+    if(!image_base64) error += mess.errMissField + "[image_base64]. "
+    if(!error) return res.status(400).send({ msg: config.err400 })
 
     const img_info = await image.upload(image.base64(image_base64), "product_image");
-    if (!img_info) return res.status(500).send({ msg: config.errSaveImage })
+    if (!img_info) return res.status(500).send({ msg: mess.errWrongField + "[image_base64]. " })
 
     // Handle Category & Specs
     var categoryDoc = await Category.findOne({ name: category });
@@ -142,8 +151,7 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
     if (!categoryDoc)
         return res.status(400).send({ msg: config.err400 })
 
-    // @ts-ignore
-    specs = categoryDoc.validSpecs(specs)
+    specs = ValidSpecs(categoryDoc, specs)
     console.log(specs)
     if (Object.keys(specs).length == 0)
         return res.status(400).send({ msg: config.err400 })
@@ -188,7 +196,7 @@ export const Read = async (req: Request, res: Response, next: NextFunction) => {
     });
 }
 
-export const ReadComment = async (req: Request, res: Response, next: NextFunction) => {
+export const ReadComments = async (req: Request, res: Response, next: NextFunction) => {
     const _id: string = req.body._id
     const code: string = req.body.code
     const skip: number = req.body.skip ?? 0
@@ -339,8 +347,7 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
                     return res.status(500).send({ msg: config.err500 })
                 // @ts-ignore
                 category.delProduct(product)
-                // @ts-ignore
-                product.specs = category.validSpecs(specs)
+                product.specs = ValidSpecs(category, specs)
                 // @ts-ignore
                 category.addProduct(product)
             }
@@ -433,10 +440,8 @@ export const ValidBag = async (req: Request, res: Response, next: NextFunction) 
         if (!bag)
             return res.status(400).send({ msg: config.err400 })
 
-        console.log("ValidBag 1")
-
-        const newBag: any[] = []
-        const bagItems: BagItem[] = []
+        const newBag: IBag[] = []
+        const bagItems: IBagItem[] = []
         var warning: string = ""
         var count: number = 0
         for (let i = 0; i < bag.length; i++) {
@@ -468,8 +473,6 @@ export const ValidBag = async (req: Request, res: Response, next: NextFunction) 
             })
             count += unit.quantity
         }
-
-        console.log("ValidBag 2")
 
         req.body.bag = newBag
         req.body.bagItems = bagItems

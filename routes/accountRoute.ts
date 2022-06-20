@@ -96,15 +96,6 @@ route.post("/account/deleteNotification", Default.Role("Customer"), Account.Dele
 route.post("/account/sendNotification", Default.Role("Admin"), Account.SendNotification)
 
 
-// header: accessToken - role: Customer
-route.get("/account/readBag", Default.Role("Customer"), Account.ReadBag)
-
-// header: accessToken - role: Customer - field: bag
-// type: 
-//      bag: object[] - [{product: string, color: string, quantity: number}] - product = product._id
-//route.post("/account/updateBag", Default.Role("Customer"), Product.ValidBag, Account.UpdateBag, Account.ReadBag)
-
-
 // header: accessToken - role: Customer - field: _id
 // type: 
 //      _id**: string

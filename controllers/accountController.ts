@@ -1,14 +1,12 @@
-import { Account, IAccount } from "../models/account";
+import { Account, AccountSurface, IAccount, IAddress, IBag, IBagItem } from "../models/account";
 import { Request, Response, NextFunction } from 'express';
 import { Document, Types } from "mongoose";
 import jwt from "jsonwebtoken";
 import argon2 from "argon2";
 import { codeCache } from "../services/cache";
-import { config } from "../services/config";
+import { config, mess, regex } from "../services/config";
 import { Bill } from "../models/bill";
-import { Product } from "../models/product";
-import { Category } from "../models/category";
-import { send } from "process";
+
 
 
 export const List = async (req: Request, res: Response, next: NextFunction) => {
@@ -27,7 +25,6 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
         if(role!=undefined)
             queryOptions['role'] = role
         
-            
         if(enable != undefined)
             queryOptions['enable'] = enable
 
@@ -49,73 +46,82 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
         const count = (req.body.skip == undefined) ? await Account.countDocuments(queryOptions) : undefined
         const result = await Account.find(queryOptions).sort(sortOptions).skip(skip).limit(limit).select("-chats -bag -bills -notifications -rate_waits -password").exec()
         if (!result)
-            return res.status(500).send({ msg: config.err500 })
+            return res.status(500).send({ msg: mess.errInternal })
 
         return res.send({ msg: config.success, data: result, count: count })
     } catch (err) {
         console.log(err)
-        return res.status(500).send({ msg: config.err500 })
+        return res.status(500).send({ msg: mess.errInternal })
     }
 }
 
 export const SignUp = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        var { email_or_phone, password, name, birth, gender, address } = req.body;
-        if (!email_or_phone || !password)
-            return res.status(400).send({ msg: config.err400 })
+        const email_or_phone: string = req.body.email_or_phone
+        var password: string = req.body.password
+        const name: string = req.body.name
+        const birth: string = req.body.birth
+        const gender: string = req.body.gender
+        const address: string = req.body.address
 
-        if (config.passwordRegEx.test(password))
-            password = await argon2.hash(password)
+        // Check field
+        var error: string = ""
+        if (!email_or_phone) error += mess.errMissField + "[Email/Phone]. " 
+        if (!password) error += mess.errMissField + "[Password]. " 
+        else if (regex.passw.test(password)) error += mess.errFormatField + "[Password]. "
+        if(!!error) return res.status(400).send({ msg: error})
+
+        // Create Account
+        password = await argon2.hash(password)
+        const data = new Account({ password, name, birth, gender, address });
+        if (config.emailRegEx.test(email_or_phone) && !(await Account.findOne({email: email_or_phone})))
+            data.email = email_or_phone
+        else if (config.phoneRegEx.test(email_or_phone) && !(await Account.findOne({phone: email_or_phone})))
+            data.phone = email_or_phone
         else
-            return res.status(400).send({ msg: config.errPassFormat })
+            return res.status(400).send({ msg: mess.errFormatField + "or " + mess.errDuplicate + "[Email/Phone]. "})
 
-        var data;
-        // @ts-ignore
-        if (config.emailRegEx.test(email_or_phone) && !(await Account.emailExists(email_or_phone)))
-            data = new Account({ email: email_or_phone, password, name, birth, gender, address });
-        // @ts-ignore
-        else if (config.phoneRegEx.test(email_or_phone) && !(await Account.phoneExists(email_or_phone)))
-            data = new Account({ phone: email_or_phone, password, name, birth, gender, address });
-        else
-            return res.status(400).send({ msg: config.errEmailFormat + " / " + config.errPhoneFormat + " or already exists." })
-
+        // Save Account
         const account = await (new Account(data)).save();
-        if (account) {
+        if (!!account) {
             // assign access token
-            console.log(account._id)
             const token = jwt.sign({ id: account._id }, process.env.ACCESS_TOKEN_SECRET!)
             res.cookie("accessToken", token, { httpOnly: false, signed: true })
-            // @ts-ignore
-            return res.send({ msg: config.success, data: await account.surface(), accessToken: token })
+            return res.send({ msg: config.success, data: await AccountSurface(account._id.toString()), accessToken: token })
         } else return res.status(400).send({ msg: config.err400 })
     } catch (err) {
         console.log(err)
-        return res.status(500).send({ msg: config.err500 })
+        return res.status(500).send({ msg: mess.errInternal })
     }
 };
 
 export const Enable = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const _id = req.body._id
-        const enable = req.body.enable
+        const _id: string = req.body._id
+        const enable: boolean = req.body.enable
 
-
-        if(!_id && enable == undefined)
-            return res.status(400).send({msg: config.err400})
+        var error = ""
+        if(!_id) error += mess.errMissField + "[_id]. "
+        if(enable == undefined) error += mess.errMissField + "[enable]. "
+        if(!!error) return res.status(400).send({msg: error})
 
         Account.findByIdAndUpdate({_id, role: "Customer"}, {enable}).exec((err) => {
-            if(err) return res.status(500).send({msg: config.err500})
-            return res.send({msg: config.success})
+            if(err) return res.status(400).send({msg: err.message})
+            return res.send({msg: mess.success})
         })
     } catch (err) {
         console.log(err)
-        return res.status(500).send({ msg: config.err500 })
+        return res.status(500).send({ msg: mess.errInternal })
     }
 };
 
 export const SignIn = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { email_or_phone, password, googleToken, code } = req.body
+        const email_or_phone: string = req.body.email_or_phone
+        var password: string = req.body.password
+        const code: string = req.body.code
+        const googleToken: string = req.body.googleToken
+
         if (email_or_phone) {
             if (password) {
                 const account = await Account.findOne({ $or: [{ email: email_or_phone }, { phone: email_or_phone }] })
@@ -123,7 +129,7 @@ export const SignIn = async (req: Request, res: Response, next: NextFunction) =>
                     const token = jwt.sign({ id: account._id }, process.env.ACCESS_TOKEN_SECRET!)
                     res.cookie("accessToken", token, { httpOnly: false, signed: true })
                     // @ts-ignore
-                    return res.send({ msg: config.success, data: await account.surface(), accessToken: token })
+                    return res.send({ msg: config.success, data: await AccountSurface(account._id), accessToken: token })
                 }
                 return res.status(400).send({ msg: config.err400 })
             } else if (code) {
@@ -133,7 +139,7 @@ export const SignIn = async (req: Request, res: Response, next: NextFunction) =>
                         const token = jwt.sign({ id: account._id }, process.env.ACCESS_TOKEN_SECRET!)
                         res.cookie("accessToken", token, { httpOnly: false, signed: true })
                         // @ts-ignore
-                        return res.send({ msg: config.success, data: await account.surface(), accessToken: token })
+                        return res.send({ msg: config.success, data: await AccountSurface(account._id), accessToken: token })
                     } else {
                         // create new account for customer
                         var data = config.emailRegEx.test(email_or_phone) ? new Account({ email: email_or_phone }) : new Account({ phone: email_or_phone })
@@ -143,7 +149,7 @@ export const SignIn = async (req: Request, res: Response, next: NextFunction) =>
                             const token = jwt.sign({ id: account._id }, process.env.ACCESS_TOKEN_SECRET!)
                             res.cookie("accessToken", token, { httpOnly: false, signed: true })
                             // @ts-ignore
-                            return res.send({ msg: config.success, data: await account.surface(), accessToken: token })
+                            return res.send({ msg: config.success, data: await AccountSurface(account._id), accessToken: token })
                         } else return res.status(400).send({ msg: config.err400 })
                     }
                 } else 
@@ -154,125 +160,112 @@ export const SignIn = async (req: Request, res: Response, next: NextFunction) =>
         }
     } catch (err) {
         console.log(err)
-        return res.status(500).send({ msg: config.err500 })
+        return res.status(500).send({ msg: mess.errInternal })
     }
 }
 
 export const Surface = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const account: any = req.body.account;
-        res.send({ msg: config.success, data: await account.surface() })
+        res.send({ msg: config.success, data: await AccountSurface(account._id) })
     } catch (err) {
         console.log(err)
-        return res.status(500).send({ msg: config.err500 })
+        return res.status(500).send({ msg: mess.errInternal })
     }
 }
 
 export const Info = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const account: any = req.body.account;
-        res.send({ msg: config.success, data: account.info })
+        res.send({ msg: config.success, data: account })
     } catch (err) {
         console.log(err)
-        return res.status(500).send({ msg: config.err500 })
+        return res.status(500).send({ msg: mess.errInternal })
     }
 }
 
 export const UpdateInfo = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { name, birth, gender, address } = req.body
-        const account: Document = req.body.account
-        account.updateOne({ name, birth, gender, address }, (err: Error) => {
-            if (err)
-                return res.status(400).send({ msg: err.message })
-            return res.send({ msg: config.success })
+        const name: string = req.body.name
+        const birth: Date = req.body.birth
+        const gender: string = req.body.gender
+        const address: IAddress = req.body.address
+        const account: Document<unknown, any, IAccount> & IAccount & { _id: Types.ObjectId; } = req.body.account
+
+        if(!!name) account.name = name
+        if(!!birth) account.birth = birth
+        if(!!gender) account.gender = gender
+        if(!!address) account.address = address
+
+        account.save((err) => {
+            if(err) return res.status(500).send({ msg: mess.errInternal })
+            return res.send({ msg: mess.success })
         })
     } catch (err) {
         console.log(err)
-        return res.status(500).send({ msg: config.err500 })
+        return res.status(500).send({ msg: mess.errInternal })
     }
 }
 
 export const UpdatePhone = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { account, phone } = req.body
-        if (account.phone == phone)
-            return res.send({ msg: "Không có gì thay đổi" })
-        // @ts-ignore
-        if (phone && config.phoneRegEx.test(phone) && !(await Account.phoneExists(phone)))
-            account.updateOne({ phone }, (_err: Error) => {
-                if (_err)
-                    return res.status(500).send({ msg: config.err500 })
-                return res.send({ msg: config.success })
-            })
-        else
-            return res.status(400).send({ msg: config.err400 });
+        const phone: string = req.body.phone
+        const account: Document<unknown, any, IAccount> & IAccount & { _id: Types.ObjectId; } = req.body.account
+
+        if (account.phone == phone) return res.send({ msg: "Không có gì thay đổi" })
+        if (!regex.phone.test(phone)) return res.status(400).send({ msg: mess.errFormatField + "[Phone]. " })
+        if (!!(await Account.findOne({phone}))) return res.status(400).send({ msg: mess.errDuplicate + "[Phone]" });
+        account.phone = phone
+        account.save((err) => {
+            if(err) return res.status(500).send({ msg: mess.errInternal })
+            return res.send({ msg: mess.success })
+        })
     } catch (err) {
         console.log(err)
-        return res.status(500).send({ msg: config.err500 })
+        return res.status(500).send({ msg: mess.errInternal })
     }
 }
 
 export const UpdatePassword = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        var { old_password, password, account } = req.body
-        if (!!old_password && !!password && config.passwordRegEx.test(password) && await argon2.verify(account.password, old_password)) {
-            password = await argon2.hash(password)
-            account.updateOne({ password }, (_err: Error) => {
-                if (_err)
-                    return res.status(500).send({ msg: config.err500 })
-                return res.send({ msg: config.success })
-            })
-        } else {
-            res.status(400).send({ msg: config.err400 })
-        }
-    } catch (err) {
-        console.log(err)
-        return res.status(500).send({ msg: config.err500 })
-    }
-}
+        const old_password: string = req.body.old_password
+        const password: string = req.body.password
+        const account: Document<unknown, any, IAccount> & IAccount & { _id: Types.ObjectId; } = req.body.account
 
-export const ReadBag = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        Account.findById(req.body.account._id).populate({
-            path:     'bag',			
-            populate: { 
-                path:  'product',
-                model: 'Product',
-                select: 'name code image_url price sale colors'
-             }
-          }).select("bag").exec((err, doc) => {
-            if (err) return res.status(500).send({ msg: config.err500 })
-            if (!doc) return res.status(400).send({ msg: config.err400 })
-            var count = 0
-            var total_price = 0
-            var total_sale = 0
-            doc.bag.forEach(e => {
-                count += e.quantity
-                // @ts-ignore
-                total_price += e.product.price * e.quantity
-                // @ts-ignore
-                total_sale += e.product.sale * e.quantity * e.product.price
-            })
-            return res.send({ msg: config.success, data: doc.bag, count, total_price, total_sale })
+        var error: string = ""
+        if (!old_password) 
+            error += mess.errMissField + "[Old Password]. "
+        else if(!(await argon2.verify(account.password, old_password))) 
+            error += mess.errMissField + "[Old Password]. " 
+        if (!password) 
+            error += mess.errMissField + "[Password]. "
+        else if (!regex.passw.test(password)) 
+            error += mess.errFormatField + "[Password]. "
+
+        if(error) return res.status(400).send({msg: error})
+
+        account.password = await argon2.hash(password)
+        account.save((err) => {
+            if(err) return res.status(500).send({ msg: mess.errInternal })
+            return res.send({ msg: mess.success })
         })
     } catch (err) {
         console.log(err)
-        return res.status(500).send({ msg: config.err500 })
+        return res.status(500).send({ msg: mess.errInternal })
     }
 }
 
 export const UpdateBag = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const bag: any[] = req.body.bag
+        const bag: IBag[] = req.body.bag
         const account = req.body.account
         account.updateOne({ bag }).exec((err: any) => {
-            if (err) return res.status(500).send({ msg: config.err500 })
+            if (err) return res.status(500).send({ msg: mess.errInternal })
             return res.send({msg: req.body.valid_bag_msg ?? config.success, count: req.body.bag_count})
         })
     } catch (err) {
         console.log(err)
-        return res.status(500).send({ msg: config.err500 })
+        return res.status(500).send({ msg: mess.errInternal })
     }
 }
 
@@ -305,7 +298,7 @@ export const PushBag = async (req: Request, res: Response, next: NextFunction) =
         next()
     } catch (err) {
         console.log(err)
-        return res.status(500).send({ msg: config.err500 })
+        return res.status(500).send({ msg: mess.errInternal })
     }
 }
 
@@ -314,13 +307,13 @@ export const ReadNotifications = async (req: Request, res: Response, next: NextF
         const skip: number = req.body.skip ?? 0
         const limit: number = req.body.limit ?? 10
         Account.findById(req.body.account._id).select("notifications").slice("notifications", [skip, limit]).exec((err, doc) => {
-            if (err) return res.status(500).send({ msg: config.err500 })
+            if (err) return res.status(500).send({ msg: mess.errInternal })
             if (!doc) return res.status(400).send({ msg: config.err400 })
             return res.send({ msg: config.success, data: doc.notifications })
         })
     } catch (err) {
         console.log(err)
-        return res.status(500).send({ msg: config.err500 })
+        return res.status(500).send({ msg: mess.errInternal })
     }
 }
 
@@ -333,13 +326,13 @@ export const DeleteNotification = async (req: Request, res: Response) => {
         }).exec((err: any) => {
             if (err) {
                 console.log(err)
-                return res.status(500).send({ msg: config.err500 })
+                return res.status(500).send({ msg: mess.errInternal })
             }
             return res.send({ msg: config.success })
         });
     } catch (err) {
         console.log(err)
-        return res.status(500).send({ msg: config.err500 })
+        return res.status(500).send({ msg: mess.errInternal })
     }
 }
 
@@ -357,14 +350,14 @@ export const SendNotification = async (req: Request, res: Response) => {
         return res.status(400).send({ msg: config.err400 })
     } catch (err) {
         console.log(err)
-        return res.status(500).send({ msg: config.err500 })
+        return res.status(500).send({ msg: mess.errInternal })
     }
 }
 
 export const ReadBills = async (req: Request, res: Response) => {
     const account: IAccount = req.body.account
     Bill.find({_id: {$in: account.bills}}).select("-products -account").exec((err, docs) => {
-        if(err) return res.status(500).send({msg: config.err500})
+        if(err) return res.status(500).send({msg: mess.errInternal})
         var result = {
             'Preparing': [], 
             'Delivering': [],

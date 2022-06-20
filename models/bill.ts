@@ -13,13 +13,13 @@ export interface IBill {
     },
 
     // Bill Info
-    products: [{
+    products: {
         product: Types.ObjectId,
         color: string
         quantity: number,
         price: number,
-        sale?: number
-    }],
+        sale: number
+    }[],
     discountCode?: string,
     status: string,
     desc: string,
@@ -30,7 +30,7 @@ export interface IBill {
 
     refund: boolean,
     verify: boolean,
-    paid: boolean,
+    paid: boolean, 
 
     // Timestamps
     createdAt: Date,
@@ -79,9 +79,9 @@ export const billSchema = new Schema<IBill>({
         },
         default: 'Preparing'
     },
-    
+
     refund: Boolean,
-    paid: Boolean,
+    paid: {type: Boolean, default: false},
     ship: {type: Number, required: true}, 
     total: {type: Number, required: true}, 
     discount: {type: Number, required: true}, 

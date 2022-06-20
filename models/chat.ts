@@ -6,11 +6,11 @@ export interface IChat {
     _id: Types.ObjectId,
     customer: Types.ObjectId,
     saler: Types.ObjectId,
-    messages: [{
+    messages: {
         isCustomer: boolean,
         message: String,
         createdAt: Date
-    }],
+    }[],
     createdAt: Date,
     updatedAt: Date
 }
