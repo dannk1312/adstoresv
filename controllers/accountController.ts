@@ -8,7 +8,6 @@ import { config, mess, regex } from "../services/config";
 import { Bill } from "../models/bill";
 
 
-
 export const List = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const skip: number = req.body.skip ?? 0

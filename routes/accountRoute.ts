@@ -2,6 +2,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import * as Account from '../controllers/accountController';
 import * as Default from '../controllers/defaultController';
 import * as Product from '../controllers/productController';
+import { mess } from '../services/config';
 
 const route = express.Router();
 
@@ -79,7 +80,6 @@ route.post("/account/updatePhone", Default.Role("All"), Default.OTPCheck, Accoun
 //      password**: string
 route.post("/account/updatePassword", Default.Role("All"), Account.UpdatePassword)
 
-
 // header: accessToken - role: Customer
 route.get("/account/readNotifications", Default.Role("Customer"), Account.ReadNotifications)
 
@@ -95,16 +95,13 @@ route.post("/account/deleteNotification", Default.Role("Customer"), Account.Dele
 // rule: dest_id**, message**
 route.post("/account/sendNotification", Default.Role("Admin"), Account.SendNotification)
 
-
 // header: accessToken - role: Customer - field: _id
 // type: 
 //      _id**: string
-route.post("/account/pushBag", Default.Role("Customer"), Account.PushBag, Product.ValidBag, Account.TryUpdateBag)
-
+route.post("/account/pushBag", Default.Role("Customer"), Account.PushBag, Product.ValidBag, Account.TryUpdateBag, (req, res) => { res.send({msg: mess.success})})
 
 // header: accessToken - role: Customer
 route.post("/account/readBills", Default.Role("Customer"), Account.ReadBills)
-
 
 
 export const accountRoute = route
