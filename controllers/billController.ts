@@ -2,7 +2,7 @@ import e, { Request, Response, NextFunction } from 'express';
 import axios from 'axios';
 import { Product } from '../models/product';
 import { config } from '../services/config';
-import { Discount } from '../models/discount';
+import { Discount, IDiscount } from '../models/discount';
 import { Bill } from '../models/bill';
 import { Account, IAccount, IBagItem } from '../models/account';
 import mongoose from 'mongoose';
@@ -34,13 +34,17 @@ const shipCalculate = async (address: { province: string, district: string, addr
 }
 
 const discountCalculate = async (code: string, bagItems: IBagItem[], total: number, ship: number, account_id: string = "") => {
-    var result: { error: string, value: number } = { error: "", value: 0 }
+    var result: { 
+        error: string, 
+        value: number, 
+        doc: mongoose.Document<unknown, any, IDiscount> & IDiscount | undefined 
+    } = { error: "", value: 0, doc: undefined }
     if (!code) return result
     const discount = await Discount.findOne({ code })
     if (!discount) { result.error += "Mã discount không tồn tại. "; return result }
-    if (discount.quantity == 0) { result.error += "Mã discount hết số lượng. "; return result }
-    if (discount.is_oic && !!discount.used && discount.used.hasOwnProperty(account_id)) { result.error += "Mã discount không thể sử dụng nhiều lần. "; return result }
-    if (discount.is_oid && !!discount.used && discount.used.hasOwnProperty(account_id) && (Date.now() - discount.used[account_id]) < 86400000) { result.error += "Mã discount không thể sử dụng nhiều lần trong 24h. "; return result }
+    if (discount.quantity <= 0) { result.error += "Mã discount hết số lượng. "; return result }
+    if (discount.is_oic && discount.used.hasOwnProperty(account_id)) { result.error += "Mã discount không thể sử dụng nhiều lần. "; return result }
+    if (discount.is_oid && discount.used.hasOwnProperty(account_id) && (Date.now() - discount.used[account_id]) < 86400000) { result.error += "Mã discount không thể sử dụng nhiều lần trong 24h. "; return result }
     if (total < discount.minPrice) { result.error += `Mã discount chỉ áp dụng cho đơn hàng > ${discount.minPrice}. `; return result }
 
     // @ts-ignore
@@ -58,6 +62,7 @@ const discountCalculate = async (code: string, bagItems: IBagItem[], total: numb
     if (discount.is_ship) result.value = Math.min(discount.is_percent ? temp * ship : temp, discount.maxPrice, ship)
     else result.value = Math.min(discount.is_percent ? temp * total / 100 : temp, discount.maxPrice, total)
 
+    result.doc = discount
     return result
 }
 
@@ -151,6 +156,7 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
         var result_discount = await discountCalculate(discountCode, bagItems, total, ship, account!._id.toString() ?? "")
         var reduce: number = result_discount.value
         warning += result_discount.error
+        const discount = result_discount.doc
 
         const products: any[] = []
         bagItems.forEach(i => products.push({ product: i.product, color: i.color, quantity: i.quantity, price: i.price, sale: i.sale }))
@@ -166,6 +172,15 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
 
             if (!billDoc || !accountDoc)
                 throw Error("Liên kết bill và account lỗi")
+
+            // update discount
+            if(!!discount) {
+                if(!!discount.quantity) {
+                    discount.quantity -= 1
+                } 
+                discount.used[account._id.toString()] = Date.now()
+
+            }
 
             for (let i = 0; i < products.length; i++) {
                 const e = products[i]
