@@ -9,6 +9,8 @@ import mongoose from 'mongoose';
 import { formatDate, fromObject, sortObject } from '../services/support';
 import querystring from 'qs';
 import crypto from "crypto";
+import { SendMail, SendSMS } from '../services/sender';
+import { SendNotification, SendNotificationsFunc } from './accountController';
 
 const shipCalculate = async (address: { province: string, district: string, address: string } | undefined, weight: number, value: number) => {
     var result: { error: string, value: number } = { error: "", value: 0 }
@@ -171,7 +173,7 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
         try {
             const opts = { session };
             const billDoc = await bill.save(opts)
-            const accountDoc = await account.updateOne({ $push: { bills: billDoc._id } }, opts).exec()
+            const accountDoc = await account.updateOne({ $push: { bills: billDoc._id }, bag: [] }, opts).exec()
 
             if (!billDoc || !accountDoc)
                 throw Error("Liên kết bill và account lỗi")
@@ -196,6 +198,9 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
 
             await session.commitTransaction();
             session.endSession();
+            if(!!account.email) SendMail(account.email, "Tạo Đơn Hàng Thành Công", "Mã đơn: " + billDoc._id)
+            SendSMS("Tạo Đơn Hàng Thành Công, Mã đơn: " + billDoc._id, phone)
+            SendNotificationsFunc(account._id.toString(), "Tạo Đơn Hàng Thành Công, Mã đơn: " + billDoc._id)
             if (cod == true)
                 return res.send({ msg: config.success })
             else {
@@ -226,7 +231,7 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
         if (!_id || !status)
             return res.status(400).send({ msg: config.err400 })
 
-        const bill = await Bill.findById(_id)
+        const bill = await Bill.findById(_id).populate("account", "phone email").exec()
         if (!bill)
             return res.status(400).send({ msg: config.errNotExists })
 
@@ -293,6 +298,11 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
 
             await session.commitTransaction();
             session.endSession();
+            const message = "Đơn hàng "+ billDoc._id+ " chuyển sang trạng thái " + billDoc.status
+            // @ts-ignore
+            if(!!bill.account.email) SendMail(bill.account.email, "Trạng Thái Đơn Hàng " + billDoc._id, message)
+            SendSMS(message, bill.phone)
+            SendNotificationsFunc(bill.account._id.toString(), message)
             return res.send({ msg: config.success })
         } catch (error) {
             await session.abortTransaction();
@@ -428,22 +438,35 @@ export const CheckVNPay = async (req: Request, res: Response, next: NextFunction
         var rspCode = vnp_Params['vnp_ResponseCode'];
 
         //Kiem tra du lieu co hop le khong, cap nhat trang thai don hang va gui ket qua cho VNPAY theo dinh dang duoi
-        const bill = await Bill.findById(orderId)
+        const bill = await Bill.findById(orderId).populate("account", "phone email").exec()
         if (!!bill) {
+            var message = ""
             if (rspCode == '00') {
                 bill.verify = true
                 bill.paid = true
                 bill.desc = "Thanh toán online thành công. "
-                if(!(await bill.save()))
-                    console.log("Bill " + bill._id + " thanh toán hoàn tất nhưng cập nhật thất bại. ")
+                if(!(await bill.save())) {
+                    message = "Bill " + bill._id + " thanh toán hoàn tất nhưng cập nhật thất bại. "
+                    console.log(message)
+                    message += "Bạn nhanh chóng liên hệ chuyên viên tư vấn của chúng tôi để được giải quyết nhanh nhất. "
+                } else 
+                    message = "Bill " + bill._id + " thanh toán hoàn tất"
                 res.status(200).json({ RspCode: '00', Message: 'success' })
             }
             else {
                 bill.desc = "Thanh toán online thất bại. Việc thanh toán sẽ chuyển sang trực tiếp. "
-                if(!(await bill.save()))
-                    console.log("Bill " + bill._id + " không thanh toán hoàn tất nhưng hủy bill thất bại. ")
+                if(!(await bill.save())) {
+                    message = "Bill " + bill._id + " không thanh toán hoàn tất nhưng hủy bill thất bại. "
+                    console.log(message)
+                    message += "Bạn nhanh chóng liên hệ chuyên viên tư vấn của chúng tôi để được giải quyết nhanh nhất. "
+                } else 
+                    message = "Bill " + bill._id + " thanh toán thất bại, đơn hàng chuyển sang trả tiền mặt. "
                 res.status(200).json({ RspCode: rspCode, Message: 'Thanh toán không hoàn tất. ' })
             }
+            // @ts-ignore
+            if(!!bill.account.email) SendMail(bill.account.email, "Thanh Toán Đơn Hàng " + billDoc._id, message)
+            SendSMS(message, bill.phone)
+            SendNotificationsFunc(bill.account._id.toString(), message)
         } else
             res.status(200).json({ RspCode: rspCode, Message: 'Bill không tồn tại. ' })
     }
