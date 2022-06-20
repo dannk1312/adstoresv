@@ -59,7 +59,7 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
         const max_price: number = req.body.max_price ?? 1000000000
         const colors: string[] = req.body.colors
         const skip: number = req.body.skip ?? 0
-        const limit: number = req.body.limit ?? 20
+        const limit: number = req.body.limit ?? 10000
 
         const sortName: string = req.body.sortName
         const sortType: number = req.body.sortType

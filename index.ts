@@ -37,7 +37,7 @@ app.use(productRoute)
 app.use(adminRoute)
 app.use(socialRoute)
 
-app.use("/test", (req: Request, res: Response) => {
+app.use("/", (req: Request, res: Response) => {
   res.send(req.protocol + "://" + req.hostname);
 })
 

@@ -18,7 +18,8 @@ const RandomCode = (): string => {
 }
 
 export const SpecsSplitter = (req: Request, res: Response, next: NextFunction) => {
-    const specs = req.body.specs
+    const specs: {name: string, values: string}[] = req.body.specs
+    const colors: string = req.body.colors
     if (!!specs && Array.isArray(specs)) {
         const temp: any = {}
         specs.forEach(s => {
@@ -27,6 +28,7 @@ export const SpecsSplitter = (req: Request, res: Response, next: NextFunction) =
         })
         req.body.specs = temp
     }
+    if(!!colors) req.body.colors = colors.split(';').map(e => e.trim())
     next()
 }
 

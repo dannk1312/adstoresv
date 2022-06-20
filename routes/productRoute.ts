@@ -17,7 +17,7 @@ route.post("/product/commingSoon", Product.CommingSoon)
 // type:
 //      category: string
 //      specs: object - {name: string, value: any[]} - undefine = all | or | [{name: string, values: string}]
-//      colors: string[] - undefine = all
+//      colors: string - undefine = all - colors: "white;blue"
 //      min_price: number - undefine = 0
 //      max_price: number - undefine = 1000000000
 //      skip: number - undefine = 0
@@ -29,7 +29,7 @@ route.post("/product/commingSoon", Product.CommingSoon)
 //      sortType và sortName hiệu quả khi đi với nhau
 // example
 //      "name": "Laptop",
-//      "specs": {"Ram": ["8gb", "16gb"], "Display": ["1920x1080"]},
+//      "specs": {name: "Ram", values:"8gb;16gb"},
 //      "colors": ["Red"],
 //      "max_price": 65000000
 // if skip == undefine => trả về count để phân trang

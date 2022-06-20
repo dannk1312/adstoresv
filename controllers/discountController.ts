@@ -179,3 +179,25 @@ export const Read = async (req: Request, res: Response, next: NextFunction) => {
     desc += discount.is_oic?"Mỗi khách hàng chỉ dùng 1 lần. \n":"Không có giới hạn sử dụng đối với khách hàng. \n"
     return res.send({msg: mess.success, data: {code, desc}})
 }
+
+export const Links = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const _id: string = req.body._id
+        const code: string = req.body.code
+        const field: string = req.body.field
+    
+        if (!_id && !code) return res.status(400).send({ msg: mess.errMissField + "[_id/code]. " })
+        if (!field) return res.status(400).send({ msg: mess.errMissField + "[field]. " })
+        if (!["accounts", "products", "categories"].includes(field)) return res.status(400).send({ msg: mess.errWrongField + "[field]. " })
+        
+        const discount = await Discount.findOne({ $or: [{ _id: _id }, { code: code }] })
+                                        .select(field)
+                                        .populate(field, 'name email phone code')
+                                        .exec()
+        if (!discount) return res.status(400).send({ msg: mess.errWrongField + "[_id/code]. " })
+        return res.send({msg: mess.success, doc: discount.accounts})
+    } catch (err) {
+        console.log(err)
+        return res.status(500).send({msg: mess.errInternal})
+    }
+}

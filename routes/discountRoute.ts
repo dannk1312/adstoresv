@@ -54,4 +54,20 @@ route.post("/discount/update", Default.Role("Admin"), Discount.Update)
 
 route.post("/discount/list", Default.Role("Admin"), Discount.List)
 
+// header: accessToken - role: Admin - field: _id, code
+// type:
+//      _id: string
+//      code: string
+
+route.post("/discount/read", Discount.Read)
+
+// header: accessToken - role: Admin - field: _id, code
+// type:
+//      _id: string
+//      code: string
+//      field**: string
+// rule: (_id | doc)**
+
+route.post("/discount/read", Default.Role("Admin"), Discount.Links)
+
 export const discountRoute = route
