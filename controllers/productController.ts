@@ -6,7 +6,7 @@ import * as image from "../services/image";
 import { Category, ValidSpecs } from "../models/category";
 import { IProduct, Product } from "../models/product";
 import { Import } from "../models/import";
-import { Account, IBag, IBagItem } from "../models/account";
+import { Account, IAccount, IBag, IBagItem } from "../models/account";
 import { Bill } from "../models/bill";
 
 
@@ -436,10 +436,11 @@ export const Imports = async (req: Request, res: Response, next: NextFunction) =
 
 export const ValidBag = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const bag: {product: string, color: string, quantity: number}[] = req.body.bag
-        if (!bag)
-            return res.status(400).send({ msg: config.err400 })
-
+        var bag: IBag[] = req.body.bag
+        const account: IAccount = req.body.account
+        if (!bag) bag = account?.bag
+        if (!bag) return res.status(400).send({ msg: config.err400 })
+        
         const newBag: IBag[] = []
         const bagItems: IBagItem[] = []
         var warning: string = ""

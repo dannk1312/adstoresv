@@ -71,10 +71,7 @@ export const GetAccount = async (req: Request, res: Response, next: NextFunction
         // @ts-ignore
         const id: string = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!).id;
         const account = await AccountInfo(id)
-        if (!!account) {
-            req.body.account = account;
-            req.body.bag = account.bag
-        }
+        if (!!account) req.body.account = account
         next();
     } catch (err) {
         console.log(err)
