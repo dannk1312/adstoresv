@@ -440,7 +440,7 @@ export const ValidBag = async (req: Request, res: Response, next: NextFunction) 
         const account: IAccount = req.body.account
         if (!bag) bag = account?.bag
         if (!bag) return res.status(400).send({ msg: config.err400 })
-        
+
         const newBag: IBag[] = []
         const bagItems: IBagItem[] = []
         var warning: string = ""

@@ -70,8 +70,6 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
         const phone: string = req.body.phone
         var warning: string = req.body.warning
 
-        if (!bagItems || bagItems.length == 0)
-            return res.status(400).send({ msg: "Giỏ hàng rỗng. " + warning })
         if (!account && !!phone)
             account = await Account.findOne({ phone })
 

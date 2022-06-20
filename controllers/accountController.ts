@@ -12,7 +12,7 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const skip: number = req.body.skip ?? 0
         const limit: number = req.body.limit ?? 10000
-        const search: string = req.body.string 
+        const search: string = req.body.string
         const role: string = req.body.role
         const enable: boolean = req.body.enable
         const sortName: string = req.body.sortName
@@ -21,16 +21,16 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
         var sortOptions: any = {}
         var queryOptions: any = {}
 
-        if(role!=undefined)
+        if (role != undefined)
             queryOptions['role'] = role
-        
-        if(enable != undefined)
+
+        if (enable != undefined)
             queryOptions['enable'] = enable
 
         if (!!sortName && ["self_cancel", "createAt", "bills"].includes(sortName) && (sortType == 1 || sortType == -1)) {
             sortOptions[sortName] = sortType
         }
-        if(!!search) {
+        if (!!search) {
             const pattern = { $regex: '.*' + search + '.*', $options: "i" }
             queryOptions['$or'] = [
                 { name: pattern },
@@ -65,20 +65,20 @@ export const SignUp = async (req: Request, res: Response, next: NextFunction) =>
 
         // Check field
         var error: string = ""
-        if (!email_or_phone) error += mess.errMissField + "[Email/Phone]. " 
-        if (!password) error += mess.errMissField + "[Password]. " 
+        if (!email_or_phone) error += mess.errMissField + "[Email/Phone]. "
+        if (!password) error += mess.errMissField + "[Password]. "
         else if (regex.passw.test(password)) error += mess.errFormatField + "[Password]. "
-        if(!!error) return res.status(400).send({ msg: error})
+        if (!!error) return res.status(400).send({ msg: error })
 
         // Create Account
         password = await argon2.hash(password)
         const data = new Account({ password, name, birth, gender, address });
-        if (config.emailRegEx.test(email_or_phone) && !(await Account.findOne({email: email_or_phone})))
+        if (config.emailRegEx.test(email_or_phone) && !(await Account.findOne({ email: email_or_phone })))
             data.email = email_or_phone
-        else if (config.phoneRegEx.test(email_or_phone) && !(await Account.findOne({phone: email_or_phone})))
+        else if (config.phoneRegEx.test(email_or_phone) && !(await Account.findOne({ phone: email_or_phone })))
             data.phone = email_or_phone
         else
-            return res.status(400).send({ msg: mess.errFormatField + "or " + mess.errDuplicate + "[Email/Phone]. "})
+            return res.status(400).send({ msg: mess.errFormatField + "or " + mess.errDuplicate + "[Email/Phone]. " })
 
         // Save Account
         const account = await (new Account(data)).save();
@@ -100,13 +100,13 @@ export const Enable = async (req: Request, res: Response, next: NextFunction) =>
         const enable: boolean = req.body.enable
 
         var error = ""
-        if(!_id) error += mess.errMissField + "[_id]. "
-        if(enable == undefined) error += mess.errMissField + "[enable]. "
-        if(!!error) return res.status(400).send({msg: error})
+        if (!_id) error += mess.errMissField + "[_id]. "
+        if (enable == undefined) error += mess.errMissField + "[enable]. "
+        if (!!error) return res.status(400).send({ msg: error })
 
-        Account.findByIdAndUpdate({_id, role: "Customer"}, {enable}).exec((err) => {
-            if(err) return res.status(400).send({msg: err.message})
-            return res.send({msg: mess.success})
+        Account.findByIdAndUpdate({ _id, role: "Customer" }, { enable }).exec((err) => {
+            if (err) return res.status(400).send({ msg: err.message })
+            return res.send({ msg: mess.success })
         })
     } catch (err) {
         console.log(err)
@@ -151,7 +151,7 @@ export const SignIn = async (req: Request, res: Response, next: NextFunction) =>
                             return res.send({ msg: config.success, data: await AccountSurface(account._id), accessToken: token })
                         } else return res.status(400).send({ msg: config.err400 })
                     }
-                } else 
+                } else
                     return res.status(400).send({ msg: config.err400 })
             }
         } else {
@@ -191,13 +191,13 @@ export const UpdateInfo = async (req: Request, res: Response, next: NextFunction
         const address: IAddress = req.body.address
         const account: Document<unknown, any, IAccount> & IAccount & { _id: Types.ObjectId; } = req.body.account
 
-        if(!!name) account.name = name
-        if(!!birth) account.birth = birth
-        if(!!gender) account.gender = gender
-        if(!!address) account.address = address
+        if (!!name) account.name = name
+        if (!!birth) account.birth = birth
+        if (!!gender) account.gender = gender
+        if (!!address) account.address = address
 
         account.save((err) => {
-            if(err) return res.status(500).send({ msg: mess.errInternal })
+            if (err) return res.status(500).send({ msg: mess.errInternal })
             return res.send({ msg: mess.success })
         })
     } catch (err) {
@@ -213,10 +213,10 @@ export const UpdatePhone = async (req: Request, res: Response, next: NextFunctio
 
         if (account.phone == phone) return res.send({ msg: "Không có gì thay đổi" })
         if (!regex.phone.test(phone)) return res.status(400).send({ msg: mess.errFormatField + "[Phone]. " })
-        if (!!(await Account.findOne({phone}))) return res.status(400).send({ msg: mess.errDuplicate + "[Phone]" });
+        if (!!(await Account.findOne({ phone }))) return res.status(400).send({ msg: mess.errDuplicate + "[Phone]" });
         account.phone = phone
         account.save((err) => {
-            if(err) return res.status(500).send({ msg: mess.errInternal })
+            if (err) return res.status(500).send({ msg: mess.errInternal })
             return res.send({ msg: mess.success })
         })
     } catch (err) {
@@ -232,20 +232,20 @@ export const UpdatePassword = async (req: Request, res: Response, next: NextFunc
         const account: Document<unknown, any, IAccount> & IAccount & { _id: Types.ObjectId; } = req.body.account
 
         var error: string = ""
-        if (!old_password) 
+        if (!old_password)
             error += mess.errMissField + "[Old Password]. "
-        else if(!(await argon2.verify(account.password, old_password))) 
-            error += mess.errMissField + "[Old Password]. " 
-        if (!password) 
+        else if (!(await argon2.verify(account.password, old_password)))
+            error += mess.errMissField + "[Old Password]. "
+        if (!password)
             error += mess.errMissField + "[Password]. "
-        else if (!regex.passw.test(password)) 
+        else if (!regex.passw.test(password))
             error += mess.errFormatField + "[Password]. "
 
-        if(error) return res.status(400).send({msg: error})
+        if (error) return res.status(400).send({ msg: error })
 
         account.password = await argon2.hash(password)
         account.save((err) => {
-            if(err) return res.status(500).send({ msg: mess.errInternal })
+            if (err) return res.status(500).send({ msg: mess.errInternal })
             return res.send({ msg: mess.success })
         })
     } catch (err) {
@@ -258,7 +258,7 @@ export const TryUpdateBag = async (req: Request, res: Response, next: NextFuncti
     try {
         const bag: IBag[] = req.body.bag
         const account = req.body.account
-        if(!!account && !(await account.updateOne({bag}).exec()))
+        if (!!account && !(await account.updateOne({ bag }).exec()))
             return res.status(500).send({ msg: mess.errInternal })
         next()
     } catch (err) {
@@ -274,24 +274,24 @@ export const PushBag = async (req: Request, res: Response, next: NextFunction) =
         const quantity: number = req.body.quantity
         const account = req.body.account
 
-        if(!_id || !color || !quantity)
-            return res.status(400).send({msg: config.err400})
-        
+        if (!_id || !color || !quantity)
+            return res.status(400).send({ msg: config.err400 })
+
         const accountDoc = await Account.findById(account._id).select("bag").exec()
-        if(accountDoc == null)
+        if (accountDoc == null)
             throw Error("")
-        
+
         var flag = false
-        for(let i = 0; i < accountDoc.bag.length ; i++) {
-            if(accountDoc.bag[i].product.toString() == _id && accountDoc.bag[i].color == color) {
+        for (let i = 0; i < accountDoc.bag.length; i++) {
+            if (accountDoc.bag[i].product.toString() == _id && accountDoc.bag[i].color == color) {
                 flag = true;
-                accountDoc.bag[i].quantity+=quantity;
+                accountDoc.bag[i].quantity += quantity;
                 break;
             }
         }
-        if(!flag) {
-            accountDoc.bag.push({product: new Types.ObjectId(_id), color, quantity})
-        }  
+        if (!flag) {
+            accountDoc.bag.push({ product: new Types.ObjectId(_id), color, quantity })
+        }
         req.body.bag = accountDoc.bag
         next()
     } catch (err) {
@@ -354,16 +354,16 @@ export const SendNotification = async (req: Request, res: Response) => {
 
 export const ReadBills = async (req: Request, res: Response) => {
     const account: IAccount = req.body.account
-    Bill.find({_id: {$in: account.bills}}).select("-products -account").exec((err, docs) => {
-        if(err) return res.status(500).send({msg: mess.errInternal})
+    Bill.find({ _id: { $in: account.bills } }).select("-products -account").exec((err, docs) => {
+        if (err) return res.status(500).send({ msg: mess.errInternal })
         var result = {
-            'Preparing': [], 
+            'Preparing': [],
             'Delivering': [],
-            'Done': [], 
+            'Done': [],
             'Cancel': []
         }
         // @ts-ignore
         docs.forEach((e) => result[e.status].push(e))
-        return res.send({msg: config.success, data: result})
+        return res.send({ msg: config.success, data: result })
     })
 }
