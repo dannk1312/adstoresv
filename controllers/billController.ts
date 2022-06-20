@@ -377,7 +377,7 @@ export const RequestVNPay = async (req: Request, res: Response, next: NextFuncti
     vnp_Params['vnp_OrderInfo'] = "Thanh toan bill " + bill_id;
     vnp_Params['vnp_OrderType'] = 110000;
     vnp_Params['vnp_Amount'] = amount * 100;
-    vnp_Params['vnp_ReturnUrl'] = returnUrl;
+    vnp_Params['vnp_ReturnUrl'] = `${req.protocol}://${req.hostname}/vnpay_ipn`;
     vnp_Params['vnp_IpAddr'] = ipAddr;
     vnp_Params['vnp_CreateDate'] = createDate;
 

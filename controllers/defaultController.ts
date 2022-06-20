@@ -23,7 +23,7 @@ export const SpecsSplitter = (req: Request, res: Response, next: NextFunction) =
         const temp: any = {}
         specs.forEach(s => {
             // @ts-ignore
-            temp[s.name] = s.values.split(',').map(e => e.trim())
+            temp[s.name] = s.values.split(';').map(e => e.trim())
         })
         req.body.specs = temp
     }

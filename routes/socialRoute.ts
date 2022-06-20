@@ -38,4 +38,12 @@ route.post("/comment/list", Default.Role(["Sale", "Admin"]), Social.ListComments
 //       _ids: string[]
 route.post("/comment/delete", Default.Role(["Sale", "Admin"]), Social.DeleteComments)
 
+// header: accessToken - role: Sale, Admin - field: emails, subject, message
+// type: 
+//       emails: string[]
+//       subject: string
+//       message: string
+route.post("/emails/send", Default.Role(["Sale", "Admin"]), Social.SendListEmails)
+
+
 export const socialRoute = route

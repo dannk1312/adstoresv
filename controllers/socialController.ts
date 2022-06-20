@@ -7,6 +7,7 @@ import { codeCache } from "../services/cache";
 import { config, mess, regex } from "../services/config";
 import { Bill } from "../models/bill";
 import { Social } from "../models/social";
+import { SendMail } from "../services/sender";
 
 const SocialId = async () => {
     try {
@@ -124,5 +125,24 @@ export const ListComments = async (req: Request, res: Response, next: NextFuncti
     } catch(err) {
         console.log(err)
         return res.status(500).send({msg: mess.errInternal})
+    }
+}
+
+export const SendListEmails = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const emails: string[] = req.body.emails
+        const subject: string = req.body.subject
+        const message: string = req.body.message
+
+        var error = ""
+        if(!emails) error += mess.errMissField + "[emails]. "
+        if(!subject) error += mess.errMissField + "[subject]. "
+        if(!message) error += mess.errMissField + "[message]. "
+        emails.forEach(email => {
+            SendMail(email, subject, message)
+        })
+    } catch(err) {
+        console.log(err)
+        return res.status(500)
     }
 }
