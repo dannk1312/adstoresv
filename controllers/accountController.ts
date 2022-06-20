@@ -255,14 +255,13 @@ export const UpdatePassword = async (req: Request, res: Response, next: NextFunc
     }
 }
 
-export const UpdateBag = async (req: Request, res: Response, next: NextFunction) => {
+export const TryUpdateBag = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const bag: IBag[] = req.body.bag
         const account = req.body.account
-        account.updateOne({ bag }).exec((err: any) => {
-            if (err) return res.status(500).send({ msg: mess.errInternal })
-            return res.send({msg: req.body.valid_bag_msg ?? config.success, count: req.body.bag_count})
-        })
+        if(!!account && !(await account.updateOne({bag}).exec()))
+            return res.status(500).send({ msg: mess.errInternal })
+        next()
     } catch (err) {
         console.log(err)
         return res.status(500).send({ msg: mess.errInternal })

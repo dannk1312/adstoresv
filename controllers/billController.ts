@@ -83,6 +83,7 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
             weight += e.quantity * 500 // 500gr for each obj
         })
 
+        console.log(address?.address)
         if(!address) address = account?.address
         var result_ship = await shipCalculate(address, weight, total)
         var ship: number = result_ship.value

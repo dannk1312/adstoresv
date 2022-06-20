@@ -99,7 +99,7 @@ route.post("/account/sendNotification", Default.Role("Admin"), Account.SendNotif
 // header: accessToken - role: Customer - field: _id
 // type: 
 //      _id**: string
-route.post("/account/pushBag", Default.Role("Customer"), Account.PushBag, Product.ValidBag, Account.UpdateBag)
+route.post("/account/pushBag", Default.Role("Customer"), Account.PushBag, Product.ValidBag, Account.TryUpdateBag)
 
 
 // header: accessToken - role: Customer

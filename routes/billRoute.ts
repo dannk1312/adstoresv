@@ -2,6 +2,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import * as Default from '../controllers/defaultController';
 import * as Bill from '../controllers/billController';
 import * as Product from '../controllers/productController';
+import * as Account from '../controllers/accountController';
 import { sortObject } from '../services/support';
 
 const route = express.Router();
@@ -11,7 +12,7 @@ const route = express.Router();
 //      bag: object[] - [{product: string, color: string, quantity: number}] - product = product._id
 //      address: object - {province: string, district: string, address: string}
 //      discountCode: string
-route.post("/bill/billCalc", Default.GetAccount, Product.ValidBag, Bill.Calculate)
+route.post("/bill/billCalc", Default.GetAccount, Product.ValidBag, Account.TryUpdateBag, Bill.Calculate)
 
 // header: accessToken - role: Customer - field: bag, discountCode, address, cod
 // type:
