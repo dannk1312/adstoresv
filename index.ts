@@ -38,7 +38,7 @@ app.use(adminRoute)
 app.use(socialRoute)
 
 app.use("/test", (req: Request, res: Response) => {
-  res.send(req.protocol + req.hostname);
+  res.send(req.protocol + "://" + req.hostname);
 })
 
 app.listen(port, () => {
