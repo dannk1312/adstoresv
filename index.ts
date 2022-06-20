@@ -37,8 +37,8 @@ app.use(productRoute)
 app.use(adminRoute)
 app.use(socialRoute)
 
-app.use("/", (req: Request, res: Response) => {
-  res.send(req.hostname);
+app.use("/test", (req: Request, res: Response) => {
+  res.send(req.protocol + req.hostname);
 })
 
 app.listen(port, () => {
