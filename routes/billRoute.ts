@@ -16,10 +16,12 @@ route.post("/bill/billCalc", Default.GetAccount, Product.ValidBag, Account.TryUp
 
 // header: accessToken - role: Customer - field: bag, discountCode, address, cod
 // type:
-//      bag: object[] - [{product: string, color: string, quantity: number}] - product = product._id
-//      address: object - {province: string, district: string, address: string}
+//      bag**: object[] - [{product: string, color: string, quantity: number}] - product = product._id
+//      address**: object - {province: string, district: string, address: string}
 //      discountCode: string
-//      cod: boolean 
+//      cod**: boolean 
+//      phone**: string
+//      name: string
 route.post("/bill/create", Default.GetAccount, Product.ValidBag, Bill.Create, Bill.RequestVNPay)
 
 route.get('/vnpay_ipn', Bill.CheckVNPay);
