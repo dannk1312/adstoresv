@@ -39,12 +39,14 @@ const discountCalculate = async (code: string, bagItems: IBagItem[], total: numb
         value: number, 
         doc: mongoose.Document<unknown, any, IDiscount> & IDiscount | undefined 
     } = { error: "", value: 0, doc: undefined }
+
+    // validate
     if (!code) return result
     const discount = await Discount.findOne({ code })
     if (!discount) { result.error += "Mã discount không tồn tại. "; return result }
     if (discount.quantity <= 0) { result.error += "Mã discount hết số lượng. "; return result }
     if (discount.is_oic && discount.used.hasOwnProperty(account_id)) { result.error += "Mã discount không thể sử dụng nhiều lần. "; return result }
-    if (discount.is_oid && discount.used.hasOwnProperty(account_id) && (Date.now() - discount.used[account_id]) < 86400000) { result.error += "Mã discount không thể sử dụng nhiều lần trong 24h. "; return result }
+    if (discount.is_oid && discount.used.hasOwnProperty(account_id) && (Date.now() - discount.used[account_id]) < config.daylong) { result.error += "Mã discount không thể sử dụng nhiều lần trong 24h. "; return result }
     if (total < discount.minPrice) { result.error += `Mã discount chỉ áp dụng cho đơn hàng > ${discount.minPrice}. `; return result }
 
     // @ts-ignore
@@ -58,6 +60,7 @@ const discountCalculate = async (code: string, bagItems: IBagItem[], total: numb
         if (!!item) { result.error += `Mã discount không thể áp dụng cho ${item.category}. `; return result }
     }
 
+    // calc
     var temp = discount.value
     if (discount.is_ship) result.value = Math.min(discount.is_percent ? temp * ship : temp, discount.maxPrice, ship)
     else result.value = Math.min(discount.is_percent ? temp * total / 100 : temp, discount.maxPrice, total)
@@ -376,7 +379,6 @@ export const RequestVNPay = async (req: Request, res: Response, next: NextFuncti
     var tmnCode = process.env.VNP_TMN_CODE;
     var secretKey = process.env.VNP_SECRET_KEY;
     var vnpUrl = process.env.VNP_URL
-    var returnUrl = process.env.VNP_RTN_URL
 
     //var createDate = formatDate(billDoc.createdAt);
     //var amount = total - reduce + ship;

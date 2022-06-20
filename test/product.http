@@ -12,7 +12,7 @@ Content-Type: application/json
 POST http://localhost:5000/product/list HTTP/1.1
 Content-Type: application/json
 
-{"specs":[{"name":"CPU","values":"Intel, Core i7, 10750H"}],"skip":0,"category":"Laptop","limit":7}
+{"colors":"wheat;white","skip":0,"category":"Laptop","limit":7}
 
 
 ###

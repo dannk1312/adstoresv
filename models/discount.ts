@@ -56,7 +56,7 @@ export const discountSchema = new Schema<IDiscount>({
     categories: [String], 
     accounts: [{ type: Schema.Types.ObjectId, ref: 'Account' }],
 
-    used: Schema.Types.Mixed
+    used: { type:Schema.Types.Mixed, default: {}}
 }, { timestamps: true })
 
 

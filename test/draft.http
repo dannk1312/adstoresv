@@ -2,7 +2,7 @@
 ###
 ### localhost:5000
 ### adstoresv.herokuapp.com
-GET http://localhost:5000/ HTTP/1.1
+GET http://adstoresv.herokuapp.com/test HTTP/1.1
 
 
 ###
