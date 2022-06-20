@@ -10,7 +10,7 @@ import { formatDate, fromObject, sortObject } from '../services/support';
 import querystring from 'qs';
 import crypto from "crypto";
 
-const shipCalculate = async (address: { province: string, district: string, address: string }, weight: number, value: number) => {
+const shipCalculate = async (address: { province: string, district: string, address: string } | undefined, weight: number, value: number) => {
     var result: { error: string, value: number } = { error: "", value: 0 }
     if (!address || !address.province || !address.district || !address.address) { result.error += "Địa chỉ thiếu. "; return result }
     const data = {
@@ -65,7 +65,7 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
     try {
         const discountCode: string = req.body.discountCode
         const bagItems: IBagItem[] = req.body.bagItems
-        const address: { province: string, district: string, address: string } = req.body.address
+        var address: { province: string, district: string, address: string } | undefined = req.body.address
         var account: mongoose.Document<unknown, any, IAccount> & IAccount | null = req.body.account
         const phone: string = req.body.phone
         var warning: string = req.body.warning
@@ -83,6 +83,7 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
             weight += e.quantity * 500 // 500gr for each obj
         })
 
+        if(!address) address = account?.address
         var result_ship = await shipCalculate(address, weight, total)
         var ship: number = result_ship.value
         warning += result_ship.error
@@ -91,7 +92,7 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
         var reduce: number = result_discount.value
         warning += result_discount.error
 
-        res.send({ msg: config.success, warning, data: { bag_details: bagItems, ship, total, discount: reduce } })
+        res.send({ msg: config.success, warning, data: { bag_details: bagItems, ship, total, discount: reduce, discountCode, address } })
     } catch (err) {
         console.log(err)
         return res.status(500).send({ config: config.err500 })
