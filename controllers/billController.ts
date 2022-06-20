@@ -12,7 +12,7 @@ import crypto from "crypto";
 
 const shipCalculate = async (address: { province: string, district: string, address: string }, weight: number, value: number) => {
     var result: { error: string, value: number } = { error: "", value: 0 }
-    if (!address.province || !address.district || !address.address) { result.error += "Địa chỉ thiếu. "; return result }
+    if (!address || !address.province || !address.district || !address.address) { result.error += "Địa chỉ thiếu. "; return result }
     const data = {
         "pick_province": process.env.PICK_PROVINCE,
         "pick_district": process.env.PICK_DISTRICT,
