@@ -39,8 +39,8 @@ const discountCalculate = async (code: string, bagItems: IBagItem[], total: numb
     const discount = await Discount.findOne({ code })
     if (!discount) { result.error += "Mã discount không tồn tại. "; return result }
     if (discount.quantity == 0) { result.error += "Mã discount hết số lượng. "; return result }
-    if (discount.is_oic && discount.used.hasOwnProperty(account_id)) { result.error += "Mã discount không thể sử dụng nhiều lần. "; return result }
-    if (discount.is_oid && discount.used.hasOwnProperty(account_id) && (Date.now() - discount.used[account_id]) < 86400000) { result.error += "Mã discount không thể sử dụng nhiều lần trong 24h. "; return result }
+    if (discount.is_oic && !!discount.used && discount.used.hasOwnProperty(account_id)) { result.error += "Mã discount không thể sử dụng nhiều lần. "; return result }
+    if (discount.is_oid && !!discount.used && discount.used.hasOwnProperty(account_id) && (Date.now() - discount.used[account_id]) < 86400000) { result.error += "Mã discount không thể sử dụng nhiều lần trong 24h. "; return result }
     if (total < discount.minPrice) { result.error += `Mã discount chỉ áp dụng cho đơn hàng > ${discount.minPrice}. `; return result }
 
     // @ts-ignore
