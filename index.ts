@@ -38,7 +38,7 @@ app.use(adminRoute)
 app.use(socialRoute)
 
 app.use("/", (req: Request, res: Response) => {
-  res.send(`ADStore Server`);
+  res.send(req.hostname);
 })
 
 app.listen(port, () => {
