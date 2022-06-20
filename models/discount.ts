@@ -52,9 +52,9 @@ export const discountSchema = new Schema<IDiscount>({
     value: {type: Number, required: true}, 
 
     // depend on
-    products: [{ type: Schema.Types.ObjectId, required: true, ref: 'Product' }], 
+    products: [{ type: Schema.Types.ObjectId, ref: 'Product' }], 
     categories: [String], 
-    accounts: [{ type: Schema.Types.ObjectId, required: true, ref: 'Account' }],
+    accounts: [{ type: Schema.Types.ObjectId, ref: 'Account' }],
 
     used: Schema.Types.Mixed
 }, { timestamps: true })
