@@ -148,9 +148,9 @@ export const PhoneFormatter = async (req: Request, res: Response, next: NextFunc
         }
         if(!!phone && regex.phone.test(phone)) {
             if(phone[0] == "0")
-                req.body.phone = "84" + phone.slice(1)
-            if(phone[0] == "+")
-                req.body.phone = phone.slice(1)
+                req.body.phone = "+84" + phone.slice(1)
+            else if(phone[0] != "+")
+                req.body.phone = "+" + phone
         }
         
         next()
