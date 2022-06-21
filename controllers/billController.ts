@@ -214,6 +214,7 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
             }
         } catch (error) {
             console.log(error)
+            SendNotificationsFunc(account._id.toString(), "Tạo Đơn Hàng Thất Bại")
             await session.abortTransaction();
             session.endSession();
             return res.status(400).send({ msg: "Lỗi không lưu bill" })
