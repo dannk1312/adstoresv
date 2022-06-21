@@ -307,7 +307,7 @@ export const ReadNotifications = async (req: Request, res: Response, next: NextF
         Account.findById(req.body.account._id).select("notifications").slice("notifications", [skip, limit]).exec((err, doc) => {
             if (err) return res.status(500).send({ msg: mess.errInternal })
             if (!doc) return res.status(400).send({ msg: config.err400 })
-            return res.send({ msg: config.success, data: doc.notifications })
+            return res.send({ msg: config.success, data: doc.notifications.reverse() })
         })
     } catch (err) {
         console.log(err)
@@ -354,7 +354,8 @@ export const SendNotification = async (req: Request, res: Response) => {
 
 export const ReadBills = async (req: Request, res: Response) => {
     const account: IAccount = req.body.account
-    Bill.find({ _id: { $in: account.bills } }).select("-products -account").exec((err, docs) => {
+    
+    Account.findById(account._id).populate("bills", "-products -account").select("bills").exec((err, doc) => {
         if (err) return res.status(500).send({ msg: mess.errInternal })
         var result = {
             'Preparing': [],
@@ -363,7 +364,7 @@ export const ReadBills = async (req: Request, res: Response) => {
             'Cancel': []
         }
         // @ts-ignore
-        docs.forEach((e) => result[e.status].push(e))
+        doc.bills.forEach((e) => result[e.status].push(e))
         return res.send({ msg: config.success, data: result })
     })
 }

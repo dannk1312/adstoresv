@@ -80,8 +80,12 @@ route.post("/account/updatePhone", Default.PhoneFormatter, Default.Role("All"), 
 //      password**: string
 route.post("/account/updatePassword", Default.Role("All"), Account.UpdatePassword)
 
-// header: accessToken - role: Customer
-route.get("/account/readNotifications", Default.Role("Customer"), Account.ReadNotifications)
+// header: accessToken - role: Customer - field: skip, limit
+// type: 
+//      skip: number - undefine = 0
+//      limit: number - undefine = 10
+
+route.post("/account/readNotifications", Default.Role("Customer"), Account.ReadNotifications)
 
 // header: accessToken - role: Customer - field: _id
 // type: 
@@ -101,7 +105,7 @@ route.post("/account/sendNotification", Default.Role("Admin"), Account.SendNotif
 route.post("/account/pushBag", Default.Role("Customer"), Account.PushBag, Product.ValidBag, Account.TryUpdateBag, (req, res) => { res.send({msg: mess.success})})
 
 // header: accessToken - role: Customer
-route.post("/account/readBills", Default.Role("Customer"), Account.ReadBills)
+route.get("/account/readBills", Default.Role("Customer"), Account.ReadBills)
 
 
 export const accountRoute = route
