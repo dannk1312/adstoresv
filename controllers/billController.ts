@@ -248,7 +248,7 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
                 if (!doc) throw Error("Account cannot save")
             } else
                 return res.status(400).send({ msg: config.errPermission })
-        } else if (account.role != "Admin")
+        } else if (account.role == "Customer")
             return res.status(400).send({ msg: config.errPermission })
 
         const session = await mongoose.startSession();

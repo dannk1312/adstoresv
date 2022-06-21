@@ -31,7 +31,7 @@ route.get('/vnpay_ipn', Bill.CheckVNPay);
 //      _id**: string - bill_id
 //      status**: string  - ['Preparing', 'Delivering', 'Done', 'Cancel']
 //      desc: string
-route.post("/bill/update", Default.Role(["Customer", "Admin"]), Bill.Update)
+route.post("/bill/update", Default.Role(["Customer", "Sale",  "Admin"]), Bill.Update)
 
 // header: accessToken - role: "Admin" - field: skip, limit, status, search, sortName, sortType
 // type:
@@ -43,11 +43,11 @@ route.post("/bill/update", Default.Role(["Customer", "Admin"]), Bill.Update)
 //       sortType: number - 1 tăng dần, -1 giảm dần
 route.post("/bill/list", Default.Role("Admin"), Bill.List)
 
-// header: accessToken - role: ["Customer", "Admin"] - field: _id
+// header: accessToken - role: ["Customer", "Sale", "Admin"] - field: _id
 // type:
 //       _id: string
 // Customer chỉ có thể đọc bill của bản thân
-route.post("/bill/read", Default.Role(["Customer", "Admin"]), Bill.Read)
+route.post("/bill/read", Default.Role(["Customer", "Sale", "Admin"]), Bill.Read)
 
 
 export const billRoute = route
