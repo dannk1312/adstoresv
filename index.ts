@@ -24,6 +24,8 @@ const port = process.env.PORT || 5000
 
 const app: Express = express()
 app.use(cors())
+// @ts-ignore
+app.options('*', cors()) 
 app.use(cookieParser(process.env.ACCESS_TOKEN_SECRET))
 
 app.use(express.json({ limit: '200mb' }))
