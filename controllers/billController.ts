@@ -456,7 +456,6 @@ export const CheckVNPay = async (req: Request, res: Response, next: NextFunction
                     message += "Bạn nhanh chóng liên hệ chuyên viên tư vấn của chúng tôi để được giải quyết nhanh nhất. "
                 } else 
                     message = "Bill " + bill._id + " thanh toán hoàn tất"
-                res.status(200).json({ RspCode: '00', Message: 'success' })
             }
             else {
                 bill.desc = "Thanh toán online thất bại. Việc thanh toán sẽ chuyển sang trực tiếp. "
