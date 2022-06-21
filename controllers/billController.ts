@@ -210,7 +210,7 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
                 req.body.createDate = formatDate(billDoc.createdAt)
                 req.body.amount = total - reduce + ship
                 req.body.bill_id = bill._id
-                next()
+                return next()
             }
         } catch (error) {
             console.log(error)
@@ -424,6 +424,7 @@ export const RequestVNPay = async (req: Request, res: Response, next: NextFuncti
 }
 
 export const CheckVNPay = async (req: Request, res: Response, next: NextFunction) => {
+    try {
     var vnp_Params = req.query;
     var secureHash = vnp_Params['vnp_SecureHash'];
 
@@ -478,6 +479,10 @@ export const CheckVNPay = async (req: Request, res: Response, next: NextFunction
     else {
         //res.status(200).json({ RspCode: '97', Message: 'Fail checksum' })
     }
+    console.log("redirect", process.env.VNP_RTN_URL)
     // @ts-ignore
     res.status(301).redirect(process.env.VNP_RTN_URL)
+    }catch(err) {
+        console.log(err)
+    }
 }
