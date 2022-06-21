@@ -420,7 +420,7 @@ export const RequestVNPay = async (req: Request, res: Response, next: NextFuncti
     vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: false });
 
     
-    res.status(301).redirect(vnpUrl!)
+    res.send({msg: mess.success, data: vnpUrl!})
 }
 
 export const CheckVNPay = async (req: Request, res: Response, next: NextFunction) => {
