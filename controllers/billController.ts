@@ -468,7 +468,7 @@ export const CheckVNPay = async (req: Request, res: Response, next: NextFunction
             
             }
             // @ts-ignore
-            if(!!bill.account.email) SendMail(bill.account.email, "Thanh Toán Đơn Hàng " + billDoc._id, message)
+            if(!!bill.account.email) SendMail(bill.account.email, "Thanh Toán Đơn Hàng " + bill._id, message)
             SendSMS(message, bill.phone)
             SendNotificationsFunc(bill.account._id.toString(), message)
         } else {
