@@ -93,7 +93,7 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
             weight += e.quantity * 500 // 500gr for each obj
         })
 
-        console.log(address?.address)
+        console.log(account)
         if(!address) address = account?.address
         var result_ship = await shipCalculate(address, weight, total)
         var ship: number = result_ship.value
@@ -165,9 +165,10 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
         warning += result_discount.error
         const discount = result_discount.doc
 
+        if(!!warning) return res.status(400).send({ msg: warning })
+
         const products: any[] = []
         bagItems.forEach(i => products.push({ product: i.product, color: i.color, quantity: i.quantity, price: i.price, sale: i.sale }))
-        console.log(products)
 
         const bill = new Bill({ account: account._id, phone: account.phone, address, products, discountCode, ship, total, discount: reduce, verify })
         const session = await mongoose.startSession();
