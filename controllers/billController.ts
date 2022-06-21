@@ -372,7 +372,7 @@ export const Read = async (req: Request, res: Response, next: NextFunction) => {
                 model: 'Product',
                 select: 'name code image_url colors'
             }
-        }).exec((err, doc) => {
+        }).populate('account', 'name email phone').exec((err, doc) => {
             if (err) return res.status(500).send({ msg: config.err500 })
             if (!doc) return res.status(400).send({ msg: config.err400 })
             return res.send({ msg: config.success, data: doc })
