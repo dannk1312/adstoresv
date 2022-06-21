@@ -464,16 +464,18 @@ export const CheckVNPay = async (req: Request, res: Response, next: NextFunction
                     message += "Bạn nhanh chóng liên hệ chuyên viên tư vấn của chúng tôi để được giải quyết nhanh nhất. "
                 } else 
                     message = "Bill " + bill._id + " thanh toán thất bại, đơn hàng chuyển sang trả tiền mặt. "
-                res.status(200).json({ RspCode: rspCode, Message: 'Thanh toán không hoàn tất. ' })
+            
             }
             // @ts-ignore
             if(!!bill.account.email) SendMail(bill.account.email, "Thanh Toán Đơn Hàng " + billDoc._id, message)
             SendSMS(message, bill.phone)
             SendNotificationsFunc(bill.account._id.toString(), message)
-        } else
-            res.status(200).json({ RspCode: rspCode, Message: 'Bill không tồn tại. ' })
+        } else {
+            //res.status(200).json({ RspCode: rspCode, Message: 'Bill không tồn tại. ' })
+        }
     }
     else {
-        res.status(200).json({ RspCode: '97', Message: 'Fail checksum' })
+        //res.status(200).json({ RspCode: '97', Message: 'Fail checksum' })
     }
+    res.redirect(process.env.VNP_RTN_URL)
 }
