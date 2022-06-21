@@ -135,7 +135,7 @@ export const accountSchema = new Schema<IAccount>({
 }, { timestamps: true })
 
 
-export const AccountInfo = async (_id: string) => await Account.findById(_id).select("-bills -notifications -rate_waits")
+export const AccountInfo = async (_id: string) => await Account.findById(_id).select("-notifications -rate_waits")
 
 
 export const AccountSurface = async (_id: string) => {
