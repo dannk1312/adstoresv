@@ -22,7 +22,7 @@ route.post("/bill/billCalc", Default.GetAccount, Product.ValidBag, Account.TryUp
 //      cod**: boolean 
 //      phone**: string
 //      name: string
-route.post("/bill/create", Default.GetAccount, Product.ValidBag, Bill.Create, Bill.RequestVNPay)
+route.post("/bill/create", Default.PhoneFormatter, Default.GetAccount, Product.ValidBag, Bill.Create, Bill.RequestVNPay)
 
 route.get('/vnpay_ipn', Bill.CheckVNPay);
 

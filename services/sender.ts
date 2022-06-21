@@ -6,18 +6,18 @@ import { google } from 'googleapis';
 var oAuth2Client: any = undefined;
 
 export const Setup = () => {
-    oAuth2Client = new google.auth.OAuth2(
-        process.env.GOOGLE_CLIENT_ID,
-        process.env.GOOGLE_CLIENT_SECRET,
-        'https://developers.google.com/oauthplayground'
-    );
-    oAuth2Client.setCredentials({ refresh_token: process.env.GOOGLE_REFRESH_TOKEN });
+  oAuth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    'https://developers.google.com/oauthplayground'
+  );
+  oAuth2Client.setCredentials({ refresh_token: process.env.GOOGLE_REFRESH_TOKEN });
 }
 
 export const SendMail = async (dest: string, subject: string, text: string): Promise<boolean> => {
   try {
-    if(!oAuth2Client)
-        Setup();
+    if (!oAuth2Client)
+      Setup();
     const accessToken = await oAuth2Client.getAccessToken();
 
     const transport = nodemailer.createTransport({
@@ -39,19 +39,26 @@ export const SendMail = async (dest: string, subject: string, text: string): Pro
       text: text,
     };
     return !!(await transport.sendMail(mailOptions));
-  } catch (error: any) {
+  } catch (err: any) {
+    console.log(err)
     return false;
   }
 }
 
 export const SendSMS = async (body: string, to: string): Promise<boolean> => {
+  try {
     const accountSid = process.env.TWILIO_ACCOUNT_SID
     const authToken = process.env.TWILIO_AUTH_TOKEN
     const client: twilio.Twilio = twilio(accountSid, authToken)
     const item = await client.messages.create({
-        body: body,
-        messagingServiceSid: process.env.TWILIO_MESS_SERVICESID,
-        to: to
+      body: body,
+      messagingServiceSid: process.env.TWILIO_MESS_SERVICESID,
+      to: to
     })
     return !!item
+  } catch (err) {
+    console.log(err)
+    return false
+  }
+
 }

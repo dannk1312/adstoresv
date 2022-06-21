@@ -1,7 +1,7 @@
 import e, { Request, Response, NextFunction } from 'express';
 import axios from 'axios';
 import { Product } from '../models/product';
-import { config } from '../services/config';
+import { config, mess, regex } from '../services/config';
 import { Discount, IDiscount } from '../models/discount';
 import { Bill } from '../models/bill';
 import { Account, IAccount, IBagItem } from '../models/account';
@@ -80,8 +80,10 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
         const phone: string = req.body.phone
         var warning: string = req.body.warning
 
-        if (!account && !!phone)
+        if (!account && !!phone) {
             account = await Account.findOne({ phone })
+            if(!regex.phone.test(phone)) warning += mess.errFormatField + "[Phone]. "
+        }
 
         var total: number = 0
         var weight: number = 0

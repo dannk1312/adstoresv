@@ -35,7 +35,7 @@ route.post("/account/enable", Default.Role("Admin"), Account.Enable)
 //      birth: Date
 //      gender: boolean
 //      address: object - {province: string, district: string, address: string}
-route.post("/account/signUp", Default.OTPCheck, Account.SignUp)
+route.post("/account/signUp", Default.PhoneFormatter, Default.OTPCheck, Account.SignUp)
 
 // field: email_or_phone, email, phone
 // type: 
@@ -43,7 +43,7 @@ route.post("/account/signUp", Default.OTPCheck, Account.SignUp)
 //      email: string
 //      phone: string
 // rule: email_or_phone | email | phone
-route.post("/account/otp", Default.OTPRequest)
+route.post("/account/otp", Default.PhoneFormatter, Default.OTPRequest)
 
 // field: email_or_phone, password, code, googleToken
 // type: 
@@ -52,7 +52,7 @@ route.post("/account/otp", Default.OTPRequest)
 //      code: string
 //      googleToken: string
 // rule: (email_or_phone & password) | (email_or_phone & code) | googleToken
-route.post("/account/login", Account.SignIn)
+route.post("/account/login", Default.PhoneFormatter, Account.SignIn)
 
 // header: accessToken - role: All
 route.get("/account/info", Default.Role("All"), Account.Info)
@@ -72,7 +72,7 @@ route.post("/account/updateInfo", Default.Role("All"), Account.UpdateInfo)
 // type: 
 //      phone**: string - (Cần mã quốc gia: 84/+84)
 //      code**: string
-route.post("/account/updatePhone", Default.Role("All"), Default.OTPCheck, Account.UpdatePhone)
+route.post("/account/updatePhone", Default.PhoneFormatter, Default.Role("All"), Default.OTPCheck, Account.UpdatePhone)
 
 // header: accessToken - role: All - field: old_password, password
 // type: 

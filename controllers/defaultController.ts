@@ -135,4 +135,28 @@ export const OTPCheck = async (req: Request, res: Response, next: NextFunction) 
     }
 }
 
+export const PhoneFormatter = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        var email_or_phone: string = req.body.email_or_phone
+        var phone: string = req.body.phone
+        
+        if(!!email_or_phone && regex.phone.test(email_or_phone)) {
+            if(email_or_phone[0] == "0")
+                req.body.email_or_phone = "84" + email_or_phone.slice(1)
+            if(email_or_phone[0] == "+")
+                req.body.email_or_phone = email_or_phone.slice(1)
+        }
+        if(!!phone && regex.phone.test(phone)) {
+            if(phone[0] == "0")
+                req.body.phone = "84" + phone.slice(1)
+            if(phone[0] == "+")
+                req.body.phone = phone.slice(1)
+        }
+        
+        next()
+    } catch (err) {
+        console.log(err)
+        res.status(400).send({ msg: config.err400 });
+    }
+}
 
