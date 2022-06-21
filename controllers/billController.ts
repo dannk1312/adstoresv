@@ -419,7 +419,8 @@ export const RequestVNPay = async (req: Request, res: Response, next: NextFuncti
     vnp_Params['vnp_SecureHash'] = signed;
     vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: false });
 
-    res.send({msg: mess.success, data: vnpUrl!})
+    
+    res.status(301).redirect(vnpUrl!)
 }
 
 export const CheckVNPay = async (req: Request, res: Response, next: NextFunction) => {
@@ -478,5 +479,5 @@ export const CheckVNPay = async (req: Request, res: Response, next: NextFunction
         //res.status(200).json({ RspCode: '97', Message: 'Fail checksum' })
     }
     // @ts-ignore
-    res.redirect(process.env.VNP_RTN_URL)
+    res.status(301).redirect(process.env.VNP_RTN_URL)
 }
