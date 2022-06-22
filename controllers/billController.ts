@@ -122,6 +122,8 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
         var warning: string = req.body.warning
         var verify: boolean = false
 
+        console.log(phone)
+
         if (!bagItems || bagItems.length == 0)
             return res.status(400).send({ msg: "Giỏ hàng rỗng. " + warning })
         if (cod == undefined)

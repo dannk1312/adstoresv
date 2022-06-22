@@ -54,7 +54,7 @@ export const Statistical = async (req: Request, res: Response, next: NextFunctio
             bills.forEach(b => {
                 if (b.createdAt.getTime() > threshold) {
                     graph.push(point)
-                    time = new Date(threshold)
+                    time = b.createdAt
                     threshold = time.getTime() + step_time
                     point = { "bills": [], "total": 0, time }
                 }
