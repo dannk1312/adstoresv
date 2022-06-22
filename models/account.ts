@@ -145,11 +145,9 @@ export const AccountSurface = async (_id: string) => {
                 "email": "$email",
                 "phone": "$phone",
                 "role": "$role",
-                "chats": "$chats",
                 "notifications_length": { "$size": "$notifications" },
-                "bag_items_length": {"$sum" : "$bag.quantity"},
+                "bag_items": "$bag",
                 "bills_length": {"$sum" : "$bills.quantity"},
-                "rate_waits_length": {"$sum" : "$rate_waits.quantity"},
             }
         },
         {
@@ -157,7 +155,15 @@ export const AccountSurface = async (_id: string) => {
         }
     ]
     var docs = await Account.aggregate(pipeline)
-    return docs.length > 0 ? docs[0]: undefined;
+    if(docs.length > 0) {
+        var doc = docs[0]
+        doc.bag_items_length = doc.bag_items.length
+        var temp = new Set()
+        doc.bag_items.forEach((u: any) => temp.add(u.product))
+        delete doc.bag_items
+        doc.bag_products = [...temp]
+        return doc
+    } else return undefined
 }
 
 export const Account = model<IAccount>('Account', accountSchema)
