@@ -16,11 +16,15 @@ import { Console } from "console";
 
 export const ImportStatistical = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        var dateStart: Date = req.body.dateStart;
-        var dateEnd: Date = req.body.dateEnd;
+        var dateStartStr: string = req.body.dateStart;
+        var dateEndStr: string = req.body.dateEnd;
         var step: string = req.body.step;
 
-        if (!dateEnd) dateEnd = new Date(Date.now())
+        var dateStart = new Date(1970, 1, 1);
+        var dateEnd = new Date(Date.now());
+
+        if (!!dateEndStr) dateEnd = new Date(dateEndStr)
+        if (!!dateStartStr) dateStart = new Date(dateStartStr)
         if (!step || !["second", "day", "month", "year"].includes(step)) step = "month"
 
         var step_time = (step == "year" ? config.yearlong : step == "month" ? config.monthlong : step == "day" ? config.daylong : 1)

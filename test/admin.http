@@ -2,6 +2,10 @@
 POST http://localhost:5000/statistical/imports HTTP/1.1
 Content-Type: application/json
 
+{
+    "dateStart": "05/05/2022"
+}
+
 
 ###
 POST http://localhost:5000/check_ship HTTP/1.1
