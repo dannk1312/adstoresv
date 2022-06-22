@@ -30,7 +30,7 @@ export const CommingSoon = async (req: Request, res: Response, next: NextFunctio
                     "enable": "$enable",
                     "sold": "$sold",
                     "colors": "$colors",
-                    "category": category,
+                    "category": "$category",
                     "colors_length": { "$size": "$colors" }
                 }
             },
