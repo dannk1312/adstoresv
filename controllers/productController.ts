@@ -18,7 +18,7 @@ export const CommingSoon = async (req: Request, res: Response, next: NextFunctio
         const skip: number = req.body.skip ?? 0
         const limit: number = req.body.limit ?? 10000
 
-        var pipeline = [
+        var pipeline: any[] = [
             {
                 "$project": {
                     "name": "$name",
@@ -36,13 +36,16 @@ export const CommingSoon = async (req: Request, res: Response, next: NextFunctio
             },
             {
                 "$match": {
-                    "category": category,
                     "colors_length": 0
                 }
             },
             { $skip: skip },
             { $limit: limit }
         ]
+
+        if(!!category)
+            pipeline[1]["$match"]["category"] = category
+ 
         Product.aggregate(pipeline).exec((err, docs) => {
             if (!!err) return res.status(500).send({ msg: mess.errInternal })
             return res.send({ msg: mess.success, data: docs })
