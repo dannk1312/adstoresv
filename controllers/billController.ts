@@ -329,7 +329,7 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
         const sortType: number = req.body.sortType
 
         var sortOptions: any = {}
-        var queryOptions: any = { status }
+        var queryOptions: any = !!status ? {status}: {}
 
         if (!!sortName && ["ship", "total", "discount"].includes(sortName) && (sortType == 1 || sortType == -1)) {
             sortOptions[sortName] = sortType
@@ -344,8 +344,10 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
             ]
         }
 
+        console.log(queryOptions)
+
         const count = (req.body.skip == undefined) ? await Bill.countDocuments(queryOptions) : undefined
-        const result = await Bill.find(queryOptions).sort(sortOptions).skip(skip).limit(limit).select("-products").exec()
+        const result = await Bill.find(queryOptions).sort(sortOptions).skip(skip).limit(limit).select("-products").populate("account", "name phone email").exec()
         if (!result)
             return res.status(500).send({ msg: config.err500 })
 

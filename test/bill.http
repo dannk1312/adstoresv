@@ -1,13 +1,25 @@
-POST http://localhost:5000/bill/create HTTP/1.1
+POST http://localhost:5000/bill/billCalc HTTP/1.1
 Content-Type: application/json
 
-{"bag":[{"product":"62ad8ab404b1746fa8596362","quantity":1,"color":"red"},{"product":"62ad8b7f04b1746fa8596378","quantity":1,"color":"white"}],"phone":"0923202850","discountCode":"","address":{"province":"TP HCM","district":"TP Thủ Đức","address":"1 Võ Văn Ngân"},"cod":true}
+{
+    "bag":[{"product":"62ad8ab404b1746fa8596362","quantity":1,"color":"red"},{"product":"62ad8b7f04b1746fa8596378","quantity":1,"color":"white"}],
+    "phone":"0923202850",
+    "discountCode":"",
+    "cod":true
+}
+
+
+####
+POST http://localhost:5000/bill/list HTTP/1.1
+Content-Type: application/json
+
+
 
 ###
 POST http://localhost:5000/account/login HTTP/1.1
 Content-Type: application/json
 
 {
-    "email_or_phone": "dannk1312@gmail.com",
-    "password": "nkD18110091"
+    "email_or_phone": "admin@gmail.com",
+    "code": "000000"
 }

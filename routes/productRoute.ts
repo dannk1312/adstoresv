@@ -124,11 +124,15 @@ route.post("/product/rate", Default.Role("Customer"), Product.Rate)
 // field: products, category, quantity
 // type: 
 //       products: string[]  // list _id product, dùng để gợi ý các món hàng liên quan
-//       category: string  // name - gợi ý các sản phẩm top của category
 //       quantity: number // undefine => 10
-// nếu trống thì trả về các sản phẩm top
-// products | category
 route.post("/product/hint", Product.Hint)
+
+// field: category, quantity
+// type: 
+//       category: string  
+//       quantity: number // undefine => 10
+route.post("/product/top", Product.Top)
+
 
 
 export const productRoute = route

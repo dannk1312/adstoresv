@@ -24,4 +24,4 @@ export const socialSchema = new Schema<ISocial>({
     }]
 })
 
-export const Social = model<ISocial>('Server', socialSchema)
+export const Social = model<ISocial>('Social', socialSchema)

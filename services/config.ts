@@ -26,7 +26,8 @@ export const config = {
     daylong: 86400000, //1000*60*60*24, 
     monthlong: 2592000000, //1000*60*60*24*30, 
     yearlong: 31104000000, //1000*60*60*24*30*12, 
-    ghtk_url: 'https://services.giaohangtietkiem.vn/services/shipment/fee?'
+    ghtk_url: 'https://services.giaohangtietkiem.vn/services/shipment/fee?',
+    hint_url: 'https://adstoresv-hint.herokuapp.com/hint',
 }
 
 export const mess = {
