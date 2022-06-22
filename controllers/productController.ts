@@ -586,7 +586,7 @@ export const Top =async (req: Request, res: Response) => {
     const category: string = req.body.category
     const quantity: number = req.body.quantity ?? 10
 
-    var query = !!category ? {category} : {}
+    var query = !!category ? {category, 'colors.0': {$exists: true}} : {'colors.0': {$exists: true}}
 
     Product.find(query).sort({ sold: -1 }).limit(quantity).select(config.product_str).exec((err, docs) => {
         if (err) return res.status(500).send({ msg: config.err500 })
