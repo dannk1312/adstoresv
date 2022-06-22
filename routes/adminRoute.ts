@@ -7,8 +7,8 @@ const route = express.Router();
 
 // header: accessToken - role: "Admin" - field: dateStart, dateEnd
 // type:
-//     dateStart**: Date
-//     dateEnd: Date - undefine = now
+//     dateStart**: string
+//     dateEnd: string - undefine = now
 //     step: string - "second", "day", "month", "year"
 //     type: string - "bill", "import" - undefine = "bill"
 route.post("/statistical", Default.Role("Admin"), Admin.Statistical)

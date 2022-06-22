@@ -1,9 +1,7 @@
 import mongoose, { Document, Types } from "mongoose";
-import jwt from "jsonwebtoken";
 import { config } from '../services/config';
 import axios from 'axios';
-import express, { NextFunction, Request, Response } from 'express';
-import * as image from "../services/image";
+import { NextFunction, Request, Response } from 'express';
 import { Product } from "../models/product";
 import { Import } from "../models/import";
 import { Bill, IBill } from "../models/bill";
@@ -19,27 +17,33 @@ export const Statistical = async (req: Request, res: Response, next: NextFunctio
         var dateStart = new Date(1970, 1, 1);
         var dateEnd = new Date(Date.now());
 
-        if (!!dateEndStr) dateEnd = new Date(dateEndStr)
-        if (!!dateStartStr) dateStart = new Date(dateStartStr)
-        if (!step || !["second", "day", "month", "year"].includes(step)) step = "month"
-        if (!type || !["bill", "import"].includes(type)) type = "bill"
+        if (!!dateEndStr) 
+            dateEnd = new Date(dateEndStr)
+        if (!!dateStartStr) 
+            dateStart = new Date(dateStartStr)
+        if (!step || !["second", "day", "month", "year"].includes(step)) 
+            step = "month"
+        if (!type || !["bill", "import"].includes(type)) 
+            type = "bill"
 
         var step_time = (step == "year" ? config.yearlong : step == "month" ? config.monthlong : step == "day" ? config.daylong : 1)
         var smallest: number = dateEnd.getTime() - step_time;
-        if (!dateStart || dateStart.getTime() > smallest) dateStart = new Date(smallest)
+        if (!dateStart || dateStart.getTime() > smallest) dateStart = new Date(smallest);
 
-        const model = type == "bill" ? Bill : Import
-
+        console.log(dateStart, dateEnd)
+        const tempModel = (type == "bill" ? Bill : Import)
+   
         //@ts-ignore
-        model.find({
-            createAt: {
-                $gte: dateStart,
-                $lte: dateEnd,
+        tempModel.find({
+            createdAt: {
+                $gt: dateStart,
+                $lt: dateEnd
             }
         }).exec((err: any, bills: (mongoose.Document<unknown, any, IBill> & IBill & {
             _id: Types.ObjectId;
         })[]) => {
             if (err) return res.status(500).send({ msg: config.err500 })
+            if(bills.length == 0) return res.send({msg: config.success, data: { graph: [], products: [] }})
             // Gom nhom du lieu
             var counter: any = {}
             var graph: any = []
