@@ -131,6 +131,7 @@ route.post("/product/hint", Product.Hint)
 // type: 
 //       category: string  
 //       quantity: number // undefine => 10
+// r u ok
 route.post("/product/top", Product.Top)
 
 
