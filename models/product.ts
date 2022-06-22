@@ -64,7 +64,7 @@ export const productSchema = new Schema<IProduct>({
         type: Number,
         default: 0,
         min: [0, 'Product discount percent must more than or equal 0'],
-        max: [1, 'Product discount percent must less than or equal 1']
+        max: [100, 'Product discount percent must less than or equal 100']
     },
     catalogue: [
         {

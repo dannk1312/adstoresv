@@ -89,7 +89,7 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
         var weight: number = 0
         bagItems.forEach(e => {
             total += e.price * e.quantity
-            reduce += e.price * e.quantity * e.sale
+            reduce += e.price * e.quantity * e.sale / 100
             weight += e.quantity * 500 // 500gr for each obj
         })
 
@@ -154,7 +154,7 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
         var weight: number = 0
         bagItems.forEach(e => {
             total += e.price * e.quantity
-            reduce += e.price * e.quantity * e.sale
+            reduce += e.price * e.quantity * e.sale / 100
             weight += e.quantity * 500 // 500gr for each obj
         })
 

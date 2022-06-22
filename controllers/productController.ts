@@ -7,9 +7,10 @@ import { Category, ValidSpecs } from "../models/category";
 import { IProduct, Product } from "../models/product";
 import { Import } from "../models/import";
 import { Account, IAccount, IBag, IBagItem } from "../models/account";
-import { Bill } from "../models/bill";
+import { Bill, IBill } from "../models/bill";
 import axios from "axios";
 import { fromObject } from "../services/support";
+import { validateRequest } from "twilio";
 
 
 export const CommingSoon = async (req: Request, res: Response, next: NextFunction) => {
@@ -43,9 +44,9 @@ export const CommingSoon = async (req: Request, res: Response, next: NextFunctio
             { $limit: limit }
         ]
 
-        if(!!category)
+        if (!!category)
             pipeline[1]["$match"]["category"] = category
- 
+
         Product.aggregate(pipeline).exec((err, docs) => {
             if (!!err) return res.status(500).send({ msg: mess.errInternal })
             return res.send({ msg: mess.success, data: docs })
@@ -319,7 +320,7 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
         const desc: string = req.body.desc
         const price: number = req.body.price
         const enable: boolean = req.body.enable
-        const specs: number = req.body.specs
+        const specs: any = req.body.specs
         const sale: number = req.body.sale
         const image_base64: string = req.body.image_base64
 
@@ -392,10 +393,10 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
 }
 
 export const Imports = async (req: Request, res: Response, next: NextFunction) => {
-    const data: {code: string, quantity: number, color: string, price: number}[] = req.body.data // [{code, quantity, color, price}]
+    const data: { code: string, quantity: number, color: string, price: number }[] = req.body.data // [{code, quantity, color, price}]
     if (!data) return res.status(400).send({ msg: config.err400 })
 
-    if(data.length) return res.send({ msg: "Rỗng" })
+    if (data.length) return res.send({ msg: "Rỗng" })
 
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -536,25 +537,36 @@ export const Rate = async (req: Request, res: Response, next: NextFunction) => {
 }
 
 export const Hint = async (req: Request, res: Response) => {
-    const products: string[] = req.body.products // _id list
+    var products: string[] = req.body.products // _id list
     const quantity: number = req.body.quantity ?? 10
+    const account: IAccount = req.body.account
 
-    if (!products) return res.status(400).send({ msg: mess.errMissField + "[products]. " })
-
-    const data = {
-        "data": products,
-        "quantity": quantity
-    }
     try {
+        if (!products) {
+            if (!!account) {
+                var accountDoc = await Account.findById(account._id).populate("bills", "products").select("bills").exec()
+                if(!accountDoc) throw Error()
+                // @ts-ignore
+                var bills: IBill = accountDoc.bills;
+                var productsSet: Set<string> = new Set()
+                bills.products.forEach(e => productsSet.add(e.product.toString()))
+                products = Array.from(productsSet)
+            } else throw Error()
+        }
+
+        const data = {
+            "data": products,
+            "quantity": quantity
+        }
         var results = await axios.post(config.hint_url, data, {
-            headers: {'Content-Type': 'application/json'}
+            headers: { 'Content-Type': 'application/json' }
         })
-        if(results.data.success == "Fail") throw Error()
+        if (results.data.success == "Fail") throw Error()
         Product.find({ _id: { $in: results.data } }).select(config.product_str).exec((err, docs) => {
             if (err) return res.status(500).send({ msg: config.err500 })
             return res.send({ msg: config.success, data: docs })
         })
-    } catch(err) {
+    } catch (err) {
         console.log("Cannot get from hint server")
         const docs = await Bill.find({ products: { $elemMatch: { product: { $in: products } } } }).populate("products").select("products").exec();
         if (!docs) return res.status(500).send({ msg: config.err500 })
@@ -570,12 +582,12 @@ export const Hint = async (req: Request, res: Response) => {
                 }
             }))
             const keys = Object.keys(counter).sort((a, b) => -counter[a] + counter[b]).slice(0, quantity)
-            Product.find({ _id: { $in: keys } }).select(config.product_str).exec((err, docs) => {
+            Product.find({ _id: { $in: keys } }).select(config.product_str).limit(quantity).exec((err, docs) => {
                 if (err) return res.status(500).send({ msg: config.err500 })
                 return res.send({ msg: config.success, data: docs })
             })
         } else {
-            Product.find({}).sort({ sold: -1 }).select(config.product_str).exec((err, docs) => {
+            Product.find({ 'colors.0': { $exists: true } }).sort({ sold: -1 }).select(config.product_str).limit(quantity).exec((err, docs) => {
                 if (err) return res.status(500).send({ msg: config.err500 })
                 return res.send({ msg: config.success, data: docs })
             })
@@ -583,11 +595,11 @@ export const Hint = async (req: Request, res: Response) => {
     }
 }
 
-export const Top =async (req: Request, res: Response) => {
+export const Top = async (req: Request, res: Response) => {
     const category: string = req.body.category
     const quantity: number = req.body.quantity ?? 10
 
-    var query = !!category ? {category, 'colors.0': {$exists: true}} : {'colors.0': {$exists: true}}
+    var query = !!category ? { category, 'colors.0': { $exists: true } } : { 'colors.0': { $exists: true } }
 
     Product.find(query).sort({ sold: -1 }).limit(quantity).select(config.product_str).exec((err, docs) => {
         if (err) return res.status(500).send({ msg: config.err500 })
