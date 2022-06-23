@@ -5,6 +5,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import * as image from "../services/image";
 import { Category } from "../models/category";
 import { Product } from "../models/product";
+import { specsModelMerge } from "./defaultController";
 
 export const Create = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -41,7 +42,7 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
         const _id: string = req.body._id;
         const name: string = req.body.name;
         const image_base64: string = req.body.image_base64;
-        const specsModel: any = req.body.specsModel;
+        var specsModel: any = req.body.specsModel;
 
 
         if (!_id || (!name && !image_base64 && !specsModel))
@@ -75,6 +76,7 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
             session.startTransaction();
             try {
                 const opts = { session };
+                specsModel = specsModelMerge(category.specsModel, specsModel)
 
                 if((!!name && !(await Category.findOne({ _id: { $ne: _id }, name }))))
                 {

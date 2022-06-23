@@ -17,6 +17,33 @@ const RandomCode = (): string => {
     return result;
 }
 
+export const specsModelMerge = (specsModel: any[], newSpecsInput: any[]) => {
+    const valuesId_2d: any[] = []
+    specsModel.forEach(spec => {
+      const temp: any[] = []
+      // @ts-ignore
+      spec.values.forEach(value => {
+        temp.push(value._id)
+      });
+      valuesId_2d.push(temp)
+    })
+  
+    const result: any[] = []
+    newSpecsInput.forEach((spec, i) => {
+      if (!spec.name) return // delete spec
+      const temp: any = { "_id": specsModel[i]._id, "name": spec.name, "values": [] }
+      // console.log(temp)
+      // @ts-ignore
+      spec.values.split(',').forEach((value, j) => {
+        if (!value) return // delete value
+        temp.values.push({ "_id": valuesId_2d[i][j], "value": value })
+        // console.log(temp.values[temp.values.length - 1])
+      })
+      result.push(temp)
+    })
+    return result
+  }
+
 export const SpecsSplitter = (req: Request, res: Response, next: NextFunction) => {
     const specs: {name: string, values: string}[] = req.body.specs
     const colors: string = req.body.colors
