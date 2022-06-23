@@ -34,7 +34,7 @@ export const specsModelMerge = (specsModel: any[], newSpecsInput: any[]) => {
       const temp: any = { "_id": specsModel[i]._id, "name": spec.name, "values": [] }
       // console.log(temp)
       // @ts-ignore
-      spec.values.split(',').forEach((value, j) => {
+      spec.values.split(';').forEach((value, j) => {
         if (!value) return // delete value
         temp.values.push({ "_id": valuesId_2d[i][j], "value": value })
         // console.log(temp.values[temp.values.length - 1])
