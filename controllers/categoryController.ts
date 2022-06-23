@@ -83,8 +83,10 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
                     category.name = name
                     console.log(name)
                     for(let  i = 0; i < category.products.length; i++) {
-                        if(!(await Product.findByIdAndUpdate(category.products[i], {"category": name}, opts).exec()))
+                        if(!(await Product.findByIdAndUpdate(category.products[i], {"category": name}, opts).exec())) {
+                            console.log(category.products[i])
                             throw Error()
+                        }
                     }
                 }
 

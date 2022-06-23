@@ -181,8 +181,7 @@ categorySchema.methods.saveSpecsModel = async function(this: ICategory, specsMod
                     j--
                 }
                 if(!flag_value) {
-                    console.log(ovalue)
-                    throw Error("Không thể xóa value đang có liên kết với product")
+                    throw Error("Không thể xóa value đang có liên kết với product " + ovalue.value)
                 }
             }
         }
