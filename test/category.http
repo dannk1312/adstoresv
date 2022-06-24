@@ -181,8 +181,82 @@ POST http://localhost:5000/category/update HTTP/1.
 Content-Type: application/json
 
 {
-    "_id": "62a701e0ad91633459e66d84",
-    "name": "Lappop"
+    "_id": "62ad83b304b1746fa85962eb",
+    "name": "Điện thoại",
+    "specsModel": [
+        {
+            "name": "Công nghệ màn hình",
+            "values": "Super Retina XDR - ProMotion;Dynamic AMOLED 2X"
+        },
+        {
+            "name": "Độ phân giải",
+            "values": "2532 x 1170 pixels;QHD+ (1440 x 3088 pixels)"
+        },
+        {
+            "name": "Màn hình",
+            "values": "6.8\";6.1 ''"
+        },
+        {
+            "name": "Camera sau",
+            "values": "12MP, f/1.6 + 12MP, ƒ/2.4;108 MP + 12 MP + 10 MP + 10 MP"
+        },
+        {
+            "name": "Đèn Flash",
+            "values": "Có;Không"
+        },
+        {
+            "name": "Hệ điều hành",
+            "values": "Android;IOS"
+        },
+        {
+            "name": "Chipset (hãng SX CPU)",
+            "values": "Apple A15;Qualcomm Snapdragon 8 Gen 1"
+        },
+        {
+            "name": "Xuất xứ",
+            "values": "Trung Quốc;Mỹ;Hàn Quốc"
+        },
+        {
+            "name": "Năm ra mắt",
+            "values": "2030;2029;2018;2017;2016;2022"
+        },
+        {
+            "name": "Loại màn hình",
+            "values": "Tai thỏ;Tràn viền;Giọt nước"
+        },
+        {
+            "name": "RAM",
+            "values": "2Gb;4Gb;8Gb;12Gb"
+        },
+        {
+            "name": "Bộ nhớ trong",
+            "values": "64Gb;128 Gb;256 Gb;512 Gb;1 Tb"
+        },
+        {
+            "name": "Thẻ nhớ ngoài",
+            "values": "Có;Không"
+        },
+        {
+            "name": "Loại pin",
+            "values": "Li-Ion"
+        },
+        {
+            "name": "Trọng lượng",
+            "values": "150g;200g;250g;300g"
+        },
+        {
+            "name": "Pin",
+            "values": "3.200mAh;3.300mAh;3.400mAh;3.500mAh"
+        },
+        {
+            "name": "Tần số quét",
+            "values": "60Hz;120Hz;144Hz"
+        },
+        {
+            "name": "Cổng kết nối/sạc",
+            "values": "Lightning;Type-C"
+        }
+    ]
 }
 
 ###
@@ -213,7 +287,7 @@ POST http://adstoresv.herokuapp.com/category/read HTTP/1.
 Content-Type: application/json
 
 {
-    "name": "Laptop"
+    "name": "Điện thoại"
 }
 
 ###

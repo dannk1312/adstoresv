@@ -37,7 +37,8 @@ export const CommingSoon = async (req: Request, res: Response, next: NextFunctio
             },
             {
                 "$match": {
-                    "colors_length": 0
+                    "colors_length": 0,
+                    "enable": true
                 }
             },
             { $skip: skip },
@@ -191,8 +192,7 @@ export const Read = async (req: Request, res: Response, next: NextFunction) => {
     const _id: string = req.body._id
     const code: string = req.body.code
 
-    if (!_id && !code)
-        return res.status(400).send({ msg: config.err400 })
+    if (!_id && !code) return res.status(400).send({ msg: config.err400 })
 
     Product.findOne({ $or: [{ _id: _id }, { code: code }] }).select("-comments").exec((err: any, doc: any) => {
         if (err) return res.status(500).send({ msg: config.err500 })
@@ -562,7 +562,7 @@ export const Hint = async (req: Request, res: Response) => {
             headers: { 'Content-Type': 'application/json' }
         })
         if (results.data.success == "Fail") throw Error()
-        Product.find({ _id: { $in: results.data } }).select(config.product_str).exec((err, docs) => {
+        Product.find({ _id: { $in: results.data }, 'colors.0': { $exists: true }, enable: true }).select(config.product_str).exec((err, docs) => {
             if (err) return res.status(500).send({ msg: config.err500 })
             return res.send({ msg: config.success, data: docs })
         })
@@ -582,12 +582,12 @@ export const Hint = async (req: Request, res: Response) => {
                 }
             }))
             const keys = Object.keys(counter).sort((a, b) => -counter[a] + counter[b]).slice(0, quantity)
-            Product.find({ _id: { $in: keys } }).select(config.product_str).limit(quantity).exec((err, docs) => {
+            Product.find({ _id: { $in: keys }, 'colors.0': { $exists: true }, enable: true }).select(config.product_str).limit(quantity).exec((err, docs) => {
                 if (err) return res.status(500).send({ msg: config.err500 })
                 return res.send({ msg: config.success, data: docs })
             })
         } else {
-            Product.find({ 'colors.0': { $exists: true } }).sort({ sold: -1 }).select(config.product_str).limit(quantity).exec((err, docs) => {
+            Product.find({ 'colors.0': { $exists: true }, enable: true  }).sort({ sold: -1 }).select(config.product_str).limit(quantity).exec((err, docs) => {
                 if (err) return res.status(500).send({ msg: config.err500 })
                 return res.send({ msg: config.success, data: docs })
             })
@@ -599,7 +599,7 @@ export const Top = async (req: Request, res: Response) => {
     const category: string = req.body.category
     const quantity: number = req.body.quantity ?? 10
 
-    var query = !!category ? { category, 'colors.0': { $exists: true } } : { 'colors.0': { $exists: true } }
+    var query = !!category ? { category, 'colors.0': { $exists: true } } : { 'colors.0': { $exists: true }, enable: true }
 
     Product.find(query).sort({ sold: -1 }).limit(quantity).select(config.product_str).exec((err, docs) => {
         if (err) return res.status(500).send({ msg: config.err500 })

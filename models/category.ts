@@ -130,15 +130,21 @@ categorySchema.methods.saveSpecsModel = async function(this: ICategory, specsMod
     var value_tree: any = {}
     var newNameSet = new Set()
     var newValueSet = new Set()
+    var editableSpecsModel = JSON.parse(JSON.stringify(this.specsModel))
 
-    for(let i = 0 ;i< this.specsModel.length;i++) {
-        var oitem = this.specsModel[i]
+    for(let i = 0 ;i< editableSpecsModel.length;i++) {
+        if(editableSpecsModel[i]._id == undefined) // new value
+            continue
+        var oitem = editableSpecsModel[i]
         var flag_item = false
         for(var nitem of specsModel) {
             if(!nitem._id) {
                 if(!newNameSet.has(nitem.name)) {
-                    this.specsModel.push(nitem)
+                    var temp_values: any[] = []
+                    nitem.values.forEach((i: any) => temp_values.push({value: i.value}))
+                    editableSpecsModel.push({name: nitem.name, values: temp_values})
                     newNameSet.add(nitem.name)
+                    flag_item = true
                 }
                 continue
             }
@@ -147,20 +153,24 @@ categorySchema.methods.saveSpecsModel = async function(this: ICategory, specsMod
             
             flag_item = true
             if(oitem.name != nitem.name) 
-                oitem.values.forEach(v => v.products.forEach(c => relate_set.add(c)))
+                oitem.values.forEach((v:any) => v.products.forEach((c:any) => relate_set.add(c)))
             name_tree[oitem.name] = nitem.name
             oitem.name = nitem.name
             value_tree[nitem.name] = {}
             
             newValueSet.clear()
-            for(let j = 0 ;j< oitem.values.length;j++) {
+            for(let j = 0;j< oitem.values.length;j++) {
+                if(oitem.values[j]._id == undefined) // new value
+                    continue
                 var ovalue = oitem.values[j]
                 var flag_value = false
+
                 for(var nvalue of nitem.values) {
                     if(!nvalue._id) {
-                        if(!newValueSet.has(nvalue.name)) {
-                            oitem.values.push(nitem)
-                            newValueSet.add(nitem.name)
+                        if(!newValueSet.has(nvalue.value)) {
+                            oitem.values.push({value: nvalue.value})
+                            newValueSet.add(nvalue.value)
+                            flag_value = true
                         }
                         continue
                     }
@@ -169,12 +179,13 @@ categorySchema.methods.saveSpecsModel = async function(this: ICategory, specsMod
                         continue
 
                     flag_value = true
-                    if(ovalue.value != nvalue.name) 
-                        ovalue.products.forEach(c => relate_set.add(c))
+                    if(ovalue.value != nvalue.value) 
+                        ovalue.products.forEach((c: any) => relate_set.add(c))
                     value_tree[nitem.name][ovalue.value] = nvalue.value
                     ovalue.value = nvalue.value
                 }
                 if(!flag_value && ovalue.products.length == 0) {
+                    console.log(oitem.values[j])
                     flag_value = true
                     // @ts-ignore
                     oitem.values.splice(j, 1)
@@ -185,25 +196,28 @@ categorySchema.methods.saveSpecsModel = async function(this: ICategory, specsMod
                 }
             }
         }
+
+
+        // @ts-ignore
         if(!flag_item && oitem.values.reduce((p, i) => p + i.products.length, 0) == 0) {
             flag_item = true
             // @ts-ignore
-            this.specsModel.splice(i, 1)
+            editableSpecsModel.splice(i, 1)
             i--
         }
         if(!flag_item) {
             throw Error("Không thể xóa spec đang có liên kết với product")
         } 
     }
-    
 
-    var categoryDoc = await Category.findByIdAndUpdate(this._id, {specsModel: this.specsModel}, session_opts).exec()
+    var categoryDoc = await Category.findByIdAndUpdate(this._id, {specsModel: editableSpecsModel}, session_opts).exec()
     if(!categoryDoc)
         throw Error("Lỗi lưu")
     var affects = [...relate_set]
     var docs = await Product.find({'_id': {$in: affects}}).select("specs").exec()
     if(!docs)
         throw Error("Lỗi load")
+    console.log("4")
     
     for(let  i = 0; i< docs.length; i++) {
         var new_specs: any = {}

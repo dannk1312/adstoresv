@@ -43,6 +43,7 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
         const name: string = req.body.name;
         const image_base64: string = req.body.image_base64;
         var specsModel: any = req.body.specsModel;
+        console.log(specsModel)
 
 
         if (!_id || (!name && !image_base64 && !specsModel))
@@ -81,7 +82,6 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
                 if((!!name && !(await Category.findOne({ _id: { $ne: _id }, name }))))
                 {
                     category.name = name
-                    console.log(name)
                     for(let  i = 0; i < category.products.length; i++) {
                         if(!(await Product.findByIdAndUpdate(category.products[i], {"category": name}, opts).exec())) {
                             console.log(category.products[i])
