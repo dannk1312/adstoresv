@@ -72,7 +72,7 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
                 $project: {
                     _id: 1,
                     saler: { $arrayElemAt: ["$saler", -1] },
-                    last_message: { $arrayElemAt: ["$messages", -1] },
+                    last_message: { $arrayElemAt: ["$messages", 0] },
                     seen: 1
                 }
             })
@@ -94,7 +94,7 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
                 $project: {
                     _id: 1,
                     customer: { $arrayElemAt: ["$customer", -1] },
-                    last_message: { $arrayElemAt: ["$messages", -1] },
+                    last_message: { $arrayElemAt: ["$messages", 0] },
                     seen: 1
                 }
             })
