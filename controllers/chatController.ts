@@ -14,8 +14,9 @@ export const New = async (req: Request, res: Response, next: NextFunction) => {
 
         // Remove old Chatbox
         if (account.chats.length > 0) {
-            Chat.findByIdAndDelete(account.chats.pop()).exec((err, doc: any) => {
+            Chat.findByIdAndDelete(account.chats.pop()).exec((err, doc) => {
                 if (doc) {
+                    console.log("???")
                     Account.findByIdAndUpdate(doc.saler, { $pull: { chats: doc._id } }).exec();
                 }
             })
@@ -67,11 +68,14 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
                     as: "saler"
                 }
             })
-            pipeline.push({$project: {
-                _id : 1,
-                saler: { $arrayElemAt: ["$saler", -1] },
-                last_message: { $arrayElemAt: ["$messages", -1] }
-            }})
+            pipeline.push({
+                $project: {
+                    _id: 1,
+                    saler: { $arrayElemAt: ["$saler", -1] },
+                    last_message: { $arrayElemAt: ["$messages", -1] },
+                    seen: 1
+                }
+            })
         }
         else {
             pipeline.push({ $match: { saler: account._id } })
@@ -86,15 +90,18 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
                     as: "customer"
                 }
             })
-            pipeline.push({$project: {
-                _id : 1,
-                customer: { $arrayElemAt: ["$customer", -1] },
-                last_message: { $arrayElemAt: ["$messages", -1] }
-            }})
+            pipeline.push({
+                $project: {
+                    _id: 1,
+                    customer: { $arrayElemAt: ["$customer", -1] },
+                    last_message: { $arrayElemAt: ["$messages", -1] },
+                    seen: 1
+                }
+            })
         }
         Chat.aggregate(pipeline).exec((err, docs) => {
-            if(err) return res.status(500).send({ msg: mess.errInternal })
-            return res.send({msg: mess.success, data: docs})
+            if (err) return res.status(500).send({ msg: mess.errInternal })
+            return res.send({ msg: mess.success, data: docs })
         })
 
     } catch (err) {
@@ -109,18 +116,18 @@ export const AddMessage = async (req: Request, res: Response, next: NextFunction
         const _id: string = req.body._id;
         const message: string = req.body.message
         var find_options: any;
-        var search_options: any;
+        var update_options: any;
 
         if (account.role == "Sale") {
             find_options = { _id, saler: account._id }
-            search_options = { $push: { "messages": { $each: [{ isCustomer: false, message: message }], $position: 0 } } }
+            update_options = { seen: false, $push: { "messages": { $each: [{ isCustomer: false, message: message }], $position: 0 } } }
         }
         else {
             find_options = { _id, customer: account._id }
-            search_options = { $push: { "messages": { $each: [{ isCustomer: true, message: message }], $position: 0 } } }
+            update_options = { seen: false, $push: { "messages": { $each: [{ isCustomer: true, message: message }], $position: 0 } } }
         }
 
-        Chat.findOneAndUpdate(find_options, search_options).exec((err, doc) => {
+        Chat.findOneAndUpdate(find_options, update_options).exec((err, doc) => {
             if (err) return res.status(500).send({ msg: config.err500 })
             if (!doc) return res.status(400).send({ msg: config.err400 })
             return res.send({ msg: config.success })
@@ -138,19 +145,29 @@ export const GetMessages = async (req: Request, res: Response, next: NextFunctio
         const skip: number = req.body.skip ?? 0;
         const limit: number = req.body.limit ?? 20;
         // @ts-ignore
-        if(!account.chats.includes(_id)) return res.status(400).send({msg: mess.errPermission + "[_id]. "})
-        
-        if(account.role == "Customer")
+        if (!account.chats.includes(_id)) return res.status(400).send({ msg: mess.errPermission + "[_id]. " })
+
+        if (account.role == "Customer")
             Chat.findById(_id).slice("messages", [skip, limit]).populate('saler', "name email phone").exec((err, doc) => {
                 if (err) return res.status(500).send({ msg: config.err500 })
                 if (!doc) return res.status(400).send({ msg: config.errPermission })
-                res.send({ msg: config.success, doc: { _id: doc._id, saler: doc.saler, messages: doc.messages.reverse() } })
+                if (skip == 0 && doc.messages[0].isCustomer == false) {
+                    doc.seen = true
+                    doc.save()
+                }
+                doc.messages = doc.messages.reverse()
+                res.send({ msg: config.success, data: doc })
             })
-        else 
+        else
             Chat.findById(_id).slice("messages", [skip, limit]).populate('customer', "name email phone").exec((err, doc) => {
                 if (err) return res.status(500).send({ msg: config.err500 })
                 if (!doc) return res.status(400).send({ msg: config.errPermission })
-                res.send({ msg: config.success, doc: { _id: doc._id, customer: doc.customer, messages: doc.messages.reverse() } })
+                if (skip == 0 && doc.messages[0].isCustomer == true) {
+                    doc.seen = true
+                    doc.save()
+                }
+                doc.messages = doc.messages.reverse()
+                res.send({ msg: config.success, data: doc})
             })
     } catch (err) {
         console.log(err)

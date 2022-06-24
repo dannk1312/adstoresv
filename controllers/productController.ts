@@ -599,9 +599,23 @@ export const Top = async (req: Request, res: Response) => {
     const category: string = req.body.category
     const quantity: number = req.body.quantity ?? 10
 
-    var query = !!category ? { category, 'colors.0': { $exists: true } } : { 'colors.0': { $exists: true }, enable: true }
+    var query: any = { 'colors.0': { $exists: true }, enable: true }
+    if(!!category) query.category = category
 
     Product.find(query).sort({ sold: -1 }).limit(quantity).select(config.product_str).exec((err, docs) => {
+        if (err) return res.status(500).send({ msg: config.err500 })
+        return res.send({ msg: config.success, data: docs })
+    })
+}
+
+export const Sale = async (req: Request, res: Response) => {
+    const category: string = req.body.category
+    const quantity: number = req.body.quantity ?? 10
+
+    var query: any = { 'colors.0': { $exists: true }, enable: true, 'catalogue.0': { $exists: true } }
+    if(!!category) query.category = category
+
+    Product.find(query).sort({ sale: -1 }).limit(quantity).select("catalogue").exec((err, docs) => {
         if (err) return res.status(500).send({ msg: config.err500 })
         return res.send({ msg: config.success, data: docs })
     })

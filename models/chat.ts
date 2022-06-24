@@ -11,6 +11,7 @@ export interface IChat {
         message: String,
         createdAt: Date
     }[],
+    seen: boolean,
     createdAt: Date,
     updatedAt: Date
 }
@@ -23,7 +24,8 @@ export const chatSchema = new Schema<IChat>({
         isCustomer: {type: Boolean, required: true},
         message: {type: String, required: true, trim: true},
         createdAt: {type: Date, default: Date.now}
-    }]
+    }],
+    seen: {type: Boolean, default: false},
 }, { timestamps: true })
 
 
