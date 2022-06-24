@@ -18,7 +18,7 @@ const route = express.Router();
 //       sortName: string - ["self_cancel", "createAt", "bills"] - số lần hủy đơn, ngày tạo, số lượng bill
 //       sortType: number - 1 là tăng dần, -1 giảm dần
 // nếu skip = 0 thì có trả số lượng
-route.post("/account/list", Default.Role("Admin"), Account.List)
+route.post("/account/list", Default.Role(["Admin", "Sale"]), Account.List)
 
 // header: accessToken - role: Admin - field: _id, enable
 // type: 

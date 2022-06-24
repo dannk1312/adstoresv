@@ -41,7 +41,7 @@ route.post("/bill/update", Default.Role(["Customer", "Sale",  "Admin"]), Bill.Up
 //       search: string - phone, address
 //       sortName: string - ["ship", "total", "discount"] - phí ship, phí tổng, - phí giảm giá
 //       sortType: number - 1 tăng dần, -1 giảm dần
-route.post("/bill/list", Default.Role("Admin"), Bill.List)
+route.post("/bill/list", Default.Role(["Admin", "Sale"]), Bill.List)
 
 // header: accessToken - role: ["Customer", "Sale", "Admin"] - field: _id
 // type:
