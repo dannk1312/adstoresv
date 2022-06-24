@@ -155,8 +155,7 @@ export const GetMessages = async (req: Request, res: Response, next: NextFunctio
                     doc.seen = true
                     doc.save()
                 }
-                doc.messages = doc.messages.reverse()
-                res.send({ msg: config.success, data: doc })
+                res.send({ msg: config.success, data: {_id: doc._id, saler: doc.saler, messages: doc.messages.reverse(), seen: doc.seen} })
             })
         else
             Chat.findById(_id).slice("messages", [skip, limit]).populate('customer', "name email phone").exec((err, doc) => {
@@ -167,7 +166,7 @@ export const GetMessages = async (req: Request, res: Response, next: NextFunctio
                     doc.save()
                 }
                 doc.messages = doc.messages.reverse()
-                res.send({ msg: config.success, data: doc})
+                res.send({ msg: config.success, data: {_id: doc._id, customer: doc.customer, messages: doc.messages.reverse(), seen: doc.seen}})
             })
     } catch (err) {
         console.log(err)
