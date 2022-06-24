@@ -165,7 +165,6 @@ export const GetMessages = async (req: Request, res: Response, next: NextFunctio
                     doc.seen = true
                     doc.save()
                 }
-                doc.messages = doc.messages.reverse()
                 res.send({ msg: config.success, data: {_id: doc._id, customer: doc.customer, messages: doc.messages.reverse(), seen: doc.seen}})
             })
     } catch (err) {
