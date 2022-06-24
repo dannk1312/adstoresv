@@ -134,6 +134,13 @@ route.post("/product/hint", Product.Hint)
 // r u ok
 route.post("/product/top", Product.Top)
 
+// field: category, quantity
+// type: 
+//       category: string  
+//       quantity: number // undefine => 10
+// r u ok
+route.post("/product/sale", Product.Sale)
+
 
 
 export const productRoute = route
