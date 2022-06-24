@@ -4,8 +4,8 @@ POST http://localhost:5000/account/login HTTP/1.1
 Content-Type: application/json
 
 {
-    "email_or_phone": "adstore7491@gmail.com",
-    "password": "ad1811007491"
+    "email_or_phone": "customer@gmail.com",
+    "code": "000000"
 }
 
 
@@ -14,7 +14,7 @@ POST http://localhost:5000/account/login HTTP/1.1
 Content-Type: application/json
 
 {
-    "email_or_phone": "dannk1312@gmail.com",
+    "email_or_phone": "sale@gmail.com",
     "code": "000000"
 }
 
@@ -36,8 +36,8 @@ POST http://localhost:5000/chat/addMessage HTTP/1.1
 Content-Type: application/json
 
 {
-    "_id": "62b03c4ae515254e2e87037a",
-    "message": "alooo"
+    "_id": "62b55f764360291a3a4553a3",
+    "message": "gì ?"
 }
 
 ###
@@ -45,9 +45,8 @@ POST http://localhost:5000/chat/getMessages HTTP/1.1
 Content-Type: application/json
 
 {
-    "_id": "62b03c4ae515254e2e87037a",
-    "skip": 0,
-    "limit": 2
+    "_id": "62b55f764360291a3a4553a3",
+    "limit": 10
 }
 
 

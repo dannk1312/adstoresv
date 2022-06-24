@@ -4,7 +4,7 @@ POST http://localhost:5000/account/login HTTP/1.1
 Content-Type: application/json
 
 {
-    "email_or_phone": "admin@gmail.com",
+    "email_or_phone": "customer@gmail.com",
     "code": "000000"
 }
 
