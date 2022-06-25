@@ -283,7 +283,7 @@ export const AddCatalogue = async (req: Request, res: Response, next: NextFuncti
         if ((!_id && !code))
             return res.status(400).send({ msg: config.err400 })
     
-        var product = await Product.findOneAndUpdate({ $or: [{ _id: _id }, { code: code }] })
+        var product = await Product.findOne({ $or: [{ _id: _id }, { code: code }] })
         if(!product) return res.status(500).send({ msg: config.err500 })
         
         const old_image_id = product.catalogue.length > 0 ? product.catalogue[0].image_url: ""
