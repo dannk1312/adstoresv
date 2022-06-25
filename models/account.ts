@@ -157,7 +157,7 @@ export const AccountSurface = async (_id: string) => {
     var docs = await Account.aggregate(pipeline)
     if(docs.length > 0) {
         var doc = docs[0]
-        doc.bag_items_length = doc.bag_items.length
+        doc.bag_items_length = doc.bag_items.reduce((a: number, b: IBag) => a + b.quantity, 0)
         var temp = new Set()
         doc.bag_items.forEach((u: any) => temp.add(u.product))
         delete doc.bag_items
