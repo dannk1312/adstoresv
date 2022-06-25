@@ -48,6 +48,7 @@ export const Follow = async (req: Request, res: Response, next: NextFunction) =>
         const email: string = req.body.email
         const socialId = await SocialId()
         if(!email) return res.status(400).send({msg: mess.errMissField + "[email]. "})
+        if(!regex.email.test(email)) return res.status(400).send({msg: mess.errFormatField + "[email]. "})
 
         if(!socialId) throw Error()
         Social.findByIdAndUpdate(socialId, {$addToSet: {followers: email}}).exec((err) => {

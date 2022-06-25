@@ -274,24 +274,43 @@ export const UpdateColor = async (req: Request, res: Response, next: NextFunctio
 }
 
 export const AddCatalogue = async (req: Request, res: Response, next: NextFunction) => {
-    const _id: string = req.body._id
-    const code: string = req.body.code
-    const image_base64: string = req.body.image_base64
 
-    if ((!_id && !code) || !image_base64)
-        return res.status(400).send({ msg: config.err400 })
+    try {
+        const _id: string = req.body._id
+        const code: string = req.body.code
+        const image_base64: string = req.body.image_base64
+    
+        if ((!_id && !code))
+            return res.status(400).send({ msg: config.err400 })
+    
+        var product = await Product.findOneAndUpdate({ $or: [{ _id: _id }, { code: code }] })
+        if(!product) return res.status(500).send({ msg: config.err500 })
+        
+        const old_image_id = product.catalogue.length > 0 ? product.catalogue[0].image_url: ""
+    
+        if(!!image_base64) {
+            const img_info = await image.upload(image.base64(image_base64), "product");
+            if (!img_info) return res.status(500).send({ msg: config.errSaveImage })
+            // @ts-ignore
+            product.catalogue = [{image_id: img_info.public_id, image_url: img_info.url}]
+        } else {
+            if(product.catalogue.length == 0)
+                return res.send({ msg: "Catalogue trống" })
+            product.catalogue = []
+        }
+        product.save((err) => {
+            if(err) {
+                if(!!image_base64) image.destroy(product!.catalogue[0].image_id)
+                return res.status(500).send({ msg: config.err500 })
+            } 
+            image.destroy(old_image_id)
+            return res.send({ msg: mess.success })
+        })
+    } catch(err) {
+        console.log(err)
+        return res.status(500).send({ msg: config.err500 })
+    }
 
-    const img_info = await image.upload(image.base64(image_base64), "product");
-    if (!img_info)
-        return res.status(500).send({ msg: config.errSaveImage })
-    const catelogue = { image_id: img_info.public_id, image_url: img_info.url }
-
-    Product.findOneAndUpdate({ $or: [{ _id: _id }, { code: code }] }, { $push: { catalogue: catelogue } }).exec((err, doc) => {
-        if (err) return res.status(500).send({ msg: config.err500 })
-        if (!doc) return res.status(400).send({ msg: config.errNotExists })
-
-        return res.send({ msg: config.success, data: catelogue })
-    });
 }
 
 export const DeleteCatalogue = async (req: Request, res: Response, next: NextFunction) => {

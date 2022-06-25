@@ -4,7 +4,7 @@ import * as Discount from '../controllers/discountController';
 
 const route = express.Router();
 
-// header: accessToken - role: Admin - field: ....
+// header: accessToken - role: ["Admin", "Sale"] - field: ....
 // type:
 //      code**: string,
 //      enable: boolean, // default: false
@@ -19,9 +19,9 @@ const route = express.Router();
 //      is_oic: boolean, // is one in customer
 //      value**: number 
 
-route.post("/discount/create", Default.Role("Admin"), Discount.Create)
+route.post("/discount/create", Default.Role(["Admin", "Sale"]), Discount.Create)
 
-// header: accessToken - role: Admin - field: ....
+// header: accessToken - role: Ad["Admin", "Sale"]min - field: ....
 // type:
 //      _id: string
 //      code: string,
@@ -34,10 +34,10 @@ route.post("/discount/create", Default.Role("Admin"), Discount.Create)
 //      products_add: string[] - products id
 //      accounts_add: string[] - accounts id - add sẽ thông báo tới người dùng
 
-route.post("/discount/update", Default.Role("Admin"), Discount.Update)
+route.post("/discount/update", Default.Role(["Admin", "Sale"]), Discount.Update)
 
 
-// header: accessToken - role: Admin - field: skip, limit
+// header: accessToken - role: ["Admin", "Sale"] - field: skip, limit
 // type:
 //      search: string
 //      skip: number - undefine - 0
@@ -52,22 +52,22 @@ route.post("/discount/update", Default.Role("Admin"), Discount.Update)
 //      fromDate: Date
 //      toDate: Date
 
-route.post("/discount/list", Default.Role("Admin"), Discount.List)
+route.post("/discount/list", Default.Role(["Admin", "Sale"]), Discount.List)
 
-// header: accessToken - role: Admin - field: _id, code
+// field: _id, code
 // type:
 //      _id: string
 //      code: string
 
 route.post("/discount/read", Discount.Read)
 
-// header: accessToken - role: Admin - field: _id, code
+// header: accessToken - role: ["Admin", "Sale"] - field: _id, code
 // type:
 //      _id: string
 //      code: string
 //      field**: string
 // rule: (_id | doc)**
 
-route.post("/discount/read", Default.Role("Admin"), Discount.Links)
+route.post("/discount/read", Default.Role(["Admin", "Sale"]), Discount.Links)
 
 export const discountRoute = route
