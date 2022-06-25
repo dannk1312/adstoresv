@@ -296,11 +296,11 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
                 }
             else if (status == "Done") {
                 // Add product to rates of account
-                const products: any = {}
+                const products: any = []
                 for (let i = 0; i < bill.products.length; i++) {
-                    products.push({ product: bill.products[i].product })
+                    products.push(bill.products[i].product)
                 }
-                if (!!(await Account.findByIdAndUpdate(account._id, { $push: { rate_waits: { $each: products } } }, opts).exec()))
+                if (!(await Account.findByIdAndUpdate(account._id, { $push: { rate_waits: { $each: products } } }, opts).exec()))
                     throw Error("Fail")
             }
 
@@ -313,6 +313,7 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
             SendNotificationsFunc(bill.account._id.toString(), message)
             return res.send({ msg: config.success })
         } catch (error) {
+            console.log(error)
             await session.abortTransaction();
             session.endSession();
             return res.status(400).send({ msg: "Lỗi không lưu bill" })
