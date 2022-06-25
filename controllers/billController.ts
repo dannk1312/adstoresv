@@ -86,6 +86,7 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
         }
 
         var total: number = 0
+        var reduce: number = 0
         var weight: number = 0
         bagItems.forEach(e => {
             total += e.price * e.quantity
@@ -100,7 +101,7 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
         warning += result_ship.error
 
         var result_discount = await discountCalculate(discountCode, bagItems, total, ship, account!._id.toString() ?? "")
-        var reduce: number = result_discount.value
+        reduce += result_discount.value
         warning += result_discount.error
 
         res.send({ msg: config.success, warning, data: { bag_details: bagItems, ship, total, discount: reduce, discountCode, address } })
@@ -151,6 +152,7 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
             return res.status(400).send({ msg: "Giỏ hàng rỗng. " + warning })
 
         var total: number = 0
+        var reduce: number = 0
         var weight: number = 0
         bagItems.forEach(e => {
             total += e.price * e.quantity
@@ -163,7 +165,7 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
         warning += result_ship.error
 
         var result_discount = await discountCalculate(discountCode, bagItems, total, ship, account!._id.toString() ?? "")
-        var reduce: number = result_discount.value
+        reduce += result_discount.value
         warning += result_discount.error
         const discount = result_discount.doc
 
