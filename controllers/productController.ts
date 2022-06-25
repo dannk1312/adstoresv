@@ -242,28 +242,35 @@ export const AddColor = async (req: Request, res: Response, next: NextFunction) 
     });
 }
 
-export const DeleteColor = async (req: Request, res: Response, next: NextFunction) => {
+export const UpdateColor = async (req: Request, res: Response, next: NextFunction) => {
     const _id: string = req.body._id
     const code: string = req.body.code
     const color: string = req.body.color
+    const image_base64: any = req.body.image_base64
 
     if ((!_id && !code) || !color)
         return res.status(400).send({ msg: config.err400 })
 
     var doc = await Product.findOne({ $or: [{ _id: _id }, { code: code }] }).select("colors").exec()
-    if (!doc)
-        return res.status(400).send({ msg: config.err400 })
+    if (!doc) return res.status(400).send({ msg: config.err400 })
 
     for (let i = 0; i < doc.colors.length; i++) {
         if (doc.colors[i].color == color) {
-            doc.colors.slice(i, 1)
+            const img_info = await image.upload(image.base64(image_base64), "product_color");
+            if (!img_info) return res.status(500).send({ msg: config.errSaveImage })
+            const old_image_id = doc.colors[i].image_id
+            doc.colors[i].image_id = img_info.public_id
+            doc.colors[i].image_url = img_info.url
             if (!!(await doc.save())) {
-                image.destroy(doc.colors[i].image_id)
-            } else
+                image.destroy(old_image_id)
+                return res.send({ msg: config.success })
+            } else {
+                image.destroy(img_info.public_id)
                 return res.status(500).send({ msg: config.err500 })
+            }
         }
     }
-    return res.send({ msg: config.success })
+    return res.status(400).send({ msg: mess.errWrongField + "[color]. " })
 }
 
 export const AddCatalogue = async (req: Request, res: Response, next: NextFunction) => {
