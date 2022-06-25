@@ -102,14 +102,6 @@ route.post("/product/updateColor", Default.Role("Admin"), Product.UpdateColor)
 // rule: (_id | code)**
 route.post("/product/addCatalogue", Default.Role("Admin"), Product.AddCatalogue)
 
-// header: accessToken - role: Admin - field: _id, catalogue_id
-// type: 
-//      _id: string - để query product
-//      code: string - để queryy product
-//      catalogue_id**: string 
-// rule: (_id | code)**
-route.post("/product/deleteCatalogue", Default.Role("Admin"), Product.DeleteCatalogue)
-
 // header: accessToken - role: Admin - field: data
 // type: 
 //      data: object[] - [{code: string, quantity: number, price: number}]

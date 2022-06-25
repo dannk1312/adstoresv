@@ -142,6 +142,7 @@ export const SendListEmails = async (req: Request, res: Response, next: NextFunc
         emails.forEach(email => {
             SendMail(email, subject, message)
         })
+        return res.send({msg: mess.success})
     } catch(err) {
         console.log(err)
         return res.status(500)
