@@ -615,8 +615,13 @@ export const Sale = async (req: Request, res: Response) => {
     var query: any = { 'colors.0': { $exists: true }, enable: true, 'catalogue.0': { $exists: true } }
     if(!!category) query.category = category
 
-    Product.find(query).sort({ sale: -1 }).limit(quantity).select("catalogue").exec((err, docs) => {
+    Product.find(query).sort({ sale: -1 }).limit(quantity).select("catalogue category name").exec((err, docs) => {
         if (err) return res.status(500).send({ msg: config.err500 })
-        return res.send({ msg: config.success, data: docs })
+        var clone: any[] = JSON.parse(JSON.stringify(docs))
+        clone.forEach(d=>{
+            d.image_url = d.catalogue[0].image_url
+            delete d.catalogue
+        })
+        return res.send({ msg: config.success, data: clone })
     })
 }
