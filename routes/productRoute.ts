@@ -85,13 +85,14 @@ route.post("/product/update", Default.Role("Admin"), Product.Update)
 // rule: (_id | code)**
 route.post("/product/addColor", Default.Role("Admin"), Product.AddColor)
 
-// header: accessToken - role: Admin - field: _id, code, color
+// header: accessToken - role: Admin - field: _id, code, color, image_base64
 // type: 
 //      _id: string - để query product
 //      code: string - để queryy product
 //      color**: string
+//      image_base64**: string
 // rule: (_id | code)**
-route.post("/product/deleteColor", Default.Role("Admin"), Product.DeleteColor)
+route.post("/product/updateColor", Default.Role("Admin"), Product.UpdateColor)
 
 // header: accessToken - role: Admin - field: _id, code, image_base64
 // type: 
