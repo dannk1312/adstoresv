@@ -587,7 +587,7 @@ export const Hint = async (req: Request, res: Response) => {
         var results = await axios.post(config.hint_url, data, {
             headers: { 'Content-Type': 'application/json' }
         })
-        if (results.data.success == "Fail") throw Error()
+        if (results.data.success == "Fail" || !results.data) throw Error()
         Product.find({ _id: { $in: results.data }, 'colors.0': { $exists: true }, enable: true }).select(config.product_str).exec((err, docs) => {
             if (err) return res.status(500).send({ msg: config.err500 })
             return res.send({ msg: config.success, data: docs })
