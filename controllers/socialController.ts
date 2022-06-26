@@ -24,16 +24,20 @@ const SocialId = async () => {
 export const Comment = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const email: string = req.body.email
+        const name: string = req.body.name
+        const subject: string = req.body.subject
         const message: string = req.body.message
         const socialId = await SocialId()
 
         var error = ""
         if(!email) error += mess.errMissField + "[email]. "
         if(!message) error += mess.errMissField + "[message]. "
+        if(!name) error += mess.errMissField + "[name]. "
+        if(!subject) error += mess.errMissField + "[subject]. "
         if(!error) return res.status(400).send({msg: error})
 
         if(!socialId) throw Error()
-        Social.findByIdAndUpdate(socialId, {$push: {comments: {email, message}}}).exec((err) => {
+        Social.findByIdAndUpdate(socialId, {$push: {comments: {name, subject, email, message}}}).exec((err) => {
             if(err) return res.status(500).send({msg: mess.errInternal})
             return res.send({msg: mess.success})
         })

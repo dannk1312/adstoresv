@@ -21,9 +21,11 @@ route.post("/follow/delete", Default.Role(["Sale", "Admin"]), Social.DeleteFollo
 //       limit: number - undefine = 10000
 route.post("/follow/list", Default.Role(["Sale", "Admin"]), Social.ListFollows)
 
-// field: email, message
+// field: email, name, subject, message
 // type: 
 //       email**: string
+//       name**: string,
+//       subject**: string,
 //       message**: string
 route.post("/comment/add", Social.Comment)
 

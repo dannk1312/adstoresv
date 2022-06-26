@@ -8,6 +8,8 @@ export interface ISocial {
     followers: string[],
     comments: {
         email: string,
+        name: string,
+        subject: string,
         message: string,
         at: Date
     }
@@ -19,6 +21,8 @@ export const socialSchema = new Schema<ISocial>({
     followers: [String],
     comments: [{
         email: {type: String, required: true},
+        name: {type: String, required: true},
+        subject: {type: String, required: true},
         message: {type: String, required: true},
         at: {type: Date, default: Date.now}
     }]
