@@ -242,7 +242,7 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
         if (!bill)
             return res.status(400).send({ msg: config.errNotExists })
 
-        if (bill.status == status)
+        if (bill.status == status || bill.status == "Cancel")
             return res.send({ msg: config.success })
         else if (account.role == "Customer" && status == "Cancel") {
             // @ts-ignore
@@ -310,6 +310,7 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
             if(!!bill.account.email) SendMail(bill.account.email, "Trạng Thái Đơn Hàng " + billDoc._id, message)
             SendSMS(message, bill.phone)
             SendNotificationsFunc(bill.account._id.toString(), message)
+            
             return res.send({ msg: config.success })
         } catch (error) {
             console.log(error)

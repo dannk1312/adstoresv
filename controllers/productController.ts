@@ -67,6 +67,7 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
         const colors: string[] = req.body.colors
         const skip: number = req.body.skip ?? 0
         const limit: number = req.body.limit ?? 10000
+        const search: string = req.body.search
 
         const sortName: string = req.body.sortName
         const sortType: number = req.body.sortType
@@ -105,6 +106,15 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
         }
 
         var queryOptions: any = { price: { $lte: max_price, $gte: min_price } }
+
+        if (!!search) {
+            const pattern = { $regex: '.*' + search + '.*', $options: "i" }
+            queryOptions['$or'] = [
+                { name: pattern },
+                { code: pattern },
+                { category: pattern }
+            ]
+        }
 
         if (!!products)
             queryOptions["_id"] = { $in: products }

@@ -80,7 +80,7 @@ export const billSchema = new Schema<IBill>({
         default: 'Preparing'
     },
 
-    refund: Boolean,
+    refund: {type: Boolean, default: false},
     paid: {type: Boolean, default: false},
     ship: {type: Number, required: true}, 
     total: {type: Number, required: true}, 

@@ -15,6 +15,7 @@ route.post("/product/commingSoon", Product.CommingSoon)
 
 // field: category, specs, colors, min_price, max_price, skip, limit, sortName, sortType
 // type:
+//      search: string - name, code - undefine = all
 //      category: string
 //      specs: object - {name: string, value: any[]} - undefine = all | or | [{name: string, values: string}]
 //      colors: string - undefine = all - colors: "white;blue"
