@@ -13,7 +13,7 @@ import { SendMail, SendSMS } from '../services/sender';
 import { SendNotification, SendNotificationsFunc } from './accountController';
 
 const shipCalculate = async (address: { province: string, district: string, address: string } | undefined, weight: number, value: number) => {
-    var result: { error: string, value: number } = { error: "", value: 0 }
+    var result: { error: string, value: number } = { error: "", value: 2000000 }
     if (!address || !address.province || !address.district || !address.address) { result.error += "Địa chỉ thiếu. "; return result }
     const data = {
         "pick_province": process.env.PICK_PROVINCE,
@@ -28,11 +28,16 @@ const shipCalculate = async (address: { province: string, district: string, addr
         "deliver_option": "xteam",
         "tags": ["1"] // 1 là dễ vỡ
     }
-    const ghtk = await axios.get(config.ghtk_url + fromObject(data), { headers: { "Token": `${process.env.GHTK_API_TOKEN}` } })
-    if (ghtk.status != 200 || ghtk.data.success == false) { result.error += `Xảy ra lỗi khi tính toán giá ship. `; return result }
-    const fee = ghtk.data.fee.fee
-    result.value = fee
-    return result
+    try {
+        const ghtk = await axios.get(config.ghtk_url + fromObject(data), { headers: { "Token": `${process.env.GHTK_API_TOKEN}` } })
+        if (ghtk.status != 200 || ghtk.data.success == false) { result.error += `Xảy ra lỗi khi tính toán giá ship. `; return result }
+        const fee = ghtk.data.fee.fee
+        result.value = fee
+        return result
+    } catch(err){
+        return result
+    }
+    
 }
 
 const discountCalculate = async (code: string, bagItems: IBagItem[], total: number, ship: number, account_id: string = "") => {
@@ -96,8 +101,11 @@ export const Calculate = async (req: Request, res: Response, next: NextFunction)
 
         if(!address) address = account?.address
         var result_ship = await shipCalculate(address, weight, total)
-        var ship: number = result_ship.value
-        warning += result_ship.error
+        var ship: number = 0
+        if(!!result_ship.error) {
+            warning += result_ship.error
+        } else 
+            ship = result_ship.value
 
         var result_discount = await discountCalculate(discountCode, bagItems, total, ship, account?._id.toString() ?? "")
         reduce += result_discount.value
@@ -160,8 +168,11 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
         })
 
         var result_ship = await shipCalculate(address, weight, total)
-        var ship: number = result_ship.value
-        warning += result_ship.error
+        var ship: number = 0
+        if(!!result_ship.error) {
+            warning += result_ship.error
+        } else 
+            ship = result_ship.value
 
         var result_discount = await discountCalculate(discountCode, bagItems, total, ship, account!._id.toString() ?? "")
         reduce += result_discount.value
