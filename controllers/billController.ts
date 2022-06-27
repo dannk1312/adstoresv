@@ -459,21 +459,26 @@ export const CheckVNPay = async (req: Request, res: Response, next: NextFunction
                 bill.paid = true
                 bill.desc = "Thanh toán online thành công. "
                 if(!(await bill.save())) {
+                    res.status(301).redirect(process.env.VNP_RTN_URL + "failure")
                     message = "Bill " + bill._id + " thanh toán hoàn tất nhưng cập nhật thất bại. "
                     console.log(message)
                     message += "Bạn nhanh chóng liên hệ chuyên viên tư vấn của chúng tôi để được giải quyết nhanh nhất. "
-                } else 
+                } else {
+                    res.status(301).redirect(process.env.VNP_RTN_URL + "success")
                     message = "Bill " + bill._id + " thanh toán hoàn tất"
+                }
             }
             else {
                 bill.desc = "Thanh toán online thất bại. Việc thanh toán sẽ chuyển sang trực tiếp. "
                 if(!(await bill.save())) {
+                    res.status(301).redirect(process.env.VNP_RTN_URL + "failure")
                     message = "Bill " + bill._id + " không thanh toán hoàn tất nhưng hủy bill thất bại. "
                     console.log(message)
                     message += "Bạn nhanh chóng liên hệ chuyên viên tư vấn của chúng tôi để được giải quyết nhanh nhất. "
-                } else 
+                } else {
+                    res.status(301).redirect(process.env.VNP_RTN_URL + "failure")
                     message = "Bill " + bill._id + " thanh toán thất bại, đơn hàng chuyển sang trả tiền mặt. "
-            
+                }
             }
             // @ts-ignore
             if(!!bill.account.email) SendMail(bill.account.email, "Thanh Toán Đơn Hàng " + bill._id, message)
@@ -486,9 +491,7 @@ export const CheckVNPay = async (req: Request, res: Response, next: NextFunction
     else {
         //res.status(200).json({ RspCode: '97', Message: 'Fail checksum' })
     }
-    console.log("redirect", process.env.VNP_RTN_URL)
     // @ts-ignore
-    res.status(301).redirect(process.env.VNP_RTN_URL)
     }catch(err) {
         console.log(err)
     }
