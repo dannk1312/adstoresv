@@ -1,79 +1,29 @@
 {
-    "_id": "62ad83b304b1746fa85962eb",
-    "name": "Điện thoại",
-    "specsModel": [
+    "bag": [
         {
-            "name": "Công nghệ màn hình",
-            "values": "Super Retina XDR - ProMotion;Dynamic AMOLED 2X"
+            "product": "62ad8b2404b1746fa859636d",
+            "quantity": 4,
+            "color": "blue"
         },
         {
-            "name": "Độ phân giải",
-            "values": "2532 x 1170 pixels;QHD+ (1440 x 3088 pixels)"
+            "product": "62ad8cb804b1746fa8596398",
+            "quantity": 4,
+            "color": "brown"
         },
         {
-            "name": "Màn hình",
-            "values": "6.8\";6.1 ''"
+            "product": "62ad8b7f04b1746fa8596378",
+            "quantity": 3,
+            "color": "white"
         },
         {
-            "name": "Camera sau",
-            "values": "12MP, f/1.6 + 12MP, ƒ/2.4;108 MP + 12 MP + 10 MP + 10 MP"
-        },
-        {
-            "name": "Đèn Flash",
-            "values": "Có;Không"
-        },
-        {
-            "name": "Hệ điều hành",
-            "values": "Android;IOS"
-        },
-        {
-            "name": "Chipset (hãng SX CPU)",
-            "values": "Apple A15;Qualcomm Snapdragon 8 Gen 1"
-        },
-        {
-            "name": "Xuất xứ",
-            "values": "Trung Quốc;Mỹ;Hàn Quốc"
-        },
-        {
-            "name": "Năm ra mắt",
-            "values": "2020;2029;2018;2017;2016;2022"
-        },
-        {
-            "name": "Loại màn hình",
-            "values": "Tai thỏ;Tràn viền;Giọt nước"
-        },
-        {
-            "name": "RAM",
-            "values": "2Gb;4Gb;8Gb;12Gb"
-        },
-        {
-            "name": "Bộ nhớ trong",
-            "values": "64Gb;128 Gb;256 Gb;512 Gb;1 Tb"
-        },
-        {
-            "name": "Thẻ nhớ ngoài",
-            "values": "Có;Không"
-        },
-        {
-            "name": "Loại pin",
-            "values": "Li-Ion"
-        },
-        {
-            "name": "Trọng lượng",
-            "values": "150g;200g;250g;300g"
-        },
-        {
-            "name": "Pin",
-            "values": "3.200mAh;3.300mAh;3.400mAh;3.500mAh"
-        },
-        {
-            "name": "Tần số quét",
-            "values": "60Hz;120Hz;144Hz"
-        },
-        {
-            "name": "Cổng kết nối/sạc",
-            "values": "Lightning;Type-C"
+            "product": "62ad8b7f04b1746fa8596378",
+            "quantity": 3,
+            "color": "white"
         }
     ],
-    "image_base64": "iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAAbFBMVEX///8AAADZ2dkFBQVTU1OTk5Py8vI6Ojp4eHhvb2/JycnBwcFBQUGlpaX29vbe3t7s7OyMjIwlJSW3t7dfX18PDw+FhYV+fn7Ozs4dHR2oqKh2dnZnZ2dtbW2fn59HR0c+Pj4uLi41NTVZWVnnwA0hAAACgklEQVR4nO3dbVPaQBiF4YRAUNEA4c1aa6j+///YAo4MpU5mjpuzO+t9fc8zew/ZJJAPFAUAAAAAAMCV5nH2ZXd17IpPzZdlILvH2C3/09yG6jsYL2L3XFmE7DuYxy76R/DAshzFbrrQdH3rbbv7C13Vd8SPpE7Ul77lVlfXjlXvh3gTo+QTddu73N3Tw4Wnn72HpLQVZ/2rVSxjd52thymcxu46Gw9T2CbzdFPvhyncJLMR6+lxQdPnm0B+nW4+VTK3xFPhS8iRswQLJ2FnrtIrDD20Ta2wCz10m1rhOPTQCYVOFEootKJQQqEVhRIKrfIvbF5zL3wrMy+cl7kXjioKFRQ6Uaih0IlCDYVOFGoodKJQQ6EThRoKnSjUUOj0DQqz/zWx2GVf2OxzL8z/zQyFEgqtKJRQaJX//XC1ybxwscn9qS3/J+9v8O2JQgmFThRqKHSiUEOhE4UaCp0o1FDoRKGGQicKNUkVZv9bW9PmXliMfudeWGf/3iL/d08USii0olBCoRWFEgqtKJRQaEWhhEIrCiUUWlEoodCKQgmFVhRKKLSiUEKhFYUSCq0olFBoRaGEQisKJRRaUSih0IpCCYVWFEootKJQQqEVhRIKrSiUUGhFoYRCKwolFFpRKKHQikIJhVYUSii0olBCodWhsAs9dJtaYRl6aJtc4TLszFWZXGE5CTnyb2CVXGH5ur4N5Pn+ODChwn05iM08dtmH8TCFbRM77MN6mMJp7K6z2TCFQa9dX1O3gxSmsw2L4mGIwF3sqgtd+MB2ETvqwqIKXpjMzfDd8S+RQkppE540u5B9b2mdou/mk1Cn6ja1M/SsGd192SidJxkAAAAAAJCOPxtnLMU10MIiAAAAAElFTkSuQmCC"
+    "address": {
+        "province": "TP.HCM",
+        "district": "Quận 2",
+        "address": "DVB"
+    }
 }

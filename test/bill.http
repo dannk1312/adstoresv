@@ -1,21 +1,35 @@
-POST http://adstoresv.herokuapp.com/bill/create HTTP/1.1
+POST http://localhost:5000/bill/billCalc HTTP/1.1
 Content-Type: application/json
 
 {
-    "bag":[
-        {"product":"62ad8ab404b1746fa8596362","quantity":1,"color":"red"}
+    "bag": [
+        {
+            "product": "62ad8b2404b1746fa859636d",
+            "quantity": 4,
+            "color": "blue"
+        },
+        {
+            "product": "62ad8cb804b1746fa8596398",
+            "quantity": 4,
+            "color": "brown"
+        },
+        {
+            "product": "62ad8b7f04b1746fa8596378",
+            "quantity": 3,
+            "color": "white"
+        },
+        {
+            "product": "62ad8b7f04b1746fa8596378",
+            "quantity": 3,
+            "color": "white"
+        }
     ],
     "address": {
-        "province": "TP HCM",
-        "district": "Q2",
-        "address": "30, Tran Nao"
-    },
-    "phone":"0923202850",
-    "discountCode":"",
-    "cod":true
+        "province": "TP.HCM",
+        "district": "Quận 2",
+        "address": "DVB"
+    }
 }
-
-
 ####
 POST http://localhost:5000/bill/list HTTP/1.1
 Content-Type: application/json
