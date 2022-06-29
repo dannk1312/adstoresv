@@ -12,7 +12,7 @@ import crypto from "crypto";
 import { SendMail, SendSMS } from '../services/sender';
 import { SendNotification, SendNotificationsFunc } from './accountController';
 
-const shipCalculate = async (address: { province: string, district: string, address: string } | undefined, weight: number, value: number) => {
+export const shipCalculate = async (address: { province: string, district: string, address: string } | undefined, weight: number, value: number) => {
     var result: { error: string, value: number } = { error: "", value: 2000000 }
     if (!address || !address.province || !address.district || !address.address) { result.error += "Địa chỉ thiếu. "; return result }
     const data = {

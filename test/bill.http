@@ -1,4 +1,4 @@
-POST http://localhost:5000/bill/billCalc HTTP/1.1
+POST http://adstoresv.herokuapp.com/bill/billCalc HTTP/1.1
 Content-Type: application/json
 
 {
@@ -23,12 +23,7 @@ Content-Type: application/json
             "quantity": 3,
             "color": "white"
         }
-    ],
-    "address": {
-        "province": "TP.HCM",
-        "district": "Quận 2",
-        "address": "DVB"
-    }
+    ]
 }
 ####
 POST http://localhost:5000/bill/list HTTP/1.1
@@ -59,6 +54,18 @@ POST http://localhost:5000/account/login HTTP/1.1
 Content-Type: application/json
 
 {
-    "email_or_phone": "dannk1312@gmail.com",
+    "email_or_phone": "customer@gmail.com",
     "code": "000000"
+}
+
+###
+POST http://localhost:5000/check_ship HTTP/1.1
+Content-Type: application/json
+
+{
+    "address": {
+        "province": "TP.HCM",
+        "district": "Quận 2",
+        "address": "DVB"
+    }
 }

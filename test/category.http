@@ -283,7 +283,7 @@ Content-Type: application/json
 
 
 ###
-POST http://adstoresv.herokuapp.com/category/read HTTP/1.
+POST http://localhost:5000/category/read HTTP/1.
 Content-Type: application/json
 
 {

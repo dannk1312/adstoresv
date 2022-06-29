@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { config, mess } from '../services/config';
 import express, { NextFunction, Request, Response } from 'express';
 import * as image from "../services/image";
-import { Category, ValidSpecs } from "../models/category";
+import { Category, ICategory, ValidSpecs } from "../models/category";
 import { IProduct, Product } from "../models/product";
 import { Import } from "../models/import";
 import { Account, IAccount, IBag, IBagItem } from "../models/account";
@@ -11,6 +11,7 @@ import { Bill, IBill } from "../models/bill";
 import axios from "axios";
 import { fromObject } from "../services/support";
 import { validateRequest } from "twilio";
+import { categoryTemp, categoryTempExist, RequestCategory } from "../services/category_temp";
 
 
 export const CommingSoon = async (req: Request, res: Response, next: NextFunction) => {
@@ -75,8 +76,9 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
         var products;
 
         if (!!category) {
-            const categoryDoc = await Category.findOne({ name: category });
-            if (!categoryDoc) return res.status(5000).send({ msg: mess.errInternal })
+            if(!categoryTempExist) await RequestCategory()
+            const categoryDoc: ICategory = !categoryTempExist ? await Category.findOne({ name: category }): categoryTemp[category];
+            if (!categoryDoc) return res.status(500).send({ msg: mess.errInternal })
 
             products = categoryDoc.products;
 
@@ -188,6 +190,7 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
 
         await session.commitTransaction();
         session.endSession();
+        RequestCategory();
         return res.send({ msg: config.success })
     } catch (error) {
         console.log(error)
@@ -413,6 +416,7 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
                 if (!!img_info) image.destroy(old_image_id)
                 await session.commitTransaction()
                 session.endSession();
+                RequestCategory();
                 return res.send({ msg: config.success })
             }
         } catch (error) {
