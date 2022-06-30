@@ -80,7 +80,7 @@ route.post("/category/delete", Default.Role("Admin"), Category.Delete)
 
 
 // Refresh Temp
-route.post("/category/refresh", Default.Role("Admin"), Category.Refresh)
+route.get("/category/refresh", Default.Role("Admin"), Category.Refresh)
 
 
 export const categoryRoute = route
