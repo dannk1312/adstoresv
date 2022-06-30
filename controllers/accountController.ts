@@ -175,7 +175,7 @@ export const SignIn = async (req: Request, res: Response, next: NextFunction) =>
                 return res.send({ msg: config.success, data: await AccountSurface(account._id), accessToken: token })
             } else {
                 // create new account for customer
-                var data = config.emailRegEx.test(email_or_phone) ? new Account({ email: email_or_phone }) : new Account({ phone: email_or_phone })
+                var data = new Account({ email: email_or_phone })
                 account = await (new Account(data)).save();
                 if (account) {
                     // assign access token
