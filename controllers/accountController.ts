@@ -6,6 +6,8 @@ import argon2 from "argon2";
 import { codeCache } from "../services/cache";
 import { config, mess, regex } from "../services/config";
 import { Bill } from "../models/bill";
+import { OAuth2Client } from 'google-auth-library';
+const client = new OAuth2Client(process.env.GOOGLEOAUTH_ID);
 
 
 export const List = async (req: Request, res: Response, next: NextFunction) => {
@@ -156,6 +158,33 @@ export const SignIn = async (req: Request, res: Response, next: NextFunction) =>
             }
         } else {
             // Google Token
+            const ticket = await client.verifyIdToken({
+                idToken: googleToken,
+                audience: process.env.GOOGLEOAUTH_ID
+            });
+            const payload = ticket.getPayload();
+            if (payload == undefined || !payload['email'])
+                return res.status(400).send({ msg: config.failure })
+            console.log(payload)
+            const email = payload['email'];
+            var account = await Account.findOne({ email })
+            if (account) {
+                const token = jwt.sign({ id: account._id }, process.env.ACCESS_TOKEN_SECRET!)
+                res.cookie("accessToken", token, { httpOnly: false, signed: true })
+                // @ts-ignore
+                return res.send({ msg: config.success, data: await AccountSurface(account._id), accessToken: token })
+            } else {
+                // create new account for customer
+                var data = config.emailRegEx.test(email_or_phone) ? new Account({ email: email_or_phone }) : new Account({ phone: email_or_phone })
+                account = await (new Account(data)).save();
+                if (account) {
+                    // assign access token
+                    const token = jwt.sign({ id: account._id }, process.env.ACCESS_TOKEN_SECRET!)
+                    res.cookie("accessToken", token, { httpOnly: false, signed: true })
+                    // @ts-ignore
+                    return res.send({ msg: config.success, data: await AccountSurface(account._id), accessToken: token })
+                } else return res.status(400).send({ msg: config.err400 })
+            }
         }
     } catch (err) {
         console.log(err)
@@ -354,7 +383,7 @@ export const SendNotification = async (req: Request, res: Response) => {
 
 export const ReadBills = async (req: Request, res: Response) => {
     const account: IAccount = req.body.account
-    
+
     Account.findById(account._id).populate("bills", "-products -account").select("bills").exec((err, doc) => {
         if (err) return res.status(500).send({ msg: mess.errInternal })
         var result = {
