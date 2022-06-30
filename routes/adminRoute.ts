@@ -1,6 +1,7 @@
 import express, { NextFunction, Request, Response } from 'express';
 import * as Default from '../controllers/defaultController';
 import * as Admin from '../controllers/adminController';
+import { Category } from '../models/category';
 
 
 const route = express.Router();
@@ -24,7 +25,6 @@ route.post("/statistical", Default.Role("Admin"), Admin.Statistical)
 //      dateStart**: Date
 //      dateEnd: Date - undefine = now
 //route.post("/model/delete", Default.Role("Admin"), Admin.DeleteModel)
-
 
 route.post("/check_ship", Default.Role("Admin"), Admin.CheckShip)
 

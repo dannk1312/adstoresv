@@ -1,11 +1,13 @@
 import mongoose, { Document, Types } from "mongoose";
 import jwt from "jsonwebtoken";
-import { config } from '../services/config';
+import { config, mess } from '../services/config';
 import express, { NextFunction, Request, Response } from 'express';
 import * as image from "../services/image";
 import { Category } from "../models/category";
 import { Product } from "../models/product";
 import { specsModelMerge } from "./defaultController";
+import { categoryInfosTemp, categorySurfacesTemp, categoryTemp, categoryTempExist, RequestCategory } from "../services/category_temp";
+import { rmSync } from "fs";
 
 export const Create = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -29,6 +31,7 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
         category.save((err, doc) => {
             if (err) return res.status(500).send({ msg: config.err500 })
             if (!doc) return res.status(400).send({ msg: config.err400 })
+            RequestCategory()
             return res.send({ msg: config.success })
         })
     } catch (err) {
@@ -100,6 +103,7 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
                 await session.commitTransaction();
                 session.endSession();
                 res.send({msg: config.success})
+                RequestCategory()
             } catch (error) {
                 console.log(error)
                 await session.abortTransaction();
@@ -117,14 +121,18 @@ export const Read = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const name: string = req.body.name;
         const _id: string = req.body._id;
-        if (!name && !_id)
-            return res.status(400).send({ msg: config.err400 })
 
-        Category.findOne({ $or: [{ '_id': _id }, { 'name': name }] }, (err: any, doc: any) => {
-            if (err) return res.status(500).send({ msg: config.err500 })
-            if (!doc) return res.status(400).send({ msg: config.errNotExists })
-            return res.send({ msg: config.success, data: doc.info })
-        })
+        if(!categoryTempExist) await RequestCategory()
+        if(!categoryTempExist) throw Error()
+        
+        if(!!name && categoryInfosTemp.hasOwnProperty(name)){
+            return res.send({ msg: mess.success, data: categoryInfosTemp[name] })
+        } 
+        if(!!_id && categoryInfosTemp.hasOwnProperty(_id)){
+            return res.send({ msg: mess.success, data: categoryInfosTemp[_id] })
+        } 
+        return res.status(400).send({msg: mess.errMissField + "[_id/name]. "})
+        
     } catch (err) {
         console.log(err)
         return res.status(500).send({ msg: config.err500 })
@@ -133,15 +141,19 @@ export const Read = async (req: Request, res: Response, next: NextFunction) => {
 
 export const List = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        // @ts-ignore
-        const data = await Category.surfaces();
-        if (data)
-            return res.send({ msg: config.success, data })
-        return res.status(400).send({ msg: config.err400 })
+        if(!categoryTempExist) await RequestCategory()
+        if(!categoryTempExist) throw Error()
+        return res.send({ msg: config.success, data: categorySurfacesTemp })
     } catch (err) {
         console.log(err)
         return res.status(500).send({ msg: config.err500 })
     }
+}
+
+export const Refresh = async (req: Request, res: Response, next: NextFunction) => {
+    if(await RequestCategory()) 
+        return res.send({msg: mess.success})
+    return res.status(500).send({ msg: config.err500 })
 }
 
 export const Delete = async (req: Request, res: Response, next: NextFunction) => {
