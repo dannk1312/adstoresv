@@ -174,7 +174,7 @@ export const SignIn = async (req: Request, res: Response, next: NextFunction) =>
                 return res.send({ msg: config.success, data: await AccountSurface(account._id), accessToken: token })
             } else {
                 // create new account for customer
-                account = await (new Account({ email: email_or_phone })).save();
+                account = await (new Account({ email, name: payload["name"] })).save();
                 if (account) {
                     // assign access token
                     const token = jwt.sign({ id: account._id }, process.env.ACCESS_TOKEN_SECRET!)

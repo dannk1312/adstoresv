@@ -143,6 +143,7 @@ export const AccountSurface = async (_id: string) => {
         {  
             "$project": {
                 "email": "$email",
+                "name": "$name",
                 "phone": "$phone",
                 "role": "$role",
                 "notifications_length": { "$size": "$notifications" },
