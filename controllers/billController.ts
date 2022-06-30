@@ -184,7 +184,7 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
         const products: any[] = []
         bagItems.forEach(i => products.push({ product: i.product, color: i.color, quantity: i.quantity, price: i.price, sale: i.sale }))
 
-        const bill = new Bill({ account: account._id, phone: account.phone, address, products, discountCode, ship, total, discount: reduce, verify })
+        const bill = new Bill({ account: account._id, phone: phone, address, products, discountCode, ship, total, discount: reduce, verify })
         const session = await mongoose.startSession();
         session.startTransaction();
         try {
