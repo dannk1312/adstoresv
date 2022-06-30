@@ -117,13 +117,13 @@ categorySchema.methods.saveSpecsModel = async function(this: ICategory, specsMod
     if(!Category.checkSpecsModel(specsModel))
         throw Error("Trùng specs")
 
-    if(!this.specsModel || this.products.length == 0) {
-        // @ts-ignore
-        this.specsModel = specsModel
-        var tempDoc = await Category.findByIdAndUpdate(this._id, specsModel, session_opts).exec()
-        if(!tempDoc)
-            throw Error("Lỗi lưu")
-    }
+    // if(!this.specsModel || this.products.length == 0) {
+    //     // @ts-ignore
+    //     this.specsModel = specsModel
+    //     var tempDoc = await Category.findByIdAndUpdate(this._id, specsModel, session_opts).exec()
+    //     if(!tempDoc)
+    //         throw Error("Lỗi lưu")
+    // }
 
     var relate_set = new Set()
     var name_tree: any = {}
@@ -185,7 +185,6 @@ categorySchema.methods.saveSpecsModel = async function(this: ICategory, specsMod
                     ovalue.value = nvalue.value
                 }
                 if(!flag_value && ovalue.products.length == 0) {
-                    console.log(oitem.values[j])
                     flag_value = true
                     // @ts-ignore
                     oitem.values.splice(j, 1)
@@ -217,7 +216,6 @@ categorySchema.methods.saveSpecsModel = async function(this: ICategory, specsMod
     var docs = await Product.find({'_id': {$in: affects}}).select("specs").exec()
     if(!docs)
         throw Error("Lỗi load")
-    console.log("4")
     
     for(let  i = 0; i< docs.length; i++) {
         var new_specs: any = {}

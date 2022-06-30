@@ -46,8 +46,6 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
         const name: string = req.body.name;
         const image_base64: string = req.body.image_base64;
         var specsModel: any = req.body.specsModel;
-        console.log(specsModel)
-
 
         if (!_id || (!name && !image_base64 && !specsModel))
             return res.status(400).send({ msg: config.err400 })
@@ -94,6 +92,7 @@ export const Update = async (req: Request, res: Response, next: NextFunction) =>
                 }
 
                 if(!!specsModel) {
+                    console.log("Luuw")
                     // @ts-ignore
                     await category.saveSpecsModel(specsModel, opts)
                 } else {

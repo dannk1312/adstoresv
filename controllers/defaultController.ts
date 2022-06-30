@@ -33,16 +33,18 @@ export const specsModelMerge = (specsModel: any[], newSpecsInput: any[]) => {
     newSpecsInput.forEach((spec, i) => {
         if (!spec.name) return // delete spec
         var temp: any;
-        temp = { "_id": specsModel[i]?._id, "name": spec.name, "values": [] }
-            
-        console.log(temp)
+        if(specsModel[i]?._id == undefined)
+            temp = { "name": spec.name, "values": [] }
+        else 
+            temp = { "_id": specsModel[i]?._id, "name": spec.name, "values": [] }
         // @ts-ignore
         spec.values.split(';').forEach((value, j) => {
             if (!value) return // delete value
             var id = valuesId_2d.length > i ? (valuesId_2d[i].length > j? valuesId_2d[i][j]: undefined) : undefined
-            temp.values.push({ "_id": id, "value": value })
-                
-            console.log(temp.values[temp.values.length - 1])
+            if(id == undefined)
+                temp.values.push({"value": value })
+            else
+                temp.values.push({"_id": id, "value": value })
         })
         result.push(temp)
     })
