@@ -159,7 +159,7 @@ export const Create = async (req: Request, res: Response, next: NextFunction) =>
     if (!specs) error += mess.errMissField + "[specs]. "
     if (!price) error += mess.errMissField + "[price]. "
     if (!image_base64) error += mess.errMissField + "[image_base64]. "
-    if (!error) return res.status(400).send({ msg: config.err400 })
+    if (!!error) return res.status(400).send({ msg: error })
 
     const img_info = await image.upload(image.base64(image_base64), "product_image");
     if (!img_info) return res.status(500).send({ msg: mess.errWrongField + "[image_base64]. " })

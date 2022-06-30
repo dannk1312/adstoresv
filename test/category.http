@@ -2,11 +2,11 @@ GET http://localhost:5000/category/list HTTP/1.1
 
 
 ###
-POST http://adstoresv.herokuapp.com/account/login HTTP/1.1
+POST http://localhost:5000/account/login HTTP/1.1
 Content-Type: application/json
 
 {
-    "email_or_phone": "admin@gmail.com",
+    "email_or_phone": "admin01@gmail.com",
     "code": "000000"
 }
 
@@ -181,104 +181,16 @@ POST http://localhost:5000/category/update HTTP/1.
 Content-Type: application/json
 
 {
-    "_id": "62ad83b304b1746fa85962eb",
-    "name": "Điện thoại",
-    "specsModel": [
-        {
-            "name": "Công nghệ màn hình",
-            "values": "Super Retina XDR - ProMotion;Dynamic AMOLED 2X"
-        },
-        {
-            "name": "Độ phân giải",
-            "values": "2532 x 1170 pixels;QHD+ (1440 x 3088 pixels)"
-        },
-        {
-            "name": "Màn hình",
-            "values": "6.8\";6.1 ''"
-        },
-        {
-            "name": "Camera sau",
-            "values": "12MP, f/1.6 + 12MP, ƒ/2.4;108 MP + 12 MP + 10 MP + 10 MP"
-        },
-        {
-            "name": "Đèn Flash",
-            "values": "Có;Không"
-        },
-        {
-            "name": "Hệ điều hành",
-            "values": "Android;IOS"
-        },
-        {
-            "name": "Chipset (hãng SX CPU)",
-            "values": "Apple A15;Qualcomm Snapdragon 8 Gen 1"
-        },
-        {
-            "name": "Xuất xứ",
-            "values": "Trung Quốc;Mỹ;Hàn Quốc"
-        },
-        {
-            "name": "Năm ra mắt",
-            "values": "2030;2029;2018;2017;2016;2022"
-        },
-        {
-            "name": "Loại màn hình",
-            "values": "Tai thỏ;Tràn viền;Giọt nước"
-        },
-        {
-            "name": "RAM",
-            "values": "2Gb;4Gb;8Gb;12Gb"
-        },
-        {
-            "name": "Bộ nhớ trong",
-            "values": "64Gb;128 Gb;256 Gb;512 Gb;1 Tb"
-        },
-        {
-            "name": "Thẻ nhớ ngoài",
-            "values": "Có;Không"
-        },
-        {
-            "name": "Loại pin",
-            "values": "Li-Ion"
-        },
-        {
-            "name": "Trọng lượng",
-            "values": "150g;200g;250g;300g"
-        },
-        {
-            "name": "Pin",
-            "values": "3.200mAh;3.300mAh;3.400mAh;3.500mAh"
-        },
-        {
-            "name": "Tần số quét",
-            "values": "60Hz;120Hz;144Hz"
-        },
-        {
-            "name": "Cổng kết nối/sạc",
-            "values": "Lightning;Type-C"
-        }
-    ]
-}
-
-###
-POST http://localhost:5000/category/update HTTP/1.
-Content-Type: application/json
-
-{
-    "_id": "62a4e4f0a5d2ed2a2e760159",
-    "name": "Thể Loại Gì Đây Update",
-    "specsModel": [
-        {
-            "_id": "62a4e4f0a5d2ed2a2e76015a",
-            "name": "Thể Update",
-            "values": [
-                { 
-                    "_id": "62a4e4f0a5d2ed2a2e76015b",
-                    "value": "A" 
-                }
-            ]
-        }
-    ], 
-    "image_base64": "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"
+    "_id":"62bdb1ad15ed7430e7839287",
+    "name":"Laptop",
+    "specsModel":[
+        {"name":"Hãng","values":"Asus;Acer;Dell;Apple"},
+        {"name":"Màn Hình","values":"13 inch;14 inch;15.6 inch;16 inch;17 inch"},
+        {"name":"Ram","values":"4gb;8gb;16gb"},
+        {"name":"CPU","values":"Amd Ryzen 7 5800x;Intel core i5-11400h;M1"},
+        {"name":"GPU","values":"GTX 1080Ti;RTX 2080Ti"},
+        {"name":"Ổ Cứng","values":"HDD 512gb;HDD 1TB;SSD 256gb;SSD 512gb"},{"name":"Hệ Điều Hành","values":"mac OS;Windows 11;Windows 10;Không"},
+        {"name":"Cân Nặng","values":"1kg;2kg"}]
 }
 
 

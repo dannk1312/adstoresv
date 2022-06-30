@@ -98,12 +98,12 @@ Content-Type: application/json
 }
 
 ###
-POST http://localhost:5000/account/updatePassword HTTP/1.1
+POST http://adstoresv.herokuapp.com/account/login HTTP/1.1
 Content-Type: application/json 
 
 {
-    "old_password": "ad18110074911",
-    "password": "ad1811007491"
+    "email_or_phone": "sale02@gmail.com",
+    "code": "000000"
 }
 
 ###
