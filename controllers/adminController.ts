@@ -6,6 +6,7 @@ import { Product } from "../models/product";
 import { Import } from "../models/import";
 import { Bill, IBill } from "../models/bill";
 import { fromObject } from "../services/support";
+import { shipCalculate } from "./billController";
 
 export const Statistical = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -124,7 +125,7 @@ export const CheckShip = async (req: Request, res: Response, next: NextFunction)
         }
         const result = await axios.get(config.ghtk_url + fromObject(data), {headers: { "Token": `${process.env.GHTK_API_TOKEN}` }})
         if(result.status == 200) {
-            console.log(result.data.fee)
+            console.log(await shipCalculate(address, 3000, 10000))
         } else {
             console.log("Anw lz")
         }
