@@ -12,7 +12,7 @@ const route = express.Router();
 // type: 
 //       skip: number - undefine = 0
 //       limit: number - undefine = 10000
-//       search: string - name, email, phone, address - undefine = all
+//       search: string - name, email, phone - undefine = all
 //       role: string - ["Admin", "Sale", "Customer"] - undefine = all
 //       enable: boolean - undefine = all
 //       sortName: string - ["self_cancel", "createAt", "bills"] - số lần hủy đơn, ngày tạo, số lượng bill

@@ -436,7 +436,7 @@ export const Imports = async (req: Request, res: Response, next: NextFunction) =
     const data: { code: string, quantity: number, color: string, price: number }[] = req.body.data // [{code, quantity, color, price}]
     if (!data) return res.status(400).send({ msg: config.err400 })
 
-    if (data.length) return res.send({ msg: "Rỗng" })
+    if (data.length == 0) return res.send({ msg: "Rỗng" })
 
     const session = await mongoose.startSession();
     session.startTransaction();

@@ -33,12 +33,18 @@ route.get('/vnpay_ipn', Bill.CheckVNPay);
 //      desc: string
 route.post("/bill/update", Default.Role(["Customer", "Sale",  "Admin"]), Bill.Update)
 
+
+// header: accessToken - role: ["Sale", "Admin"] - field: _id
+// type:
+//      _id**: string - bill_id
+route.post("/bill/verify", Default.Role(["Sale",  "Admin"]), Bill.Verity)
+
 // header: accessToken - role: "Admin" - field: skip, limit, status, search, sortName, sortType
 // type:
 //       skip: number = req.body.skip ?? 0
 //       limit: number = req.body.limit ?? 10000
 //       status: string - in ['Preparing', 'Delivering', 'Done', 'Cancel'] 
-//       search: string - phone, address
+//       search: string - phone
 //       sortName: string - ["ship", "total", "discount"] - phí ship, phí tổng, - phí giảm giá
 //       sortType: number - 1 tăng dần, -1 giảm dần
 route.post("/bill/list", Default.Role(["Admin", "Sale"]), Bill.List)

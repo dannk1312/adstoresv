@@ -353,14 +353,10 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
         if (!!search) {
             const pattern = { $regex: '.*' + search + '.*', $options: "i" }
             queryOptions['$or'] = [
-                { phone: pattern },
-                { 'address.provine': pattern },
-                { 'address.district': pattern },
-                { 'address.address': pattern },
+                { phone: pattern }
             ]
+            console.log(pattern)
         }
-
-        console.log(queryOptions)
 
         const count = (req.body.skip == undefined) ? await Bill.countDocuments(queryOptions) : undefined
         const result = await Bill.find(queryOptions).sort(sortOptions).skip(skip).limit(limit).select("-products").populate("account", "name phone email").exec()
@@ -506,4 +502,18 @@ export const CheckVNPay = async (req: Request, res: Response, next: NextFunction
     }catch(err) {
         console.log(err)
     }
+}
+
+export const Verity = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const _id: string = req.body._id
+        Bill.findByIdAndUpdate(_id, {verify: true}).exec((err, doc) => {
+            if(!!err) return res.status(500).send({msg: mess.errInternal})
+            return res.send({msg: mess.success}) 
+        })
+    } catch(err){
+        console.log(err)
+        return res.status(500).send({msg: mess.errInternal})
+    }
+
 }

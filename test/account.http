@@ -32,13 +32,11 @@ Content-Type: application/json
 }
 
 ###
-POST http://localhost:5000/account/updateBag HTTP/1.1
+POST http://localhost:5000/account/updatePassword HTTP/1.1
 Content-Type: application/json
 
 {
-    "bag": [
-        {"product": "62a95e2bd566f89d33c6621e", "color": "Red", "quantity": 2}
-    ] 
+    
 }
 
 ###
@@ -89,20 +87,19 @@ Content-Type: application/json
 }
 
 ###
-POST http://adstoresv.herokuapp.com/account/updatePhone HTTP/1.1
+POST http://localhost:5000/account/updatePassword HTTP/1.1
 Content-Type: application/json 
 
 {
-    "phone": "+84923202850",
-    "code": "000000"
+    "password": "aD1811007491"
 }
 
 ###
-POST http://adstoresv.herokuapp.com/account/login HTTP/1.1
+POST http://localhost:5000/account/login HTTP/1.1
 Content-Type: application/json 
 
 {
-    "email_or_phone": "sale02@gmail.com",
+    "email_or_phone": "admin02@gmail.com",
     "code": "000000"
 }
 

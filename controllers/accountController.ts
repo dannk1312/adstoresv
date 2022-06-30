@@ -14,7 +14,7 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const skip: number = req.body.skip ?? 0
         const limit: number = req.body.limit ?? 10000
-        const search: string = req.body.string
+        const search: string = req.body.search
         const role: string = req.body.role
         const enable: boolean = req.body.enable
         const sortName: string = req.body.sortName
@@ -32,15 +32,13 @@ export const List = async (req: Request, res: Response, next: NextFunction) => {
         if (!!sortName && ["self_cancel", "createAt", "bills"].includes(sortName) && (sortType == 1 || sortType == -1)) {
             sortOptions[sortName] = sortType
         }
+
         if (!!search) {
             const pattern = { $regex: '.*' + search + '.*', $options: "i" }
             queryOptions['$or'] = [
                 { name: pattern },
                 { email: pattern },
-                { phone: pattern },
-                { 'address.provine': pattern },
-                { 'address.district': pattern },
-                { 'address.address': pattern },
+                { phone: pattern }
             ]
         }
 
