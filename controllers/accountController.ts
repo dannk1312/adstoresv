@@ -259,10 +259,11 @@ export const UpdatePassword = async (req: Request, res: Response, next: NextFunc
         const account: Document<unknown, any, IAccount> & IAccount & { _id: Types.ObjectId; } = req.body.account
 
         var error: string = ""
-        if (!old_password)
-            error += mess.errMissField + "[Old Password]. "
-        else if (!(await argon2.verify(account.password, old_password)))
-            error += mess.errMissField + "[Old Password]. "
+        if(account.password)
+            if (!old_password)
+                error += mess.errMissField + "[Old Password]. "
+            else if (!(await argon2.verify(account.password, old_password)))
+                error += mess.errMissField + "[Old Password]. "
         if (!password)
             error += mess.errMissField + "[Password]. "
         else if (!regex.passw.test(password))
