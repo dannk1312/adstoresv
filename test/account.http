@@ -12,6 +12,10 @@ Content-Type: application/json
 POST http://localhost:5000/account/list HTTP/1.1
 Content-Type: application/json
 
+{
+    "search": "84"
+}
+
 
 ###
 GET http://localhost:5000/account/readBills HTTP/1.1
