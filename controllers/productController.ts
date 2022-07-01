@@ -604,7 +604,16 @@ export const Hint = async (req: Request, res: Response) => {
         if (results.data.success == "Fail" || !results.data) throw Error()
         Product.find({ _id: { $in: results.data.reverse() }, 'colors.0': { $exists: true }, enable: true }).select(config.product_str).exec((err, docs) => {
             if (err) return res.status(500).send({ msg: config.err500 })
-            return res.send({ msg: config.success, data: docs })
+            var rs: any[] = []
+            results.data.forEach((_id: any) => {
+                for(var i = 0; i< docs.length; i++) {
+                    if(docs[i]._id == _id) {
+                        rs.push(docs[i])
+                        break;
+                    }
+                }
+            })
+            return res.send({ msg: config.success, data: rs })
         })
     } catch (err) {
         console.log("Cannot get from hint server")
@@ -621,10 +630,19 @@ export const Hint = async (req: Request, res: Response) => {
                     counter[key] = 1
                 }
             }))
-            const keys = Object.keys(counter).sort((a, b) => -counter[a] + counter[b]).slice(0, quantity).reverse()
+            const keys = Object.keys(counter).sort((a, b) => -counter[a] + counter[b]).slice(0, quantity)
             Product.find({ _id: { $in: keys }, 'colors.0': { $exists: true }, enable: true }).select(config.product_str).limit(quantity).exec((err, docs) => {
                 if (err) return res.status(500).send({ msg: config.err500 })
-                return res.send({ msg: config.success, data: docs })
+                var rs: any[] = []
+                keys.forEach((_id: any) => {
+                    for(var i = 0; i< docs.length; i++) {
+                        if(docs[i]._id == _id) {
+                            rs.push(docs[i])
+                            break;
+                        }
+                    }
+                })
+                return res.send({ msg: config.success, data: rs })
             })
         } else {
             Product.find({ 'colors.0': { $exists: true }, enable: true  }).sort({ sold: -1 }).select(config.product_str).limit(quantity).exec((err, docs) => {
